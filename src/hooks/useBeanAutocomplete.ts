@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ShotLog, BeanProfile } from '../types';
-import { getUniqueBeans } from '../lib/beans';
+import { getUniqueBeans, inactiveBeanNames } from '../lib/beans';
 
 export function useBeanAutocomplete(beans: BeanProfile[], shots: ShotLog[]) {
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -12,7 +12,12 @@ export function useBeanAutocomplete(beans: BeanProfile[], shots: ShotLog[]) {
 
     const allSuggestions = () => {
         const libraryBeans = beans.filter(b => b.isActive).map(b => b.name);
-        const historyBeans = getUniqueBeans(shots);
+        // History reintroduces names the library already switched off, so a
+        // retired bag would come back through the back door. A name with no
+        // library entry at all is kept: it was typed straight into the form.
+        const hidden = inactiveBeanNames(beans);
+        const historyBeans = getUniqueBeans(shots)
+            .filter(name => !hidden.has(name.trim().toLowerCase()));
         return [...new Set([...libraryBeans, ...historyBeans])].sort((a, b) => a.localeCompare(b));
     };
 
