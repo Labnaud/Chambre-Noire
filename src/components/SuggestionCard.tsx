@@ -177,6 +177,12 @@ export default function SuggestionCard({
             {suggestion?.reason && (
                 <p className="suggested-settings__reason">{suggestion.reason}</p>
             )}
+
+            {suggestion?.advice && (
+                <p className="suggested-settings__advice">
+                    <Icons.Lightbulb /> {suggestion.advice}
+                </p>
+            )}
             {!suggestion && (
                 <p className="suggested-settings__reason">
                     That one landed balanced at the strength you wanted. Repeat these settings.

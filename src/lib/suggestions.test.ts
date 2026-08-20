@@ -1,250 +1,172 @@
 import { describe, it, expect } from 'vitest';
-import { getBaristaTip, getSuggestedSettings } from './suggestions';
+import {
+    getBaristaTip, getSuggestedSettings,
+    getEspressoStartingPoint, getFreshnessGrindNote,
+} from './suggestions';
 import type { ShotLog, Rating } from '../types';
-import { GRIND_MAX } from '../constants';
-import { profileFor } from './brew';
 
-const ESPRESSO = profileFor('Espresso');
-const [TEMP_MIN, TEMP_MAX] = ESPRESSO.tempRangeC;
-const TEMP_MID = ESPRESSO.defaultTempC;
-const STEP = ESPRESSO.tempStepC;
-
-const shot = (rating: Rating, grindSize: number, waterTempC: number = TEMP_MID): ShotLog => ({
-    id: '1',
-    beanName: 'Ethiopia',
-    method: 'Espresso',
-    basket: 'Double',
-    grindSize,
-    waterTempC,
-    strength: 2,
-    rating,
-    timestamp: new Date(),
+// 18g / 36g / 30s, the empirical centre of the archived sweet spots.
+const shot = (over: Partial<ShotLog> = {}): ShotLog => ({
+    id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+    grindSize: 21, waterTempC: 93, strength: 2, rating: 'Balanced',
+    doseIn: 18, doseOut: 36, extractionTime: 30,
+    timestamp: new Date(), ...over,
 });
 
 describe('getBaristaTip', () => {
-    it('returns large adjustment for Very Sour', () => {
+    it('scales the adjustment with how far off the taste is', () => {
         expect(getBaristaTip('Very Sour').adjustment).toBe('large');
-    });
-
-    it('returns small adjustment for Sour', () => {
         expect(getBaristaTip('Sour').adjustment).toBe('small');
-    });
-
-    it('returns no adjustment for Balanced', () => {
-        const tip = getBaristaTip('Balanced');
-        expect(tip.adjustment).toBe('none');
-        expect(tip.message).toMatch(/Perfect/);
-    });
-
-    it('returns small adjustment for Bitter', () => {
+        expect(getBaristaTip('Balanced').adjustment).toBe('none');
         expect(getBaristaTip('Bitter').adjustment).toBe('small');
-    });
-
-    it('returns large adjustment for Very Bitter', () => {
         expect(getBaristaTip('Very Bitter').adjustment).toBe('large');
     });
 });
 
-describe('getSuggestedSettings', () => {
-    it('returns null when there is no last shot', () => {
-        expect(getSuggestedSettings(null)).toBeNull();
-        expect(getSuggestedSettings(undefined)).toBeNull();
+describe('espresso: temperature is never a proposed parameter', () => {
+    const ratings: Rating[] = ['Very Sour', 'Sour', 'Bitter', 'Very Bitter'];
+
+    it('never moves the temperature, whatever the taste or flow', () => {
+        for (const rating of ratings) {
+            for (const extractionTime of [15, 24, 30, 36, 45]) {
+                const out = getSuggestedSettings(shot({ rating, extractionTime }));
+                expect(out?.tempDiff).toBe(0);
+                expect(out?.waterTempC).toBe(93);
+            }
+        }
     });
 
-    it('returns null when the last shot has no rating yet', () => {
-        // A logged-but-untasted shot carries no taste signal, so there is
-        // nothing to dial toward; the UI prompts to rate it instead.
-        expect(getSuggestedSettings({ ...shot('Balanced', 12), rating: undefined })).toBeNull();
+    it('offers temperature only as advice when flow is right and taste is not', () => {
+        expect(getSuggestedSettings(shot({ rating: 'Very Bitter', extractionTime: 30 }))?.advice)
+            .toMatch(/too hot|cool-flush/i);
+        expect(getSuggestedSettings(shot({ rating: 'Sour', extractionTime: 30 }))?.advice)
+            .toMatch(/too cool|purge/i);
     });
 
-    it('returns null for a Balanced last shot', () => {
-        expect(getSuggestedSettings(shot('Balanced', 12))).toBeNull();
-    });
-
-    it('Very Sour drops grind by 3 and raises temperature', () => {
-        const out = getSuggestedSettings(shot('Very Sour', 12));
-        expect(out).toEqual({
-            grindSize: 9,
-            waterTempC: TEMP_MID + STEP,
-            adjustmentType: 'both',
-            grindDiff: -3,
-            tempDiff: STEP,
-            yieldDiff: 0,
-        });
-    });
-
-    it('Sour drops grind by 1 and keeps temperature', () => {
-        const out = getSuggestedSettings(shot('Sour', 12));
-        expect(out?.grindSize).toBe(11);
-        expect(out?.waterTempC).toBe(TEMP_MID);
-        expect(out?.adjustmentType).toBe('grind');
-    });
-
-    it('Bitter raises grind by 1', () => {
-        const out = getSuggestedSettings(shot('Bitter', 12));
-        expect(out?.grindSize).toBe(13);
-        expect(out?.adjustmentType).toBe('grind');
-    });
-
-    it('Very Bitter raises grind by 3 and lowers temperature', () => {
-        const out = getSuggestedSettings(shot('Very Bitter', 12));
-        expect(out).toEqual({
-            grindSize: 15,
-            waterTempC: TEMP_MID - STEP,
-            adjustmentType: 'both',
-            grindDiff: 3,
-            tempDiff: -STEP,
-            yieldDiff: 0,
-        });
-    });
-
-    it('clamps grind to floor of 1 for Very Sour at minimum', () => {
-        const out = getSuggestedSettings(shot('Very Sour', 2));
-        expect(out?.grindSize).toBe(1);
-    });
-
-    it('clamps grind to the ceiling for Very Bitter at maximum', () => {
-        const out = getSuggestedSettings(shot('Very Bitter', GRIND_MAX - 1));
-        expect(out?.grindSize).toBe(GRIND_MAX);
-    });
-
-    // The scale widened for filter grinds, but a dial-in move is still a
-    // handful of clicks within one bean/recipe, not a fraction of the range.
-    it('keeps step sizes small on the wide scale', () => {
-        expect(getSuggestedSettings(shot('Sour', 50))?.grindSize).toBe(49);
-        expect(getSuggestedSettings(shot('Very Bitter', 50))?.grindSize).toBe(53);
-    });
-
-    it('does not raise temperature past the method ceiling', () => {
-        const out = getSuggestedSettings(shot('Very Sour', 12, TEMP_MAX));
-        expect(out?.waterTempC).toBe(TEMP_MAX);
-    });
-
-    it('does not lower temperature past the method floor', () => {
-        const out = getSuggestedSettings(shot('Very Bitter', 12, TEMP_MIN));
-        expect(out?.waterTempC).toBe(TEMP_MIN);
-    });
-
-    it('falls back to the method default when no temperature was recorded', () => {
-        const out = getSuggestedSettings({ ...shot('Very Sour', 12), waterTempC: undefined });
-        expect(out?.waterTempC).toBe(TEMP_MID + STEP);
+    it('gives no temperature advice while flow is still the problem', () => {
+        expect(getSuggestedSettings(shot({ rating: 'Sour', extractionTime: 15 }))?.advice).toBeUndefined();
     });
 });
 
-// With a recorded extraction time on an espresso pull, taste alone no longer
-// picks the lever: a fast sour shot is mechanically under-extracted (grind),
-// while a sour shot that already pulled on time needs heat, not a finer grind.
-describe('getSuggestedSettings with extraction time', () => {
-    it('grinds finer when a sour shot ran fast', () => {
-        const out = getSuggestedSettings({ ...shot('Sour', 12), extractionTime: 20 });
-        expect(out?.grindSize).toBe(11);
+// Flow is the absolute priority: nothing else moves until it is in range.
+describe('espresso step 1: flow', () => {
+    it('jumps 2 steps finer under 20s', () => {
+        const out = getSuggestedSettings(shot({ extractionTime: 18, rating: 'Sour' }));
+        expect(out?.adjustmentType).toBe('grind');
+        expect(out?.grindDiff).toBe(-2);
+    });
+
+    it('jumps 2 steps coarser over 40s', () => {
+        const out = getSuggestedSettings(shot({ extractionTime: 45, rating: 'Bitter' }));
+        expect(out?.grindDiff).toBe(2);
+    });
+
+    it('moves 1 step finer between 20 and 28s', () => {
+        const out = getSuggestedSettings(shot({ extractionTime: 24, rating: 'Bitter' }));
         expect(out?.grindDiff).toBe(-1);
+    });
+
+    it('leaves the grind alone once the shot runs 28-40s', () => {
+        for (const extractionTime of [28, 32, 36, 40]) {
+            expect(getSuggestedSettings(shot({ extractionTime, rating: 'Sour' }))?.grindDiff).toBe(0);
+        }
+    });
+
+    // Flow outranks taste: a fast shot gets its grind fixed even when the
+    // taste would point at yield.
+    it('fixes flow before taste', () => {
+        const out = getSuggestedSettings(shot({ extractionTime: 18, rating: 'Bitter' }));
         expect(out?.adjustmentType).toBe('grind');
-        expect(out?.waterTempC).toBe(TEMP_MID);
-        expect(out?.reason).toMatch(/finer/i);
-    });
-
-    it('raises temperature (not grind) when a sour shot already pulled on time', () => {
-        const out = getSuggestedSettings({ ...shot('Sour', 12), extractionTime: 29 });
-        expect(out?.grindSize).toBe(12);
-        expect(out?.grindDiff).toBe(0);
-        expect(out?.adjustmentType).toBe('temp');
-        expect(out?.waterTempC).toBe(TEMP_MID + STEP);
-        expect(out?.reason).toMatch(/temperature/i);
-    });
-
-    it('grinds coarser when a bitter shot ran long', () => {
-        const out = getSuggestedSettings({ ...shot('Bitter', 12), extractionTime: 36 });
-        expect(out?.grindSize).toBe(13);
-        expect(out?.grindDiff).toBe(1);
-        expect(out?.adjustmentType).toBe('grind');
-        expect(out?.waterTempC).toBe(TEMP_MID);
-    });
-
-    it('lowers temperature (not grind) when a bitter shot did not run long', () => {
-        const out = getSuggestedSettings({ ...shot('Very Bitter', 12), extractionTime: 22 });
-        expect(out?.grindSize).toBe(12);
-        expect(out?.adjustmentType).toBe('temp');
-        expect(out?.waterTempC).toBe(TEMP_MID - STEP);
-        expect(out?.reason).toMatch(/temperature/i);
-    });
-
-    it('ignores time for non-espresso brews and keeps rating-only behavior', () => {
-        const out = getSuggestedSettings({ ...shot('Sour', 12), method: 'V60', extractionTime: 20 });
-        expect(out?.grindSize).toBe(11);
-        expect(out?.adjustmentType).toBe('grind');
-        expect(out?.reason).toBeUndefined();
-    });
-
-    it('falls back to grinding finer when the temperature is already maxed', () => {
-        const out = getSuggestedSettings({ ...shot('Sour', 12, TEMP_MAX), extractionTime: 29 });
-        expect(out?.grindSize).toBe(11);
-        expect(out?.adjustmentType).toBe('grind');
-        expect(out?.waterTempC).toBe(TEMP_MAX);
-        expect(out?.reason).toMatch(/finer|grind/i);
+        expect(out?.yieldDiff).toBe(0);
     });
 });
 
-// Strength is a second axis. Yield moves concentration, but it moves
-// extraction too, so it only gets a turn once taste is already balanced.
-describe('strength drives yield, after taste is dialled in', () => {
-    const espresso = (over: Partial<ShotLog>): ShotLog => ({
-        id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
-        grindSize: 22, waterTempC: TEMP_MID, strength: 2, rating: 'Balanced',
-        doseIn: 18, doseOut: 36, timestamp: new Date(), ...over,
-    });
-
-    it('says nothing when taste and strength are both on target', () => {
-        expect(getSuggestedSettings(espresso({}))).toBeNull();
-    });
-
-    it('lengthens the shot when balanced but overwhelming', () => {
-        const out = getSuggestedSettings(espresso({ strength: 3 }));
+describe('espresso step 2: taste through yield', () => {
+    it('pulls longer for a sour shot that already flows well', () => {
+        const out = getSuggestedSettings(shot({ rating: 'Sour', extractionTime: 30 }));
         expect(out?.adjustmentType).toBe('yield');
-        expect(out?.doseOut).toBe(39);
-        expect(out?.yieldDiff).toBe(3);
+        expect(out?.yieldDiff).toBe(2);
+        expect(out?.doseOut).toBe(38);
         expect(out?.grindDiff).toBe(0);
-        expect(out?.reason).toMatch(/dilute/i);
     });
 
-    it('shortens the shot when balanced but weak', () => {
-        const out = getSuggestedSettings(espresso({ strength: 1 }));
-        expect(out?.doseOut).toBe(33);
+    it('stops shorter for a bitter shot that already flows well', () => {
+        const out = getSuggestedSettings(shot({ rating: 'Bitter', extractionTime: 30 }));
+        expect(out?.yieldDiff).toBe(-2);
+        expect(out?.doseOut).toBe(34);
+    });
+
+    it('uses the larger 4g step at the extremes', () => {
+        expect(getSuggestedSettings(shot({ rating: 'Very Sour', extractionTime: 30 }))?.yieldDiff).toBe(4);
+        expect(getSuggestedSettings(shot({ rating: 'Very Bitter', extractionTime: 30 }))?.yieldDiff).toBe(-4);
+    });
+
+    it('keeps the ratio inside the 1:1.67 - 1:2.33 window', () => {
+        // 18g -> 42g is already 1:2.33
+        expect(getSuggestedSettings(shot({ rating: 'Sour', doseOut: 42, extractionTime: 30 }))?.adjustmentType)
+            .toBe('grind'); // no yield room left, so fall back
+        expect(getSuggestedSettings(shot({ rating: 'Bitter', doseOut: 30.1, extractionTime: 30 }))?.adjustmentType)
+            .toBe('grind');
+    });
+
+    it('falls back to grind when there is no dose data', () => {
+        const out = getSuggestedSettings(shot({ rating: 'Sour', doseIn: undefined, extractionTime: 30 }));
+        expect(out?.adjustmentType).toBe('grind');
+        expect(out?.grindDiff).toBe(-1);
+    });
+});
+
+describe('espresso step 3: body, once taste is balanced', () => {
+    it('says nothing when taste and strength are both on target', () => {
+        expect(getSuggestedSettings(shot())).toBeNull();
+    });
+
+    it('pulls longer when balanced but overwhelming', () => {
+        const out = getSuggestedSettings(shot({ strength: 3 }));
+        expect(out?.yieldDiff).toBe(3);
+        expect(out?.reason).toMatch(/dose at 18g/i);
+    });
+
+    it('stops shorter when balanced but weak', () => {
+        const out = getSuggestedSettings(shot({ strength: 1 }));
         expect(out?.yieldDiff).toBe(-3);
-        expect(out?.reason).toMatch(/concentrated/i);
     });
 
-    it('leaves grind and temperature alone when yield is the lever', () => {
-        const out = getSuggestedSettings(espresso({ strength: 3 }));
-        expect(out?.grindSize).toBe(22);
-        expect(out?.waterTempC).toBe(TEMP_MID);
+    it('does not touch body while taste is still off', () => {
+        const out = getSuggestedSettings(shot({ rating: 'Sour', strength: 3, extractionTime: 30 }));
+        expect(out?.yieldDiff).toBe(2); // the taste step, not the body step
+    });
+});
+
+describe('starting points', () => {
+    it('matches the documented row for each roast level', () => {
+        expect(getEspressoStartingPoint('Light')).toEqual({ doseIn: 18, doseOut: 36, grind: [13, 18], time: [28, 32] });
+        expect(getEspressoStartingPoint('Medium')).toEqual({ doseIn: 18, doseOut: 36, grind: [18, 23], time: [28, 32] });
+        expect(getEspressoStartingPoint('Medium-Dark')).toEqual({ doseIn: 17.5, doseOut: 35, grind: [20, 25], time: [27, 30] });
+        expect(getEspressoStartingPoint('Dark')).toEqual({ doseIn: 17, doseOut: 34, grind: [23, 28], time: [25, 30] });
     });
 
-    // One variable at a time: a sour shot gets its grind fixed first, even if
-    // the strength is also off.
-    it('fixes taste before strength', () => {
-        const out = getSuggestedSettings(espresso({ rating: 'Sour', strength: 3 }));
-        expect(out?.adjustmentType).not.toBe('yield');
-        expect(out?.yieldDiff).toBe(0);
-        expect(out?.grindDiff).toBeLessThan(0);
+    // Never invent: no roast level means no starting point.
+    it('returns nothing without a roast level', () => {
+        expect(getEspressoStartingPoint(undefined)).toBeNull();
     });
 
-    it('will not walk the ratio past a lungo', () => {
-        const out = getSuggestedSettings(espresso({ strength: 3, doseOut: 44 })); // 1:2.44
-        expect(out?.doseOut).toBe(45); // clamped at 1:2.5
+    it('nudges grind for very fresh and very old beans', () => {
+        expect(getFreshnessGrindNote(5)).toMatch(/coarser/i);
+        expect(getFreshnessGrindNote(40)).toMatch(/finer/i);
+        expect(getFreshnessGrindNote(20)).toBeNull();
+        expect(getFreshnessGrindNote(null)).toBeNull();
+    });
+});
+
+describe('filter keeps temperature as a lever', () => {
+    it('moves grind and temperature together at the extremes', () => {
+        const out = getSuggestedSettings(shot({ method: 'V60', grindSize: 52, waterTempC: 92, rating: 'Very Sour' }));
+        expect(out?.grindDiff).toBe(-3);
+        expect(out?.tempDiff).toBe(2);
     });
 
-    it('will not walk the ratio below a ristretto', () => {
-        const out = getSuggestedSettings(espresso({ strength: 1, doseOut: 28 })); // 1:1.56
-        expect(out?.doseOut).toBe(27); // clamped at 1:1.5
-    });
-
-    it('does nothing without dose data to work from', () => {
-        expect(getSuggestedSettings(espresso({ strength: 3, doseIn: undefined }))).toBeNull();
-    });
-
-    // On filter the yield number is total brew water, a different quantity.
-    it('stays out of it for filter brews', () => {
-        expect(getSuggestedSettings(espresso({ method: 'V60', strength: 3 }))).toBeNull();
+    it('says nothing for a balanced filter brew', () => {
+        expect(getSuggestedSettings(shot({ method: 'V60', rating: 'Balanced' }))).toBeNull();
     });
 });

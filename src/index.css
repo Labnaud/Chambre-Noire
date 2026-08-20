@@ -6442,3 +6442,91 @@ textarea:focus-visible {
   color: var(--color-muted);
   line-height: 1.45;
 }
+
+/* Starting point for a bean with no history, and non-parameter advice */
+.starting-point {
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed color-mix(in srgb, var(--color-caramel) 45%, transparent);
+  background: color-mix(in srgb, var(--color-caramel) 8%, transparent);
+  margin-bottom: 0.75rem;
+}
+
+.starting-point__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-latte);
+  margin-bottom: 0.5rem;
+}
+
+.starting-point__rows {
+  margin: 0 0 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.starting-point__rows > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.starting-point__rows dt {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.starting-point__rows dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-cream);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.starting-point__note {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.starting-point--unknown {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.starting-point--unknown strong {
+  color: var(--color-cream);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.starting-point--unknown p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.suggested-settings__advice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-mocha) 40%, transparent);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 560px) {
+  .starting-point__rows { grid-template-columns: repeat(2, 1fr); }
+}

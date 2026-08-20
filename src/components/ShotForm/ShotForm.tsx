@@ -37,6 +37,7 @@ interface ShotFormProps {
     ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
     ratingColors: Record<Rating, string>;
     onApplySuggestion: () => void;
+    onApplyStartingPoint: (doseIn: number, doseOut: number, grind: number) => void;
 }
 
 export default function ShotForm({
@@ -59,6 +60,7 @@ export default function ShotForm({
     ratingConfig,
     ratingColors,
     onApplySuggestion,
+    onApplyStartingPoint,
 }: ShotFormProps) {
     return (
         <form className="shot-form" onSubmit={onSubmit}>
@@ -95,6 +97,7 @@ export default function ShotForm({
                 ratingConfig={ratingConfig}
                 ratingColors={ratingColors}
                 onApply={onApplySuggestion}
+                onApplyStartingPoint={onApplyStartingPoint}
             />
 
             <BrewSettingControls

@@ -145,6 +145,15 @@ function App() {
 
   const suggestedSettings = getSuggestedSettings(lastShotForBean);
 
+  // A documented starting point for a bean with no history yet.
+  const applyStartingPoint = (doseIn: number, doseOut: number, grind: number) => {
+    form.setGrindSize(grind);
+    form.setShowDose(true);
+    form.setDoseIn(String(doseIn));
+    form.setDoseOut(String(doseOut));
+    showToast('Starting point loaded', 'success');
+  };
+
   const applySuggestedSettings = () => {
     if (!suggestedSettings || !lastShotForBean) return;
     form.applyFromShot(lastShotForBean);
@@ -567,6 +576,7 @@ function App() {
             ratingConfig={RATING_CONFIG}
             ratingColors={RATING_COLORS}
             onApplySuggestion={applySuggestedSettings}
+            onApplyStartingPoint={applyStartingPoint}
           />
         </div>
 

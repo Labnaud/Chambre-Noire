@@ -145,8 +145,31 @@ derives the hot pour by subtracting the ice from total water.
 
 ## Dial-in engine
 
-`src/lib/suggestions.ts` reads the last rated shot for the current bean and
-proposes the next one.
+`src/lib/suggestions.ts` reads the last rated shot for the current bean **on
+the current method** and proposes the next one.
+
+**Espresso** follows one parameter at a time, in a fixed order:
+
+1. **Flow, through grind.** Absolute priority. Under 20s or over 40s takes a
+   2-step jump; 20-28s takes 1 step; 28-40s is workable and the grind is left
+   alone.
+2. **Taste, through yield.** Only once flow is in range, so a grind change
+   cannot undo a shot time that was already right. 2g normally, 4g at the
+   extremes, clamped to the 1:1.67-1:2.33 ratio window.
+3. **Body, through yield.** Only once taste is Balanced. Dose stays anchored
+   at 18g; refinement goes through yield.
+
+**Temperature is not an adjusted parameter on espresso.** It surfaces only as
+advice when the flow is right and the cup still reads wrong: burnt at a correct
+time means cool-flush the group, residual sourness with the grind in range means
+purge first. `SuggestedSettings.advice` carries that, separately from `reason`.
+
+**Filter keeps temperature as a real lever**, since its order is grind, then
+temperature, then ratio and agitation.
+
+A bean with no history on the current method gets the documented starting point
+for its roast level instead. Without a roast level there is no starting point
+and the card says so rather than guessing.
 
 - **Grind is the primary lever**, moving 1 step for Sour/Bitter and 3 for
   Very Sour/Very Bitter. Those step sizes are deliberately **not** scaled to the
