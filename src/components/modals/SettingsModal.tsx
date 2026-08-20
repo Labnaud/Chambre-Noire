@@ -209,10 +209,14 @@ export default function SettingsModal({
                                 <Icons.Trash />
                                 <span>Clear All Data</span>
                             </button>
+                            {/* iOS matches the picker on file type, not extension, so a
+                                downloaded .json often greys out under accept=".json" alone.
+                                The parser validates content anyway, so a wrong file fails
+                                with a message rather than being unpickable. */}
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".json"
+                                accept=".json,application/json,text/plain"
                                 onChange={onImport}
                                 style={{ display: 'none' }}
                             />
