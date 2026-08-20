@@ -4,7 +4,9 @@ import { useFocusTrap } from '../../hooks';
 import Icons from '../Icons';
 
 interface TastingNotesModalProps {
-    bean: BeanProfile;
+    /** Undefined when the bean is not in the library yet; saving creates it. */
+    bean: BeanProfile | undefined;
+    beanName: string;
     method: BrewMethod;
     onSave: (notes: string) => void;
     onSkip: () => void;
@@ -14,9 +16,9 @@ interface TastingNotesModalProps {
 // when the profile is established and a flavour note finally means something.
 // The roaster's notes seed the field, since they are usually close and easier
 // to edit than to retype.
-export default function TastingNotesModal({ bean, method, onSave, onSkip }: TastingNotesModalProps) {
+export default function TastingNotesModal({ bean, beanName, method, onSave, onSkip }: TastingNotesModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
-    const [notes, setNotes] = useState(bean.flavorNotes ?? '');
+    const [notes, setNotes] = useState(bean?.flavorNotes ?? '');
 
     return (
         <div className="modal-overlay" onClick={onSkip}>
@@ -39,10 +41,10 @@ export default function TastingNotesModal({ bean, method, onSave, onSkip }: Tast
 
                 <div className="modal__body">
                     <p className="modal__desc">
-                        You just dialled in <strong>{bean.name}</strong> as {method}. How does it taste?
+                        You just dialled in <strong>{beanName}</strong> as {method}. How does it taste?
                     </p>
 
-                    {bean.flavorNotes && (
+                    {bean?.flavorNotes && (
                         <p className="tasting-prompt__roaster">
                             <span className="tasting-prompt__roaster-label">Roaster&apos;s notes</span>
                             {bean.flavorNotes}
@@ -51,7 +53,7 @@ export default function TastingNotesModal({ bean, method, onSave, onSkip }: Tast
 
                     <div className="form-group">
                         <label className="form-label" htmlFor="tasting-notes-field">
-                            {bean.name} as {method}
+                            {beanName} as {method}
                         </label>
                         <textarea
                             id="tasting-notes-field"
@@ -65,9 +67,11 @@ export default function TastingNotesModal({ bean, method, onSave, onSkip }: Tast
                             onChange={(e) => setNotes(e.target.value)}
                         />
                         <p className="tasting-prompt__hint">
-                            {bean.flavorNotes
+                            {bean?.flavorNotes
                                 ? 'Prefilled from the bag. Edit it to what you actually taste.'
-                                : 'Saved against this bean for this method only.'}
+                                : bean
+                                    ? 'Saved against this bean for this method only.'
+                                    : `Saving adds "${beanName}" to your Bean Library.`}
                         </p>
                     </div>
                 </div>

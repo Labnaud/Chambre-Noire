@@ -62,7 +62,7 @@ function App() {
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showCaffeine, setShowCaffeine] = useState(false);
-  const [sweetSpot, setSweetSpot] = useState<{ bean: BeanProfile; method: BrewMethod } | null>(null);
+  const [sweetSpot, setSweetSpot] = useState<{ bean: BeanProfile | undefined; beanName: string; method: BrewMethod } | null>(null);
   const [beanFilter, setBeanFilter] = useState<string>('');
   const [notesSearch, setNotesSearch] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -489,8 +489,10 @@ function App() {
       const key = newShot.beanName.toLowerCase();
       const profile = beans.find(b => b.name.toLowerCase() === key);
       const alreadyNoted = profile?.methodNotes?.[newShot.method]?.trim();
-      if (profile && !alreadyNoted) {
-        setSweetSpot({ bean: profile, method: newShot.method });
+      // The bean does not need to be in the library yet: typing a name into
+      // the form is the normal flow, and saving the note creates the bean.
+      if (!alreadyNoted) {
+        setSweetSpot({ bean: profile, beanName: newShot.beanName, method: newShot.method });
       }
     }
     const beanShots = shots.filter(s => s.beanName.toLowerCase() === newShot.beanName.toLowerCase()).length + 1;
@@ -667,14 +669,31 @@ function App() {
       {sweetSpot && (
         <TastingNotesModal
           bean={sweetSpot.bean}
+          beanName={sweetSpot.beanName}
           method={sweetSpot.method}
           onSkip={() => setSweetSpot(null)}
           onSave={(notes) => {
-            const methodNotes = { ...(sweetSpot.bean.methodNotes ?? {}) };
+            const existing = sweetSpot.bean;
+            const methodNotes = { ...(existing?.methodNotes ?? {}) };
             if (notes) methodNotes[sweetSpot.method] = notes;
-            updateBean({ ...sweetSpot.bean, methodNotes });
+            if (existing) {
+              updateBean({ ...existing, methodNotes });
+            } else {
+              addBean({
+                id: generateId(),
+                name: sweetSpot.beanName,
+                methodNotes,
+                isActive: true,
+                createdAt: new Date(),
+              });
+            }
             setSweetSpot(null);
-            showToast(`Saved how ${sweetSpot.bean.name} tastes as ${sweetSpot.method}`, 'success');
+            showToast(
+              existing
+                ? `Saved how ${sweetSpot.beanName} tastes as ${sweetSpot.method}`
+                : `Added ${sweetSpot.beanName} to your Bean Library`,
+              'success',
+            );
           }}
         />
       )}
