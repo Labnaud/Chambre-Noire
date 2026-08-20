@@ -3,6 +3,7 @@ import type { SuggestedSettings } from '../lib/suggestions';
 import { getBaristaTip } from '../lib/suggestions';
 import { yieldLabel, formatDuration, targetTimeLabel } from '../lib/brew';
 import { STRENGTHS } from '../constants';
+import ExtractionCompass from './ExtractionCompass';
 import Icons from './Icons';
 
 interface SuggestionCardProps {
@@ -207,8 +208,9 @@ export default function SuggestionCard({
                         <Icons.TrendingUp /> Recent Journey
                         <span className="dialin-journey__dir">oldest to newest</span>
                     </div>
+                    <ExtractionCompass shots={[...shotsForBean].slice(0, 5).reverse()} />
                     <div className="journey-rows">
-                        {shotsForBean.slice(0, 5).reverse().map((shot) => {
+                        {shotsForBean.slice(0, 5).reverse().map((shot, idx) => {
                             const shotConfig = shot.rating ? ratingConfig[shot.rating] : null;
                             const strengthTone = STRENGTHS.find(x => x.value === shot.strength);
                             const parts = [`G${shot.grindSize}`];
@@ -220,6 +222,7 @@ export default function SuggestionCard({
                             }
                             return (
                                 <div key={shot.id} className="journey-row">
+                                    <span className="journey-row__n">{idx + 1}</span>
                                     <span
                                         className={`journey-row__taste ${shotConfig ? `journey-row__taste--${shotConfig.colorClass}` : 'journey-row__taste--unrated'}`}
                                         style={shot.rating ? { color: ratingColors[shot.rating] } : undefined}

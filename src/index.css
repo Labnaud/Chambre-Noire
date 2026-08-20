@@ -6605,7 +6605,7 @@ textarea:focus-visible {
 
 .journey-row {
   display: grid;
-  grid-template-columns: 5.5rem 1fr auto;
+  grid-template-columns: 1.1rem 5.5rem 1fr auto;
   align-items: baseline;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
@@ -6656,6 +6656,86 @@ textarea:focus-visible {
 }
 
 @media (max-width: 420px) {
-  .journey-row { grid-template-columns: 5rem 1fr; }
-  .journey-row__strength { grid-column: 2; justify-self: start; }
+  .journey-row { grid-template-columns: 1.1rem 5rem 1fr; }
+  .journey-row__strength { grid-column: 3; justify-self: start; }
+}
+
+/* Extraction compass: extraction across, strength up, sweet spot in the
+   middle. Cells are shaded by distance from that cell, not by a measured
+   TDS/EY relationship the app does not have. */
+.compass {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.compass__cell {
+  fill: var(--color-mocha);
+  stroke: var(--color-espresso);
+  stroke-width: 1;
+}
+
+.compass__cell--sweet {
+  fill: color-mix(in srgb, var(--color-balanced) 45%, transparent);
+  stroke: var(--color-balanced);
+}
+
+.compass__yield {
+  stroke: var(--color-latte);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+  opacity: 0.75;
+}
+
+.compass__arrowhead {
+  fill: var(--color-latte);
+  opacity: 0.75;
+}
+
+.compass__path {
+  stroke: var(--color-cream);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-dasharray: 4 3;
+  opacity: 0.55;
+}
+
+.compass__dot {
+  stroke: var(--color-black-coffee);
+  stroke-width: 1.5;
+}
+
+.compass__dot--latest {
+  stroke: var(--color-cream);
+  stroke-width: 2;
+}
+
+.compass__dot-n {
+  font-size: 7px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  fill: var(--color-black-coffee);
+  pointer-events: none;
+}
+
+.compass__axis {
+  font-size: 8px;
+  font-family: var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--color-muted);
+}
+
+.compass__corner {
+  font-size: 7px;
+  font-family: var(--font-sans);
+  fill: var(--color-subtle);
+}
+
+.journey-row__n {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-subtle);
+  font-variant-numeric: lining-nums tabular-nums;
 }
