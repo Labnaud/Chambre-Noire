@@ -127,6 +127,22 @@ export default function ShotForm({
                 timer={timer}
             />
 
+            <DrinkControls
+                show={form.showDrink}
+                setShow={form.setShowDrink}
+                drink={form.drink}
+                setDrink={form.setDrink}
+                milkType={form.milkType}
+                setMilkType={form.setMilkType}
+                milkMl={form.milkMl}
+                setMilkMl={form.setMilkMl}
+                milkTempC={form.milkTempC}
+                setMilkTempC={form.setMilkTempC}
+                waterMl={form.waterMl}
+                setWaterMl={form.setWaterMl}
+                supported={profileFor(form.method).supportsDrink}
+            />
+
             <StrengthControl
                 strength={form.strength}
                 setStrength={form.setStrength}
@@ -146,21 +162,6 @@ export default function ShotForm({
                 setScored={form.setScored}
             />
 
-            <DrinkControls
-                show={form.showDrink}
-                setShow={form.setShowDrink}
-                drink={form.drink}
-                setDrink={form.setDrink}
-                milkType={form.milkType}
-                setMilkType={form.setMilkType}
-                milkMl={form.milkMl}
-                setMilkMl={form.setMilkMl}
-                milkTempC={form.milkTempC}
-                setMilkTempC={form.setMilkTempC}
-                waterMl={form.waterMl}
-                setWaterMl={form.setWaterMl}
-                supported={profileFor(form.method).supportsDrink}
-            />
 
 
             <div className="form-group">

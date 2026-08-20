@@ -6392,3 +6392,18 @@ textarea:focus-visible {
     transform: rotate(90deg);
   }
 }
+
+/* Shot timer: neither the mode labels nor the manual value should clip.
+   --text-xs at flex-basis 0 left "Stopwatch" without room on narrow panels,
+   and the 80px input is tight for a filter drawdown in the hundreds. */
+.shot-timer__mode-btn {
+  min-width: 0;
+  white-space: nowrap;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.shot-timer__input {
+  width: 6.5rem;
+  min-width: 0;
+}

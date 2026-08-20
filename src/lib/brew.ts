@@ -20,6 +20,9 @@ export interface BrewProfile {
     typicalRatio: number;
     /** Target brew time in seconds: espresso shot time, filter drawdown. */
     targetTimeSec: [number, number];
+    /** Starting dose and yield, so the fields open prefilled. */
+    defaultDoseIn: number;
+    defaultDoseOut: number;
     hasPourPattern: boolean;
     supportsIce: boolean;
     /** Can a milk or water drink be built on it. */
@@ -38,6 +41,8 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         ratioStyle: 'espresso',
         typicalRatio: 2,
         targetTimeSec: [25, 32],
+        defaultDoseIn: 18,
+        defaultDoseOut: 36, // the 1:2 golden rule
         hasPourPattern: false,
         supportsIce: false,
         supportsDrink: true,
@@ -51,6 +56,8 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         ratioStyle: 'filter',
         typicalRatio: 16.6,
         targetTimeSec: [180, 210], // 3:00-3:30 drawdown
+        defaultDoseIn: 15,
+        defaultDoseOut: 250, // 1:16.6
         hasPourPattern: true,
         supportsIce: true,
         supportsDrink: false,
@@ -64,6 +71,8 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         ratioStyle: 'filter',
         typicalRatio: 16,
         targetTimeSec: [240, 240], // 4 minute steep
+        defaultDoseIn: 30,
+        defaultDoseOut: 480, // 1:16
         hasPourPattern: false,
         supportsIce: false,
         supportsDrink: false,

@@ -132,3 +132,26 @@ describe('brew time targets', () => {
         expect(targetTimeLabel('French Press')).toBe('4:00');
     });
 });
+
+describe('default dose and yield', () => {
+    it('starts espresso on the 18g/36g golden rule', () => {
+        const p = profileFor('Espresso');
+        expect([p.defaultDoseIn, p.defaultDoseOut]).toEqual([18, 36]);
+    });
+
+    // The recipe sheet's 15 g row: 250 g total water, i.e. the 1:16.6 ratio
+    // rounded to a number you can actually pour.
+    it('starts V60 on the documented 15g / 250g row', () => {
+        const p = profileFor('V60');
+        expect([p.defaultDoseIn, p.defaultDoseOut]).toEqual([15, 250]);
+        expect(p.defaultDoseOut / p.defaultDoseIn).toBeCloseTo(16.6, 0);
+    });
+
+    it('gives every method a usable starting dose', () => {
+        for (const m of BREW_METHODS) {
+            const p = profileFor(m);
+            expect(p.defaultDoseIn).toBeGreaterThan(0);
+            expect(p.defaultDoseOut).toBeGreaterThan(p.defaultDoseIn);
+        }
+    });
+});

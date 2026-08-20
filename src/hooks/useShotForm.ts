@@ -34,16 +34,18 @@ export function useShotForm() {
     // they start expanded.
     const [showTimer, setShowTimer] = useState(true);
     const [showDose, setShowDose] = useState(true);
-    const [manualTimeInput, setManualTimeInput] = useState(false);
+    const [manualTimeInput, setManualTimeInput] = useState(true);
     const [manualTimerValue, setManualTimerValue] = useState<string>('');
-    const [doseIn, setDoseIn] = useState<string>('');
-    const [doseOut, setDoseOut] = useState<string>('');
+    const [doseIn, setDoseIn] = useState<string>(String(profileFor('Espresso').defaultDoseIn));
+    const [doseOut, setDoseOut] = useState<string>(String(profileFor('Espresso').defaultDoseOut));
 
     // Switching method re-baselines the water temperature, since the sensible
     // range for espresso and for filter barely overlap.
     const changeMethod = (next: BrewMethod) => {
         setMethod(next);
         setWaterTempC(profileFor(next).defaultTempC);
+        setDoseIn(String(profileFor(next).defaultDoseIn));
+        setDoseOut(String(profileFor(next).defaultDoseOut));
         if (!profileFor(next).supportsIce) setIced(false);
         if (!profileFor(next).supportsDrink) setShowDrink(false);
     };
@@ -53,8 +55,8 @@ export function useShotForm() {
         setNotes('');
         setSessionLog('');
         setManualTimerValue('');
-        setDoseIn('');
-        setDoseOut('');
+        setDoseIn(String(profileFor(method).defaultDoseIn));
+        setDoseOut(String(profileFor(method).defaultDoseOut));
         setIceGrams('');
         setMilkMl('');
         setMilkTempC('');
@@ -73,6 +75,8 @@ export function useShotForm() {
         setGrindSize(shot.grindSize);
         setWaterTempC(shot.waterTempC ?? profileFor(shot.method).defaultTempC);
         setStrength(shot.strength);
+        setDoseIn(String(shot.doseIn ?? profileFor(shot.method).defaultDoseIn));
+        setDoseOut(String(shot.doseOut ?? profileFor(shot.method).defaultDoseOut));
         if (shot.drink) {
             setShowDrink(true);
             setDrink(shot.drink);
@@ -100,6 +104,8 @@ export function useShotForm() {
         setGrindSize(r.grindSize);
         setWaterTempC(r.waterTempC ?? profileFor(r.method).defaultTempC);
         setStrength(r.strength);
+        setDoseIn(String(profileFor(r.method).defaultDoseIn));
+        setDoseOut(String(profileFor(r.method).defaultDoseOut));
         if (r.drink) {
             setShowDrink(true);
             setDrink(r.drink);
