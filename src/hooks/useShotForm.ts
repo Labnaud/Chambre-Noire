@@ -20,8 +20,6 @@ export function useShotForm() {
     const [score, setScore] = useState(3.5);
     const [scored, setScored] = useState(true);
     const [notes, setNotes] = useState('');
-    const [sessionLog, setSessionLog] = useState('');
-    const [showSessionLog, setShowSessionLog] = useState(false);
 
     const [showDrink, setShowDrink] = useState(false);
     const [drink, setDrink] = useState<EspressoDrink>('Latte');
@@ -53,7 +51,6 @@ export function useShotForm() {
     const reset = () => {
         setBeanName('');
         setNotes('');
-        setSessionLog('');
         setManualTimerValue('');
         setDoseIn(String(profileFor(method).defaultDoseIn));
         setDoseOut(String(profileFor(method).defaultDoseOut));
@@ -88,8 +85,6 @@ export function useShotForm() {
         setMilkTempC(shot.milkTempC?.toString() ?? '');
         setWaterMl(shot.waterMl?.toString() ?? '');
         setNotes(shot.notes ?? '');
-        setSessionLog(shot.sessionLog ?? '');
-        setShowSessionLog(Boolean(shot.sessionLog));
         setScored(shot.score !== undefined);
         setScore(shot.score ?? 3.5);
     };
@@ -131,8 +126,6 @@ export function useShotForm() {
         score, setScore,
         scored, setScored,
         notes, setNotes,
-        sessionLog, setSessionLog,
-        showSessionLog, setShowSessionLog,
         showDrink, setShowDrink,
         drink, setDrink,
         milkType, setMilkType,

@@ -125,13 +125,6 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
                     <p>{shot.notes}</p>
                 </div>
             )}
-
-            {shot.sessionLog && (
-                <div className="shot-detail__notes">
-                    <span className="shot-detail__label">Session Log</span>
-                    <pre className="shot-detail__session-log">{shot.sessionLog}</pre>
-                </div>
-            )}
         </>
     );
 }

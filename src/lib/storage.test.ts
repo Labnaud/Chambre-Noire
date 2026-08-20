@@ -366,16 +366,6 @@ describe('score and session log validation', () => {
         expect(loadShots()[0].score).toBeUndefined();
     });
 
-    it('keeps a multi-line session log intact', () => {
-        const log = 'shot 1: 24s, sour\n-> 2 finer\nshot 2: 29s, balanced';
-        store({ sessionLog: log });
-        expect(loadShots()[0].sessionLog).toBe(log);
-    });
-
-    it('rejects a non-string session log', () => {
-        store({ sessionLog: 42 });
-        expect(loadShots()).toHaveLength(0);
-    });
 });
 
 describe('strength as a target scale', () => {

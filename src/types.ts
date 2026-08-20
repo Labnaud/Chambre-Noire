@@ -41,7 +41,6 @@ export interface ShotLog {
   milkTempC?: number;
   waterMl?: number; // Americano
   notes?: string; // short tasting note
-  sessionLog?: string; // long-form: trial shots, what changed, conclusions
   extractionTime?: number; // seconds
   doseIn?: number; // grams of coffee
   doseOut?: number; // liquid out for espresso, total water for filter (see brew profile)

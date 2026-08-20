@@ -344,7 +344,6 @@ function App() {
       milkTempC: form.showDrink && form.milkTempC ? parseFloat(form.milkTempC) : undefined,
       waterMl: form.showDrink && form.waterMl ? parseFloat(form.waterMl) : undefined,
       notes: form.notes.trim() || undefined,
-      sessionLog: form.sessionLog.trim() || undefined,
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
       extractionTime: readExtractionTime(),
@@ -473,7 +472,6 @@ function App() {
       milkTempC: form.showDrink && form.milkTempC ? parseFloat(form.milkTempC) : undefined,
       waterMl: form.showDrink && form.waterMl ? parseFloat(form.waterMl) : undefined,
       notes: form.notes.trim() || undefined,
-      sessionLog: form.sessionLog.trim() || undefined,
       extractionTime: readExtractionTime(),
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
@@ -585,7 +583,6 @@ function App() {
               setEditingShot(null);
               form.setBeanName('');
               form.setNotes('');
-              form.setSessionLog('');
               form.setDoseIn('');
               form.setDoseOut('');
               showToast('Edit cancelled', 'info');

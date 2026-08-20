@@ -182,39 +182,6 @@ export default function ShotForm({
                 />
             </div>
 
-            <div className="advanced-tools">
-                <div className="advanced-group">
-                    <button
-                        type="button"
-                        className={`advanced-toggle ${form.showSessionLog ? 'advanced-toggle--active' : ''}`}
-                        onClick={() => form.setShowSessionLog(!form.showSessionLog)}
-                        aria-expanded={form.showSessionLog}
-                    >
-                        <Icons.Clipboard />
-                        <span>Session Log</span>
-                        <span className="advanced-toggle__badge">{form.sessionLog.trim() ? 'Written' : 'Empty'}</span>
-                        {form.showSessionLog ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
-                    </button>
-                    <div className={`collapsible ${form.showSessionLog ? 'collapsible--open' : ''}`}>
-                        <div className="collapsible__inner" inert={!form.showSessionLog ? true : undefined}>
-                            <div className="session-log">
-                                <label className="form-label" htmlFor="shot-session-log">
-                                    Trial shots, what you changed, and what you concluded
-                                </label>
-                                <textarea
-                                    id="shot-session-log"
-                                    className="form-input form-input--textarea session-log__field"
-                                    rows={8}
-                                    placeholder={'18g / 36g / 24s - ran fast, sour\n-> 2 steps finer\n18g / 36g / 29s - balanced, keep this'}
-                                    value={form.sessionLog}
-                                    onChange={(e) => form.setSessionLog(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div className="form-actions">
                 <button type="submit" className={editingShot ? 'btn-submit btn-submit--edit' : 'btn-submit'}>
                     {editingShot ? 'Update Shot' : 'Log Shot'}

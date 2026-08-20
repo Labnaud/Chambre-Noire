@@ -71,7 +71,7 @@ function csvCell(value: string): string {
 }
 
 export function buildCSV(shots: ShotLog[]): string {
-    const headers = ['Date', 'Bean', 'Brew', 'Method', 'Pour Pattern', 'Iced', 'Basket', 'Grind', 'Water Temp (C)', 'Strength', 'Rating', 'Score', 'Extraction Time', 'Dose In (g)', 'Yield (g)', 'Yield Means', 'Ice (g)', 'Hot Water (g)', 'Ratio', 'Drink', 'Milk Type', 'Milk (mL)', 'Milk Temp (C)', 'Water (mL)', 'Notes', 'Session Log'];
+    const headers = ['Date', 'Bean', 'Brew', 'Method', 'Pour Pattern', 'Iced', 'Basket', 'Grind', 'Water Temp (C)', 'Strength', 'Rating', 'Score', 'Extraction Time', 'Dose In (g)', 'Yield (g)', 'Yield Means', 'Ice (g)', 'Hot Water (g)', 'Ratio', 'Drink', 'Milk Type', 'Milk (mL)', 'Milk Temp (C)', 'Water (mL)', 'Notes'];
     const csvRows = [headers.join(',')];
 
     shots.forEach(shot => {
@@ -102,7 +102,6 @@ export function buildCSV(shots: ShotLog[]): string {
             shot.milkTempC ?? '',
             shot.waterMl ?? '',
             csvCell(shot.notes || ''),
-            csvCell(shot.sessionLog || ''),
         ];
         csvRows.push(row.join(','));
     });

@@ -267,16 +267,12 @@ describe('CSV score and session log', () => {
         grindSize: 12, strength: 2 as const, timestamp: new Date('2026-05-01T10:00:00Z'),
     };
 
-    it('includes both new columns in the header', () => {
-        const header = buildCSV([]).split('\n')[0];
-        expect(header).toContain('Score');
-        expect(header).toContain('Session Log');
+    it('includes the score column in the header', () => {
+        expect(buildCSV([]).split('\n')[0]).toContain('Score');
     });
 
-    it('writes a score and quotes a multi-line session log', () => {
-        const csv = buildCSV([{ ...shot, score: 4.5, sessionLog: 'line one\nline two' }]);
-        expect(csv).toContain('4.5');
-        expect(csv).toContain('"line one\nline two"');
+    it('writes the score', () => {
+        expect(buildCSV([{ ...shot, score: 4.5 }])).toContain('4.5');
     });
 
     it('leaves the score cell empty when unscored', () => {

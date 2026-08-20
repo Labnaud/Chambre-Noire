@@ -73,7 +73,6 @@ export function validShotRecord(value: unknown): value is ShotLog {
     if (value.score !== undefined
         && (typeof value.score !== 'number' || !Number.isFinite(value.score)
             || value.score < SCORE_MIN || value.score > SCORE_MAX)) return false;
-    if (!isOptionalString(value.sessionLog)) return false;
     if (!isOptionalString(value.notes) || !isOptionalFiniteNumber(value.extractionTime)
         || !isOptionalFiniteNumber(value.doseIn) || !isOptionalFiniteNumber(value.doseOut)
         || !isOptionalFiniteNumber(value.iceGrams) || !isOptionalFiniteNumber(value.milkMl)

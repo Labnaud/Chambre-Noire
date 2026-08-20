@@ -1432,76 +1432,6 @@ button.grind-control__value:hover {
 }
 
 /* Discrete Rating Slider */
-.rating-slider {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rating-slider__label {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  font-family: var(--font-display);
-  text-align: center;
-  transition: color 0.2s ease;
-}
-
-.rating-slider__track {
-  position: relative;
-  padding: 0.5rem 0;
-}
-
-.rating-slider__input {
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: var(--radius-xs);
-  background: linear-gradient(to right,
-      var(--color-very-sour) 0%,
-      var(--color-sour) 25%,
-      var(--color-balanced) 50%,
-      var(--color-bitter) 75%,
-      var(--color-very-bitter) 100%);
-  outline: none;
-  cursor: pointer;
-}
-
-.rating-slider__input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--color-cream);
-  border: 3px solid var(--rating-color, var(--color-caramel));
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s ease, transform 0.15s ease;
-}
-
-.rating-slider__input::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-
-.rating-slider__input::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--color-cream);
-  border: 3px solid var(--rating-color, var(--color-caramel));
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.rating-slider__scale {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-xs);
-  color: var(--color-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
 
 /* Froth Lab - Collapsible Milk Section */
 .froth-toggle {
@@ -1700,19 +1630,6 @@ button.grind-control__value:hover {
 }
 
 /* Thicker Rating Slider */
-.rating-slider__input {
-  height: 10px;
-}
-
-.rating-slider__input::-webkit-slider-thumb {
-  width: 28px;
-  height: 28px;
-}
-
-.rating-slider__input::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
-}
 
 /* Larger Pill Buttons for Mobile (44px min height) */
 .pill-btn {
@@ -1794,10 +1711,7 @@ button.grind-control__value:hover {
   }
 
   /* Rating slider label */
-  .rating-slider__label {
-    font-size: var(--text-base);
-  }
-
+  
   /* History item layout */
   .history-item {
     flex-wrap: wrap;
@@ -4747,10 +4661,7 @@ button.grind-control__value:hover {
 
   /* Larger slider track */
   .slider--thick,
-  .rating-slider__input {
-    height: 32px;
-  }
-
+  
   /* Larger secondary toggle tap target */
   .rating-later-toggle {
     min-height: 44px;
@@ -6081,37 +5992,6 @@ textarea:focus-visible {
   color: var(--color-muted);
 }
 
-.session-log {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.85rem;
-}
-
-.session-log__field {
-  min-height: 9rem;
-  resize: vertical;
-  line-height: 1.55;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-}
-
-.shot-detail__session-log {
-  margin: 0.35rem 0 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-espresso);
-  border: 1px solid var(--color-mocha);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-  color: var(--color-cream);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  max-height: 22rem;
-  overflow-y: auto;
-}
-
 /* ============================================
    Brew method modifiers and drink builder
    ============================================ */
@@ -6630,6 +6510,24 @@ textarea:focus-visible {
 
 .tasting-prompt__hint {
   margin: 0.35rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+/* Taste rating as discrete pills. Five fixed values do not want a slider,
+   and on a phone the drag was the thing bouncing focus out of the control. */
+.rating-pills {
+  gap: 0.35rem;
+}
+
+.rating-pill--active {
+  color: var(--color-black-coffee);
+  font-weight: 600;
+}
+
+.rating-hint {
+  margin: 0.4rem 0 0;
   font-size: var(--text-xs);
   color: var(--color-muted);
   line-height: 1.45;

@@ -9,6 +9,9 @@ Forked from [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboa
 - Bundled Vercel Web Analytics. The app now makes no outbound network requests.
 - The upstream author's funding and personal links.
 
+### Removed
+- The per-shot session log. Every trial shot is now its own record, so the dial-in narrative is the shot history itself; cross-shot conclusions belong on the bean, where the per-method flavour notes now live.
+
 ### Added
 - Logged shots now appear as rows in the caffeine intake list instead of only feeding the curve invisibly. Removing one stops it counting toward caffeine while leaving the shot in your history, and exclusions can be undone from the same list.
 
