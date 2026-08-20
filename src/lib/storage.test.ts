@@ -397,3 +397,31 @@ describe('strength as a target scale', () => {
         expect(loadShots()).toHaveLength(0);
     });
 });
+
+describe('bean method notes', () => {
+    const bean = (over: object) => JSON.stringify([{
+        id: 'b1', name: 'Ethiopia', isActive: true, createdAt: '2026-05-01T10:00:00.000Z', ...over,
+    }]);
+
+    it('keeps a note per method', () => {
+        localStorage.setItem('chambre-noire-beans', bean({
+            methodNotes: { Espresso: 'nutty, dense', V60: 'fruity, jammy' },
+        }));
+        expect(loadBeans()[0].methodNotes).toEqual({ Espresso: 'nutty, dense', V60: 'fruity, jammy' });
+    });
+
+    it('rejects a note under an unknown method', () => {
+        localStorage.setItem('chambre-noire-beans', bean({ methodNotes: { Aeropress: 'x' } }));
+        expect(loadBeans()).toHaveLength(0);
+    });
+
+    it('rejects a non-string note', () => {
+        localStorage.setItem('chambre-noire-beans', bean({ methodNotes: { Espresso: 5 } }));
+        expect(loadBeans()).toHaveLength(0);
+    });
+
+    it('treats an absent map as valid', () => {
+        localStorage.setItem('chambre-noire-beans', bean({}));
+        expect(loadBeans()[0].methodNotes).toBeUndefined();
+    });
+});

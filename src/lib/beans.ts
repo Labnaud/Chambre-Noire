@@ -1,4 +1,4 @@
-import type { ShotLog, BeanProfile } from '../types';
+import type { ShotLog, BeanProfile, BrewMethod } from '../types';
 
 export function getDaysSinceRoast(roastDate: string | undefined): number | null {
     if (!roastDate) return null;
@@ -14,6 +14,15 @@ export function getFreshnessStatus(days: number | null): { label: string; color:
     if (days <= 21) return { label: 'Peak', color: 'var(--color-balanced)' };
     if (days <= 35) return { label: 'Fading', color: 'var(--color-sour)' };
     return { label: 'Stale', color: 'var(--color-very-bitter)' };
+}
+
+export function isDialedIn(beanName: string, shots: ShotLog[], method: BrewMethod): boolean {
+    const key = beanName.trim().toLowerCase();
+    if (!key) return false;
+    return shots.some(s =>
+        s.beanName.trim().toLowerCase() === key
+        && s.method === method
+        && s.rating === 'Balanced');
 }
 
 export function getUniqueBeans(shots: ShotLog[]): string[] {

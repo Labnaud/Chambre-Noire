@@ -81,7 +81,13 @@ export interface BeanProfile {
   roastLevel?: RoastLevel;
   processMethod?: ProcessMethod;
   roastDate?: string; // ISO date
-  flavorNotes?: string;
+  flavorNotes?: string; // what the roaster prints on the bag
+  /**
+   * How the bean actually tastes on each method. The same bean reads fruity
+   * as a V60 and nutty as an espresso, so this cannot live on the bean alone
+   * and cannot live on a single shot either.
+   */
+  methodNotes?: Partial<Record<BrewMethod, string>>;
   bagSizeGrams?: number; // for inventory + cost-per-shot
   pricePaid?: number; // in the user's own currency
   isActive: boolean;

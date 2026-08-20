@@ -582,6 +582,7 @@ function App() {
             ratingColors={RATING_COLORS}
             onApplySuggestion={applySuggestedSettings}
             onApplyStartingPoint={applyStartingPoint}
+            onUpdateBean={updateBean}
           />
         </div>
 

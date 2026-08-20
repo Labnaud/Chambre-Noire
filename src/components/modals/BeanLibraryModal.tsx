@@ -220,7 +220,7 @@ export default function BeanLibraryModal({
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label" htmlFor="bean-flavor-notes">Flavor Notes</label>
+                            <label className="form-label" htmlFor="bean-flavor-notes">Roaster&apos;s Notes</label>
                             <input
                                 id="bean-flavor-notes"
                                 type="text"
@@ -296,6 +296,18 @@ export default function BeanLibraryModal({
                                                     {bean.origin && <span>{bean.origin}</span>}
                                                     {bean.roastLevel && <span>{bean.roastLevel}</span>}
                                                 </div>
+                                                {bean.flavorNotes && (
+                                                    <div className="bean-card__notes">
+                                                        <span className="bean-card__notes-label">Roaster</span>
+                                                        {bean.flavorNotes}
+                                                    </div>
+                                                )}
+                                                {bean.methodNotes?.[method] && (
+                                                    <div className="bean-card__notes">
+                                                        <span className="bean-card__notes-label">As {method}</span>
+                                                        {bean.methodNotes[method]}
+                                                    </div>
+                                                )}
                                                 {bean.roastDate && (
                                                     <div
                                                         className="bean-card__freshness"

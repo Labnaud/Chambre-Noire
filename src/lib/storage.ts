@@ -97,6 +97,12 @@ export function validBeanRecord(value: unknown): value is BeanProfile {
     if (!isOptionalString(value.roaster) || !isOptionalString(value.origin) || !isOptionalString(value.roastDate)
         || !isOptionalString(value.flavorNotes) || !isOptionalFiniteNumber(value.bagSizeGrams)
         || !isOptionalFiniteNumber(value.pricePaid)) return false;
+    if (value.methodNotes !== undefined) {
+        if (!isRecord(value.methodNotes)) return false;
+        for (const [method, note] of Object.entries(value.methodNotes)) {
+            if (!isOneOf(method, BREW_METHODS) || typeof note !== 'string') return false;
+        }
+    }
     if (value.roastLevel !== undefined && !isOneOf(value.roastLevel, ROAST_LEVELS)) return false;
     if (value.processMethod !== undefined && !isOneOf(value.processMethod, PROCESS_METHODS)) return false;
     return parsesToValidDate(value.createdAt);

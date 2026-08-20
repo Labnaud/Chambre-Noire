@@ -38,6 +38,7 @@ interface ShotFormProps {
     ratingColors: Record<Rating, string>;
     onApplySuggestion: () => void;
     onApplyStartingPoint: (doseIn: number, doseOut: number, grind: number) => void;
+    onUpdateBean: (bean: BeanProfile) => void;
 }
 
 export default function ShotForm({
@@ -61,6 +62,7 @@ export default function ShotForm({
     ratingColors,
     onApplySuggestion,
     onApplyStartingPoint,
+    onUpdateBean,
 }: ShotFormProps) {
     return (
         <form className="shot-form" onSubmit={onSubmit}>
@@ -98,6 +100,7 @@ export default function ShotForm({
                 ratingColors={ratingColors}
                 onApply={onApplySuggestion}
                 onApplyStartingPoint={onApplyStartingPoint}
+                onUpdateBean={onUpdateBean}
             />
 
             <BrewSettingControls

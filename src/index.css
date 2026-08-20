@@ -6530,3 +6530,79 @@ textarea:focus-visible {
 @media (max-width: 560px) {
   .starting-point__rows { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Roaster's notes vs how the bean tastes on this method */
+.roaster-notes {
+  margin: 0.6rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-cream);
+  line-height: 1.45;
+}
+
+.roaster-notes__label,
+.method-notes__label {
+  display: block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin-bottom: 0.15rem;
+}
+
+.method-notes {
+  margin-top: 0.6rem;
+}
+
+.method-notes__display {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px dashed transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.4rem;
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  cursor: text;
+  transition: var(--transition-base);
+}
+
+.method-notes__display:hover {
+  border-color: var(--color-mocha);
+}
+
+.method-notes__display .icon {
+  width: 0.85em;
+  height: 0.85em;
+  color: var(--color-muted);
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.method-notes__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.bean-card__notes {
+  font-size: var(--text-xs);
+  color: var(--color-cream);
+  line-height: 1.45;
+  margin-top: 0.2rem;
+}
+
+.bean-card__notes-label {
+  display: inline-block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  margin-right: 0.35rem;
+}

@@ -4,6 +4,7 @@ import {
     getFreshnessStatus,
     getUniqueBeans,
     getFreshnessAlert,
+    isDialedIn,
 } from './beans';
 import type { ShotLog, BeanProfile } from '../types';
 
@@ -115,5 +116,35 @@ describe('getFreshnessAlert', () => {
         const roast40 = new Date(NOW.getTime() - 40 * 24 * 60 * 60 * 1000).toISOString();
         const alert = getFreshnessAlert('ETHIOPIA', [makeBean({ name: 'Ethiopia', roastDate: roast40 })]);
         expect(alert).not.toBeNull();
+    });
+});
+
+// A flavour note only means something once the pairing is established; before
+// that it describes a bad extraction rather than the bean.
+describe('isDialedIn', () => {
+    const mk = (over: Partial<ShotLog>): ShotLog => ({
+        id: 'x', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+        grindSize: 21, strength: 2, timestamp: new Date(), ...over,
+    });
+
+    it('is true once a Balanced shot exists for that bean and method', () => {
+        expect(isDialedIn('Ethiopia', [mk({ rating: 'Balanced' })], 'Espresso')).toBe(true);
+    });
+
+    it('is false while the pairing has only off-target shots', () => {
+        expect(isDialedIn('Ethiopia', [mk({ rating: 'Sour' }), mk({ rating: 'Bitter' })], 'Espresso')).toBe(false);
+    });
+
+    it('is false when the Balanced shot was a different method', () => {
+        expect(isDialedIn('Ethiopia', [mk({ rating: 'Balanced', method: 'V60' })], 'Espresso')).toBe(false);
+    });
+
+    it('is false for a different bean', () => {
+        expect(isDialedIn('Colombia', [mk({ rating: 'Balanced' })], 'Espresso')).toBe(false);
+    });
+
+    it('ignores unrated shots and an empty bean name', () => {
+        expect(isDialedIn('Ethiopia', [mk({})], 'Espresso')).toBe(false);
+        expect(isDialedIn('   ', [mk({ rating: 'Balanced' })], 'Espresso')).toBe(false);
     });
 });

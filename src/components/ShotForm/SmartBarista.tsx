@@ -1,10 +1,11 @@
 import type { BeanProfile, ShotLog, Rating, BrewMethod } from '../../types';
 import type { SuggestedSettings } from '../../lib/suggestions';
-import { getFreshnessAlert, getDaysSinceRoast } from '../../lib/beans';
+import { getFreshnessAlert, getDaysSinceRoast, isDialedIn } from '../../lib/beans';
 import { getBeanInventory } from '../../lib/inventory';
 import { getEspressoStartingPoint, getFreshnessGrindNote } from '../../lib/suggestions';
 import { profileFor } from '../../lib/brew';
 import StartingPointCard from './StartingPointCard';
+import MethodNotes from './MethodNotes';
 import SuggestionCard from '../SuggestionCard';
 import Icons from '../Icons';
 
@@ -20,6 +21,7 @@ interface SmartBaristaProps {
     ratingColors: Record<Rating, string>;
     onApply: () => void;
     onApplyStartingPoint: (doseIn: number, doseOut: number, grind: number) => void;
+    onUpdateBean: (bean: BeanProfile) => void;
 }
 
 // Sits inside the form between the brew shape and the dials: by this point the
@@ -27,7 +29,7 @@ interface SmartBaristaProps {
 // temperature controls it talks about are directly below it.
 export default function SmartBarista({
     beanName, method, beans, shots, lastShot, suggestion, shotsForBean,
-    ratingConfig, ratingColors, onApply, onApplyStartingPoint,
+    ratingConfig, ratingColors, onApply, onApplyStartingPoint, onUpdateBean,
 }: SmartBaristaProps) {
     const freshness = getFreshnessAlert(beanName, beans);
 
@@ -92,6 +94,22 @@ export default function SmartBarista({
                 ratingConfig={ratingConfig}
                 ratingColors={ratingColors}
                 onApply={onApply}
+            />
+
+            {profile?.flavorNotes && (
+                <p className="roaster-notes">
+                    <span className="roaster-notes__label">Roaster&apos;s notes</span>
+                    {profile.flavorNotes}
+                </p>
+            )}
+
+            <MethodNotes
+                key={`${profile?.id ?? 'none'}:${method}`}
+                bean={profile}
+                beanName={beanName}
+                method={method}
+                dialedIn={isDialedIn(beanName, shots, method)}
+                onUpdateBean={onUpdateBean}
             />
         </section>
     );
