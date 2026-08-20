@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
     computeCaffeine, DAILY_LIMIT, caffeineLevelAt, solveKa, resolveBedtime,
-    computeForecast, dosesFromShots, allDoses,
+    computeForecast, dosesFromShots, allDoses, resolveTimeToday, includedShots,
 } from './caffeine';
 import type { ShotLog, Basket } from '../types';
 
@@ -238,5 +238,64 @@ describe('parity with the reference half-life calculator', () => {
     it('the same coffees at 16:00/16:30 leave 75.4mg at midnight', () => {
         const doses = [{ mg: 95, at: d(16) }, { mg: 95, at: d(16, 30) }];
         expect(caffeineLevelAt(doses, new Date(2026, 4, 2, 0, 0), HL)).toBeCloseTo(75.4, 1);
+    });
+});
+
+describe('resolveTimeToday', () => {
+    const now = new Date(2026, 4, 12, 15, 0); // 15:00
+
+    it('puts an earlier time on today', () => {
+        const at = resolveTimeToday('08:30', now);
+        expect(at.getDate()).toBe(12);
+        expect(at.getHours()).toBe(8);
+        expect(at.getMinutes()).toBe(30);
+    });
+
+    // A time still ahead of now cannot have happened yet today, so it was
+    // yesterday. This keeps the curve continuous across midnight.
+    it('puts a later time on yesterday', () => {
+        const at = resolveTimeToday('22:00', now);
+        expect(at.getDate()).toBe(11);
+        expect(at.getHours()).toBe(22);
+    });
+
+    it('treats the current minute as today', () => {
+        expect(resolveTimeToday('15:00', now).getDate()).toBe(12);
+    });
+
+    it('zeroes seconds so repeated entries are stable', () => {
+        const at = resolveTimeToday('09:15', now);
+        expect(at.getSeconds()).toBe(0);
+        expect(at.getMilliseconds()).toBe(0);
+    });
+
+    it('falls back to now on unparseable input', () => {
+        expect(resolveTimeToday('not a time', now).getTime()).toBe(now.getTime());
+    });
+});
+
+describe('includedShots', () => {
+    const a = shot('Double');
+    const b = { ...shot('Single'), id: 'other' };
+
+    it('returns everything when nothing is excluded', () => {
+        expect(includedShots([a, b], new Set())).toHaveLength(2);
+    });
+
+    it('drops an excluded shot', () => {
+        expect(includedShots([a, b], new Set([b.id])).map(s => s.id)).toEqual([a.id]);
+    });
+
+    // Excluding is not deleting: the caller keeps the original array.
+    it('does not mutate the input', () => {
+        const shots = [a, b];
+        includedShots(shots, new Set([b.id]));
+        expect(shots).toHaveLength(2);
+    });
+
+    it('removes an excluded shot from the caffeine total', () => {
+        const full = computeCaffeine([a, b], []);
+        const trimmed = computeCaffeine(includedShots([a, b], new Set([b.id])), []);
+        expect(trimmed.todayCaffeine).toBeLessThan(full.todayCaffeine);
     });
 });

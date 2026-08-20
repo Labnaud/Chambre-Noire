@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import type { ShotLog, CaffeineEntry, CaffeinePrefs } from '../../types';
 import {
-    computeCaffeine, computeForecast, allDoses,
+    computeCaffeine, computeForecast, allDoses, includedShots,
+    caffeineForBasket, resolveTimeToday,
     INTAKE_PRESETS, QUICK_ADD_PRESETS,
 } from '../../lib/caffeine';
+import { describeBrew } from '../../lib/brew';
 import { generateId } from '../../lib/format';
 import { useFocusTrap } from '../../hooks';
 import CaffeineCurve from '../CaffeineCurve';
@@ -17,7 +19,20 @@ interface CaffeineModalProps {
     setPref: <K extends keyof CaffeinePrefs>(key: K, value: CaffeinePrefs[K]) => void;
     onAddIntake: (entry: CaffeineEntry) => void;
     onDeleteIntake: (id: string) => void;
+    excludedShots: Set<string>;
+    onExcludeShot: (id: string) => void;
+    onRestoreShot: (id: string) => void;
     onClose: () => void;
+}
+
+// One row in the intake list: either a logged shot or a manual drink.
+interface DoseRow {
+    key: string;
+    kind: 'shot' | 'entry';
+    id: string;
+    label: string;
+    mg: number;
+    at: Date;
 }
 
 // Sentinel for the "type your own" option in the drink dropdown.
@@ -26,26 +41,34 @@ const CUSTOM = '__custom__';
 const clock = (d: Date) =>
     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-function toLocalInput(d: Date): string {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+// Same day label the curve uses, so a row from yesterday is obvious.
+const dayLabel = (d: Date, now: Date): string => {
+    const a = new Date(d); a.setHours(0, 0, 0, 0);
+    const b = new Date(now); b.setHours(0, 0, 0, 0);
+    const days = Math.round((b.getTime() - a.getTime()) / 86_400_000);
+    if (days === 0) return '';
+    if (days === 1) return 'yesterday';
+    return `${days}d ago`;
+};
 
 export default function CaffeineModal({
-    open, shots, intake, prefs, setPref, onAddIntake, onDeleteIntake, onClose,
+    open, shots, intake, prefs, setPref, onAddIntake, onDeleteIntake,
+    excludedShots, onExcludeShot, onRestoreShot, onClose,
 }: CaffeineModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
     const [addOpen, setAddOpen] = useState(false);
     const [preset, setPreset] = useState<string>(INTAKE_PRESETS[0].label); // CUSTOM = own drink
     const [customLabel, setCustomLabel] = useState('');
     const [mg, setMg] = useState(String(INTAKE_PRESETS[0].mg));
-    const [when, setWhen] = useState(() => toLocalInput(new Date()));
+    const [when, setWhen] = useState(() => clock(new Date()));
+    const [showExcluded, setShowExcluded] = useState(false);
 
     if (!open) return null;
 
     const now = new Date();
-    const daily = computeCaffeine(shots, intake);
-    const forecast = computeForecast(allDoses(shots, intake), prefs, now);
+    const counted = includedShots(shots, excludedShots);
+    const daily = computeCaffeine(counted, intake);
+    const forecast = computeForecast(allDoses(counted, intake), prefs, now);
 
     const quickAdd = (presetLabel: string, presetMg: number) => {
         onAddIntake({ id: generateId(), label: presetLabel, mg: presetMg, timestamp: new Date() });
@@ -58,21 +81,46 @@ export default function CaffeineModal({
 
     const submitEntry = () => {
         if (!canSubmit) return;
-        const at = new Date(when);
         onAddIntake({
             id: generateId(),
             label: entryLabel,
             mg: mgValue,
-            timestamp: Number.isNaN(at.getTime()) ? new Date() : at,
+            timestamp: resolveTimeToday(when, new Date()),
         });
         setAddOpen(false);
         setCustomLabel('');
-        setWhen(toLocalInput(new Date()));
+        setWhen(clock(new Date()));
     };
 
-    const recentIntake = [...intake]
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, 12);
+    // Shots and manual drinks in one list, newest first, so everything feeding
+    // the curve has a visible row.
+    const shotRows: DoseRow[] = shots
+        .filter(s => !excludedShots.has(s.id))
+        .map(s => ({
+            key: `shot:${s.id}`,
+            kind: 'shot' as const,
+            id: s.id,
+            label: `${s.beanName} (${describeBrew(s)})`,
+            mg: caffeineForBasket(s.basket),
+            at: new Date(s.timestamp),
+        }));
+
+    const entryRows: DoseRow[] = intake.map(e => ({
+        key: `entry:${e.id}`,
+        kind: 'entry' as const,
+        id: e.id,
+        label: e.label,
+        mg: e.mg,
+        at: new Date(e.timestamp),
+    }));
+
+    const rows = [...shotRows, ...entryRows]
+        .sort((a, b) => b.at.getTime() - a.at.getTime())
+        .slice(0, 20);
+
+    const excludedRows = shots
+        .filter(s => excludedShots.has(s.id))
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -202,7 +250,8 @@ export default function CaffeineModal({
                     <div className="caffeine-section">
                         <h3>Intake</h3>
                         <p className="caffeine-section__note">
-                            Every logged shot already counts toward the curve. Add anything else you drink here.
+                            Logged shots appear here automatically. Removing one stops it counting
+                            toward caffeine; the shot stays in your history.
                         </p>
 
                         <div className="caffeine-quick">
@@ -220,7 +269,7 @@ export default function CaffeineModal({
                             <button
                                 type="button"
                                 className="caffeine-quick__btn caffeine-quick__btn--ghost"
-                                onClick={() => { setWhen(toLocalInput(new Date())); setAddOpen(v => !v); }}
+                                onClick={() => { setWhen(clock(new Date())); setAddOpen(v => !v); }}
                                 aria-expanded={addOpen}
                             >
                                 {addOpen ? 'Cancel' : '+ Add drink'}
@@ -281,10 +330,10 @@ export default function CaffeineModal({
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label" htmlFor="intake-when">When</label>
+                                        <label className="form-label" htmlFor="intake-when">Time</label>
                                         <input
                                             id="intake-when"
-                                            type="datetime-local"
+                                            type="time"
                                             className="form-input form-input--sm"
                                             value={when}
                                             onChange={(e) => setWhen(e.target.value)}
@@ -302,27 +351,77 @@ export default function CaffeineModal({
                             </div>
                         )}
 
-                        {recentIntake.length > 0 ? (
+                        {rows.length > 0 ? (
                             <div className="caffeine-intake-list">
-                                {recentIntake.map(entry => (
-                                    <div key={entry.id} className="caffeine-intake-row">
-                                        <span className="caffeine-intake-row__label">{entry.label}</span>
-                                        <span className="caffeine-intake-row__meta">
-                                            {entry.mg} mg &middot; {clock(entry.timestamp)}
-                                        </span>
-                                        <button
-                                            className="caffeine-intake-row__delete"
-                                            onClick={() => onDeleteIntake(entry.id)}
-                                            title={`Remove ${entry.label}`}
-                                            aria-label={`Remove ${entry.label}`}
-                                        >
-                                            <Icons.Trash />
-                                        </button>
-                                    </div>
-                                ))}
+                                {rows.map(row => {
+                                    const day = dayLabel(row.at, now);
+                                    return (
+                                        <div key={row.key} className="caffeine-intake-row">
+                                            {row.kind === 'shot' && (
+                                                <span className="caffeine-intake-row__tag" title="From your shot log">
+                                                    Shot
+                                                </span>
+                                            )}
+                                            <span className="caffeine-intake-row__label">{row.label}</span>
+                                            <span className="caffeine-intake-row__meta">
+                                                {row.mg} mg &middot; {clock(row.at)}
+                                                {day && <span className="caffeine-intake-row__day"> {day}</span>}
+                                            </span>
+                                            <button
+                                                className="caffeine-intake-row__delete"
+                                                onClick={() => row.kind === 'shot'
+                                                    ? onExcludeShot(row.id)
+                                                    : onDeleteIntake(row.id)}
+                                                title={row.kind === 'shot'
+                                                    ? 'Stop counting this shot toward caffeine'
+                                                    : `Remove ${row.label}`}
+                                                aria-label={row.kind === 'shot'
+                                                    ? `Stop counting ${row.label} toward caffeine`
+                                                    : `Remove ${row.label}`}
+                                            >
+                                                <Icons.Trash />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ) : (
-                            <p className="caffeine-section__note">No extra drinks logged.</p>
+                            <p className="caffeine-section__note">Nothing counting toward caffeine yet.</p>
+                        )}
+
+                        {excludedRows.length > 0 && (
+                            <div className="caffeine-excluded">
+                                <button
+                                    type="button"
+                                    className="caffeine-excluded__toggle"
+                                    onClick={() => setShowExcluded(v => !v)}
+                                    aria-expanded={showExcluded}
+                                >
+                                    {excludedRows.length} shot{excludedRows.length === 1 ? '' : 's'} not counted
+                                    <span className="caffeine-excluded__chev">{showExcluded ? 'Hide' : 'Show'}</span>
+                                </button>
+                                {showExcluded && (
+                                    <div className="caffeine-intake-list">
+                                        {excludedRows.map(s => (
+                                            <div key={s.id} className="caffeine-intake-row caffeine-intake-row--excluded">
+                                                <span className="caffeine-intake-row__label">
+                                                    {s.beanName} ({describeBrew(s)})
+                                                </span>
+                                                <span className="caffeine-intake-row__meta">
+                                                    {caffeineForBasket(s.basket)} mg &middot; {clock(s.timestamp)}
+                                                </span>
+                                                <button
+                                                    className="caffeine-intake-row__restore"
+                                                    onClick={() => onRestoreShot(s.id)}
+                                                    title="Count this shot again"
+                                                >
+                                                    Restore
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
 

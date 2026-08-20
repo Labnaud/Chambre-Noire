@@ -8,7 +8,7 @@ import { getLogMessage } from './lib/milestones';
 import { getSuggestedSettings } from './lib/suggestions';
 import { getMaintenanceAlerts } from './lib/maintenance';
 import { RATINGS, RATING_COLORS, BALANCED_RATING_INDEX, GRIND_MIN, GRIND_MAX } from './constants';
-import { useToast, useConfirm, useTimer, useShots, useBeans, useRecipes, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock, useIntake, useCaffeinePrefs } from './hooks';
+import { useToast, useConfirm, useTimer, useShots, useBeans, useRecipes, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock, useIntake, useCaffeinePrefs, useCaffeineExclusions } from './hooks';
 import Icons from './components/Icons';
 import Header from './components/Header';
 import ShotForm from './components/ShotForm/ShotForm';
@@ -79,6 +79,7 @@ function App() {
   const { events: maintenanceEvents, recordCleaning, recordDescaling, lastEventFor: lastMaintenanceFor, replaceAll: setMaintenance } = useMaintenance();
   const { entries: intake, addEntry: addIntake, deleteEntry: deleteIntake, replaceAll: setIntake } = useIntake();
   const { prefs: caffeinePrefs, setPref: setCaffeinePref } = useCaffeinePrefs();
+  const { excluded: excludedShots, exclude: excludeShot, restore: restoreShot, replaceAll: setExcludedShots } = useCaffeineExclusions();
 
   const autocomplete = useBeanAutocomplete(beans, shots);
 
@@ -744,6 +745,9 @@ function App() {
             setPref={setCaffeinePref}
             onAddIntake={addIntake}
             onDeleteIntake={deleteIntake}
+            excludedShots={excludedShots}
+            onExcludeShot={excludeShot}
+            onRestoreShot={restoreShot}
             onClose={() => setShowCaffeine(false)}
           />
         )}
@@ -804,6 +808,7 @@ function App() {
                   setFavorites({});
                   setMaintenance([]);
                   setIntake([]);
+                  setExcludedShots([]);
                   setImportBackup(null);
                   showToast('All data cleared', 'success');
                   setShowSettings(false);

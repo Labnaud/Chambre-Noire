@@ -19,6 +19,7 @@ const BEANS_KEY = 'chambre-noire-beans';
 const MAINTENANCE_KEY = 'chambre-noire-maintenance';
 const INTAKE_KEY = 'chambre-noire-intake';
 const CAFFEINE_PREFS_KEY = 'chambre-noire-caffeine-prefs';
+const CAFFEINE_EXCLUDED_KEY = 'chambre-noire-caffeine-excluded';
 
 // Date revival, shared with the import path in dataIO.ts
 export const reviveShot = (s: ShotLog): ShotLog => ({ ...s, timestamp: new Date(s.timestamp) });
@@ -238,3 +239,7 @@ export function loadCaffeinePrefs(fallback: CaffeinePrefs): CaffeinePrefs {
     return { halfLifeHours, bedtime, targetMg };
 }
 export function saveCaffeinePrefs(prefs: CaffeinePrefs): void { saveJSON(CAFFEINE_PREFS_KEY, prefs); }
+
+// Shot ids excluded from the caffeine calculation.
+export function loadCaffeineExcluded(): string[] { return loadStringArray(CAFFEINE_EXCLUDED_KEY); }
+export function saveCaffeineExcluded(ids: string[]): void { saveStringArray(CAFFEINE_EXCLUDED_KEY, ids); }

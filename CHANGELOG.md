@@ -9,6 +9,9 @@ Forked from [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboa
 - Bundled Vercel Web Analytics. The app now makes no outbound network requests.
 - The upstream author's funding and personal links.
 
+### Added
+- Logged shots now appear as rows in the caffeine intake list instead of only feeding the curve invisibly. Removing one stops it counting toward caffeine while leaving the shot in your history, and exclusions can be undone from the same list.
+
 ### Documentation
 - Added `ARCHITECTURE.md` (layer model, data model, brew profiles, dial-in and caffeine engines, storage and validation, testing) and `CONTRIBUTING.md` (where a change belongs, how to add a brew method or drink, traps worth knowing).
 - Rewrote `README.md` and `SECURITY.md` for the fork, including the threat model and the deferred hardening items.

@@ -6185,3 +6185,68 @@ textarea:focus-visible {
 @media (max-width: 640px) {
   .drink-panel__inputs { grid-template-columns: 1fr; }
 }
+
+/* Shot rows and excluded shots in the caffeine intake list */
+.caffeine-intake-row__tag {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--color-caramel) 22%, transparent);
+  color: var(--color-latte);
+}
+
+.caffeine-intake-row__day {
+  color: var(--color-subtle);
+}
+
+.caffeine-intake-row--excluded {
+  opacity: 0.6;
+}
+
+.caffeine-intake-row--excluded .caffeine-intake-row__label {
+  text-decoration: line-through;
+}
+
+.caffeine-intake-row__restore {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-mocha);
+  border-radius: var(--radius-xs);
+  color: var(--color-latte);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.caffeine-intake-row__restore:hover {
+  border-color: var(--color-caramel);
+  color: var(--color-cream);
+}
+
+.caffeine-excluded {
+  margin-top: 0.6rem;
+}
+
+.caffeine-excluded__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.35rem 0;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.caffeine-excluded__chev {
+  color: var(--color-latte);
+}

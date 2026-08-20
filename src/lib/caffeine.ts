@@ -91,6 +91,25 @@ export function allDoses(shots: ShotLog[], entries: CaffeineEntry[]): CaffeineDo
     return [...dosesFromShots(shots), ...dosesFromEntries(entries)];
 }
 
+// Turn an 'HH:MM' from a time-only input into an absolute instant. A time that
+// is still ahead of now belongs to yesterday, so a late-evening entry logged
+// after midnight lands on the right side of the curve. Storage stays absolute;
+// only the input is time-only.
+export function resolveTimeToday(hhmm: string, now: Date = new Date()): Date {
+    const [h, m] = hhmm.split(':').map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return new Date(now);
+    const at = new Date(now);
+    at.setHours(h, m, 0, 0);
+    if (at.getTime() > now.getTime()) at.setDate(at.getDate() - 1);
+    return at;
+}
+
+// Shots the user has excluded from the caffeine calculation. The shot stays in
+// the log; it just stops counting here.
+export function includedShots(shots: ShotLog[], excluded: Set<string>): ShotLog[] {
+    return excluded.size === 0 ? shots : shots.filter(s => !excluded.has(s.id));
+}
+
 // The next time the clock reads `bedtime` at or after `now`.
 export function resolveBedtime(bedtime: string, now: Date): Date {
     const [h, m] = bedtime.split(':').map(Number);

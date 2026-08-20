@@ -180,6 +180,11 @@ Doses are **absolute instants**, not clock times. Logged brews become doses
 automatically via `dosesFromShots()` (basket to mg at the shot's timestamp), so
 the shot log doubles as the intake log; `CaffeineEntry` covers everything else.
 
+Every dose has a visible row in the intake list. Removing a shot row **excludes**
+it (its id goes into `chambre-noire-caffeine-excluded`) rather than deleting the
+shot: a caffeine screen should not destroy a brewing record. Exclusions are
+reversible from the same list.
+
 The forecast reports current level, level at bedtime, peak, and when the level
 next falls below the target. The older daily-total view is kept alongside it as
 a separate "consumed today" figure rather than being replaced.
@@ -207,7 +212,7 @@ chambre-noire-beans            chambre-noire-caffeine-prefs
 chambre-noire-recipes          chambre-noire-maintenance
 chambre-noire-favorites        chambre-noire-pinned-recipes
 chambre-noire-theme            chambre-noire-24hour
-chambre-noire-show-shortcuts
+chambre-noire-show-shortcuts   chambre-noire-caffeine-excluded
 ```
 
 `src/lib/dataIO.ts` handles backup and export. The JSON backup is at **schema

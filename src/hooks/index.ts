@@ -28,6 +28,8 @@ export { useIntake } from './useIntake';
 
 export { useCaffeinePrefs } from './useCaffeinePrefs';
 
+export { useCaffeineExclusions } from './useCaffeineExclusions';
+
 export { useFocusTrap } from './useFocusTrap';
 
 export { useScrollLock } from './useScrollLock';
