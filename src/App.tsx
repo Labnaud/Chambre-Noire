@@ -294,6 +294,15 @@ function App() {
     showToast(`Rated ${rating}`, 'success');
   };
 
+  // Shared by logging and editing, so an edit cannot silently keep the old time.
+  const readExtractionTime = (): number | undefined => {
+    if (form.manualTimeInput) {
+      const parsed = parseFloat(form.manualTimerValue);
+      return parsed > 0 ? Math.round(parsed * 10) / 10 : undefined;
+    }
+    return timerSeconds > 0 ? Math.round(timerSeconds * 10) / 10 : undefined;
+  };
+
   const openEditShot = (shot: ShotLog) => {
     form.applyFromShot(shot);
     const ratingIdx = shot.rating ? RATINGS.indexOf(shot.rating) : -1;
@@ -301,6 +310,9 @@ function App() {
     form.setRatingIndex(ratingIdx >= 0 ? ratingIdx : BALANCED_RATING_INDEX);
     form.setDoseIn(shot.doseIn?.toString() ?? '');
     form.setDoseOut(shot.doseOut?.toString() ?? '');
+    form.setShowTimer(true);
+    form.setManualTimeInput(true);
+    form.setManualTimerValue(shot.extractionTime?.toString() ?? '');
     setEditingShot(shot);
     setShowHistoryModal(false);
     showToast('Editing shot - make changes and click Update Shot', 'info');
@@ -331,6 +343,7 @@ function App() {
       sessionLog: form.sessionLog.trim() || undefined,
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
+      extractionTime: readExtractionTime(),
     };
 
     updateShot(updated);
@@ -437,14 +450,6 @@ function App() {
       return;
     }
 
-    const getExtractionTime = (): number | undefined => {
-      if (form.manualTimeInput) {
-        const parsed = parseFloat(form.manualTimerValue);
-        return parsed > 0 ? Math.round(parsed * 10) / 10 : undefined;
-      }
-      return timerSeconds > 0 ? Math.round(timerSeconds * 10) / 10 : undefined;
-    };
-
     const newShot: ShotLog = {
       id: generateId(),
       beanName: form.beanName.trim(),
@@ -465,7 +470,7 @@ function App() {
       waterMl: form.showDrink && form.waterMl ? parseFloat(form.waterMl) : undefined,
       notes: form.notes.trim() || undefined,
       sessionLog: form.sessionLog.trim() || undefined,
-      extractionTime: getExtractionTime(),
+      extractionTime: readExtractionTime(),
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
       timestamp: new Date(),
