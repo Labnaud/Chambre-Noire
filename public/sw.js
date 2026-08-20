@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luxe-cafe-v1';
+const CACHE_NAME = 'chambre-noire-v1';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

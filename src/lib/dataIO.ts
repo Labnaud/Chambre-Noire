@@ -1,13 +1,16 @@
-import type { ShotLog, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent } from '../types';
+import type { ShotLog, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from '../types';
 import {
     reviveShot,
     reviveRecipe,
     reviveBean,
+    reviveIntake,
     validShotRecord,
     validRecipeRecord,
     validBeanRecord,
     validMaintenanceRecord,
+    validIntakeRecord,
 } from './storage';
+import { describeBrew, hotWaterGrams, yieldLabel } from './brew';
 
 export interface BackupPayload {
     version: number;
@@ -17,6 +20,7 @@ export interface BackupPayload {
     recipes: SavedRecipe[];
     beans: BeanProfile[];
     maintenance: MaintenanceEvent[];
+    intake: CaffeineEntry[];
 }
 
 export interface ImportResult {
@@ -25,7 +29,8 @@ export interface ImportResult {
     beans: BeanProfile[];
     favorites: FavoritesMap;
     maintenance: MaintenanceEvent[];
-    skipped: { shots: number; recipes: number; beans: number; maintenance: number };
+    intake: CaffeineEntry[];
+    skipped: { shots: number; recipes: number; beans: number; maintenance: number; intake: number };
 }
 
 export function buildBackupObject(
@@ -34,15 +39,17 @@ export function buildBackupObject(
     beans: BeanProfile[],
     favorites: FavoritesMap,
     maintenance: MaintenanceEvent[],
+    intake: CaffeineEntry[],
 ): BackupPayload {
     return {
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
         shots,
         favorites,
         recipes,
         beans,
         maintenance,
+        intake,
     };
 }
 
@@ -52,8 +59,9 @@ export function buildJSONBackup(
     beans: BeanProfile[],
     favorites: FavoritesMap,
     maintenance: MaintenanceEvent[],
+    intake: CaffeineEntry[],
 ): string {
-    return JSON.stringify(buildBackupObject(shots, recipes, beans, favorites, maintenance), null, 2);
+    return JSON.stringify(buildBackupObject(shots, recipes, beans, favorites, maintenance, intake), null, 2);
 }
 
 // quote a free-text cell, doubling quotes and neutralizing spreadsheet formula injection (CWE-1236)
@@ -63,7 +71,7 @@ function csvCell(value: string): string {
 }
 
 export function buildCSV(shots: ShotLog[]): string {
-    const headers = ['Date', 'Bean', 'Brew Type', 'Basket', 'Grind', 'Temperature', 'Strength', 'Rating', 'Extraction Time', 'Dose In (g)', 'Dose Out (g)', 'Ratio', 'Milk Type', 'Milk Style', 'Notes'];
+    const headers = ['Date', 'Bean', 'Brew', 'Method', 'Pour Pattern', 'Iced', 'Basket', 'Grind', 'Water Temp (C)', 'Strength', 'Rating', 'Score', 'Extraction Time', 'Dose In (g)', 'Yield (g)', 'Yield Means', 'Ice (g)', 'Hot Water (g)', 'Ratio', 'Drink', 'Milk Type', 'Milk (mL)', 'Milk Temp (C)', 'Water (mL)', 'Notes', 'Session Log'];
     const csvRows = [headers.join(',')];
 
     shots.forEach(shot => {
@@ -71,19 +79,30 @@ export function buildCSV(shots: ShotLog[]): string {
         const row = [
             new Date(shot.timestamp).toLocaleString(),
             csvCell(shot.beanName),
-            shot.brewType,
+            csvCell(describeBrew(shot)),
+            shot.method,
+            shot.pourPattern || '',
+            shot.iced ? 'yes' : '',
             shot.basket,
             shot.grindSize,
-            shot.temperature || '',
+            shot.waterTempC ?? '',
             shot.strength,
             shot.rating || '',
+            shot.score ?? '',
             shot.extractionTime || '',
             shot.doseIn || '',
             shot.doseOut || '',
+            yieldLabel(shot.method) === 'Out (g)' ? 'liquid out' : 'total water',
+            shot.iceGrams ?? '',
+            hotWaterGrams(shot) ?? '',
             ratio,
-            shot.milk?.type || '',
-            shot.milk?.style || '',
+            shot.drink || '',
+            shot.milkType || '',
+            shot.milkMl ?? '',
+            shot.milkTempC ?? '',
+            shot.waterMl ?? '',
             csvCell(shot.notes || ''),
+            csvCell(shot.sessionLog || ''),
         ];
         csvRows.push(row.join(','));
     });
@@ -145,6 +164,8 @@ export function parseBackup(text: string): ImportResult {
     const beans = collect<BeanProfile>(data.beans, validBeanRecord, reviveBean, (bean) => bean.id);
     // older backups predate maintenance, default to empty
     const maintenance = collect<MaintenanceEvent>(data.maintenance, validMaintenanceRecord);
+    // backups older than version 3 predate the caffeine intake log
+    const intake = collect<CaffeineEntry>(data.intake, validIntakeRecord, reviveIntake, (entry) => entry.id);
 
     const favorites: FavoritesMap = isRecord(data.favorites)
         ? Object.fromEntries(Object.entries(data.favorites).filter(([, v]) => typeof v === 'string')) as FavoritesMap
@@ -156,7 +177,8 @@ export function parseBackup(text: string): ImportResult {
         beans: beans.items,
         favorites,
         maintenance: maintenance.items,
-        skipped: { shots: shots.skipped, recipes: recipes.skipped, beans: beans.skipped, maintenance: maintenance.skipped },
+        intake: intake.items,
+        skipped: { shots: shots.skipped, recipes: recipes.skipped, beans: beans.skipped, maintenance: maintenance.skipped, intake: intake.skipped },
     };
 }
 

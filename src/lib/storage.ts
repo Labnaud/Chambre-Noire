@@ -1,26 +1,30 @@
-import type { ShotLog, FavoritesMap, SavedRecipe, BeanProfile, MaintenanceEvent } from '../types';
+import type { ShotLog, FavoritesMap, SavedRecipe, BeanProfile, MaintenanceEvent, CaffeineEntry, CaffeinePrefs } from '../types';
 import {
     BASKETS,
-    BREW_TYPES,
-    MILK_STYLES,
     MILK_TYPES,
     PROCESS_METHODS,
     RATINGS,
     ROAST_LEVELS,
+    POUR_PATTERNS,
+    SCORE_MAX,
+    SCORE_MIN,
     STRENGTHS,
-    TEMPERATURES,
 } from '../constants';
+import { BREW_METHODS, ESPRESSO_DRINKS } from './brew';
 
-const STORAGE_KEY = 'espresso-shots';
-const FAVORITES_KEY = 'espresso-favorites';
-const RECIPES_KEY = 'espresso-recipes';
-const BEANS_KEY = 'espresso-beans';
-const MAINTENANCE_KEY = 'luxe-cafe-maintenance';
+const STORAGE_KEY = 'chambre-noire-shots';
+const FAVORITES_KEY = 'chambre-noire-favorites';
+const RECIPES_KEY = 'chambre-noire-recipes';
+const BEANS_KEY = 'chambre-noire-beans';
+const MAINTENANCE_KEY = 'chambre-noire-maintenance';
+const INTAKE_KEY = 'chambre-noire-intake';
+const CAFFEINE_PREFS_KEY = 'chambre-noire-caffeine-prefs';
 
 // Date revival, shared with the import path in dataIO.ts
 export const reviveShot = (s: ShotLog): ShotLog => ({ ...s, timestamp: new Date(s.timestamp) });
 export const reviveRecipe = (r: SavedRecipe): SavedRecipe => ({ ...r, createdAt: new Date(r.createdAt) });
 export const reviveBean = (b: BeanProfile): BeanProfile => ({ ...b, createdAt: new Date(b.createdAt) });
+export const reviveIntake = (e: CaffeineEntry): CaffeineEntry => ({ ...e, timestamp: new Date(e.timestamp) });
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -47,33 +51,42 @@ function isOneOf(value: unknown, options: readonly unknown[]): boolean {
     return options.includes(value);
 }
 
+// Shared by shots and recipes: method plus its optional modifiers.
+function validBrewShape(value: Record<string, unknown>): boolean {
+    if (!isOneOf(value.method, BREW_METHODS)) return false;
+    if (value.pourPattern !== undefined && !isOneOf(value.pourPattern, POUR_PATTERNS)) return false;
+    if (value.iced !== undefined && typeof value.iced !== 'boolean') return false;
+    if (!isOptionalFiniteNumber(value.waterTempC)) return false;
+    if (value.drink !== undefined && !isOneOf(value.drink, ESPRESSO_DRINKS)) return false;
+    if (value.milkType !== undefined && !isOneOf(value.milkType, MILK_TYPES)) return false;
+    return true;
+}
+
 export function validShotRecord(value: unknown): value is ShotLog {
     if (!isRecord(value)) return false;
     if (!isNonEmptyString(value.id) || !isNonEmptyString(value.beanName)) return false;
-    if (!isOneOf(value.brewType, BREW_TYPES) || !isOneOf(value.basket, BASKETS)) return false;
+    if (!validBrewShape(value) || !isOneOf(value.basket, BASKETS)) return false;
     if (typeof value.grindSize !== 'number' || !Number.isFinite(value.grindSize)) return false;
     if (!STRENGTHS.some(({ value: strength }) => strength === value.strength)) return false;
     if (value.rating !== undefined && !isOneOf(value.rating, RATINGS)) return false;
-    if (value.temperature !== undefined && !isOneOf(value.temperature, TEMPERATURES)) return false;
+    if (value.score !== undefined
+        && (typeof value.score !== 'number' || !Number.isFinite(value.score)
+            || value.score < SCORE_MIN || value.score > SCORE_MAX)) return false;
+    if (!isOptionalString(value.sessionLog)) return false;
     if (!isOptionalString(value.notes) || !isOptionalFiniteNumber(value.extractionTime)
-        || !isOptionalFiniteNumber(value.doseIn) || !isOptionalFiniteNumber(value.doseOut)) return false;
-    if (value.milk !== undefined) {
-        if (!isRecord(value.milk) || !isOneOf(value.milk.type, MILK_TYPES) || !isOneOf(value.milk.style, MILK_STYLES)) return false;
-    }
+        || !isOptionalFiniteNumber(value.doseIn) || !isOptionalFiniteNumber(value.doseOut)
+        || !isOptionalFiniteNumber(value.iceGrams) || !isOptionalFiniteNumber(value.milkMl)
+        || !isOptionalFiniteNumber(value.milkTempC) || !isOptionalFiniteNumber(value.waterMl)) return false;
     return parsesToValidDate(value.timestamp);
 }
 
 export function validRecipeRecord(value: unknown): value is SavedRecipe {
     if (!isRecord(value)) return false;
     if (!isNonEmptyString(value.id) || !isNonEmptyString(value.name) || !isNonEmptyString(value.beanName)) return false;
-    if (!isOneOf(value.brewType, BREW_TYPES) || !isOneOf(value.basket, BASKETS)) return false;
+    if (!validBrewShape(value) || !isOneOf(value.basket, BASKETS)) return false;
     if (typeof value.grindSize !== 'number' || !Number.isFinite(value.grindSize)) return false;
     if (!STRENGTHS.some(({ value: strength }) => strength === value.strength)) return false;
-    if (value.temperature !== undefined && !isOneOf(value.temperature, TEMPERATURES)) return false;
     if (!isOptionalString(value.notes)) return false;
-    if (value.milk !== undefined) {
-        if (!isRecord(value.milk) || !isOneOf(value.milk.type, MILK_TYPES) || !isOneOf(value.milk.style, MILK_STYLES)) return false;
-    }
     return parsesToValidDate(value.createdAt);
 }
 
@@ -86,6 +99,13 @@ export function validBeanRecord(value: unknown): value is BeanProfile {
     if (value.roastLevel !== undefined && !isOneOf(value.roastLevel, ROAST_LEVELS)) return false;
     if (value.processMethod !== undefined && !isOneOf(value.processMethod, PROCESS_METHODS)) return false;
     return parsesToValidDate(value.createdAt);
+}
+
+export function validIntakeRecord(value: unknown): value is CaffeineEntry {
+    if (!isRecord(value)) return false;
+    if (!isNonEmptyString(value.id) || !isNonEmptyString(value.label)) return false;
+    if (typeof value.mg !== 'number' || !Number.isFinite(value.mg) || value.mg < 0) return false;
+    return parsesToValidDate(value.timestamp);
 }
 
 export function validMaintenanceRecord(value: unknown): value is MaintenanceEvent {
@@ -168,7 +188,7 @@ export function saveStorageValue(key: string, value: string): void {
         // quota exceeded or storage disabled (private mode); never crash the render
         console.warn(`Failed to save ${key}`, e);
         if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('luxe:storage-error'));
+            window.dispatchEvent(new CustomEvent('chambre-noire:storage-error'));
         }
     }
 }
@@ -199,3 +219,22 @@ export function saveBeans(beans: BeanProfile[]): void { saveJSON(BEANS_KEY, bean
 
 export function loadMaintenance(): MaintenanceEvent[] { return loadArray(MAINTENANCE_KEY, validMaintenanceRecord); }
 export function saveMaintenance(events: MaintenanceEvent[]): void { saveJSON(MAINTENANCE_KEY, events); }
+
+export function loadIntake(): CaffeineEntry[] { return loadArray(INTAKE_KEY, validIntakeRecord, reviveIntake, (entry) => entry.id); }
+export function saveIntake(entries: CaffeineEntry[]): void { saveJSON(INTAKE_KEY, entries); }
+
+// Prefs are a single record, so fall back field by field rather than rejecting
+// the whole object when one value is unusable.
+export function loadCaffeinePrefs(fallback: CaffeinePrefs): CaffeinePrefs {
+    const stored = loadRecord<Partial<CaffeinePrefs>>(CAFFEINE_PREFS_KEY, {});
+    const halfLifeHours = typeof stored.halfLifeHours === 'number'
+        && Number.isFinite(stored.halfLifeHours) && stored.halfLifeHours > 0
+        ? stored.halfLifeHours : fallback.halfLifeHours;
+    const targetMg = typeof stored.targetMg === 'number'
+        && Number.isFinite(stored.targetMg) && stored.targetMg >= 0
+        ? stored.targetMg : fallback.targetMg;
+    const bedtime = typeof stored.bedtime === 'string' && /^\d{1,2}:\d{2}$/.test(stored.bedtime)
+        ? stored.bedtime : fallback.bedtime;
+    return { halfLifeHours, bedtime, targetMg };
+}
+export function saveCaffeinePrefs(prefs: CaffeinePrefs): void { saveJSON(CAFFEINE_PREFS_KEY, prefs); }

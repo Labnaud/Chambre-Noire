@@ -226,30 +226,21 @@ export default function SettingsModal({
                     <div className="settings-footer">
                         <a
                             className="settings-footer__link"
-                            href="https://ko-fi.com/Arishawke"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <Icons.Coffee className="icon" aria-hidden="true" />
-                            <span>Support</span>
-                        </a>
-                        <a
-                            className="settings-footer__link"
-                            href="https://github.com/Arishawke/luxe-cafe-dashboard"
+                            href="https://github.com/Labnaud/Chambre-Noire"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
                             <Icons.Github aria-hidden="true" />
-                            <span>GitHub</span>
+                            <span>Source</span>
                         </a>
                         <a
                             className="settings-footer__link"
-                            href="https://arishawke.com"
+                            href="https://github.com/Arishawke/luxe_cafe_dashboard"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            <Icons.Globe aria-hidden="true" />
-                            <span>Website</span>
+                            <Icons.Coffee className="icon" aria-hidden="true" />
+                            <span>Based on Luxe Cafe</span>
                         </a>
                     </div>
                 </div>

@@ -96,7 +96,7 @@ export default function SuggestionCard({
                         {suggestion.adjustmentType !== 'grind' && (
                             <div className="suggested-setting">
                                 <span className="suggested-setting__label">Temp</span>
-                                <span className="suggested-setting__value">{suggestion.temperature}</span>
+                                <span className="suggested-setting__value">{suggestion.waterTempC} &deg;C</span>
                             </div>
                         )}
                     </div>

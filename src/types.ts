@@ -1,37 +1,50 @@
 export type ThemeType = 'dark' | 'light' | 'catppuccin' | 'rosepine' | 'rosepine-moon' | 'fadetouched';
 
-export type Basket = 'Single' | 'Double' | 'Luxe';
-export type Temperature = 'Low' | 'Med' | 'High';
+export type Basket = 'Single' | 'Double';
 export type Strength = 1 | 2 | 3;
 
 export type Rating = 'Very Sour' | 'Sour' | 'Balanced' | 'Bitter' | 'Very Bitter';
 
-export type BrewType = 'Espresso' | 'Drip Coffee' | 'Cold Brew' | 'Cold Pressed' | 'Over Ice';
+// The brewing device. Everything that used to be baked into a flat brew-type
+// enum -- whether there is a water temperature, whether the yield number means
+// liquid out or total water, whether ratio labels apply -- now lives in the
+// per-method profile in lib/brew.ts instead.
+export type BrewMethod = 'Espresso' | 'V60' | 'French Press';
 
-export const COLD_BREW_TYPES: BrewType[] = ['Cold Brew', 'Cold Pressed', 'Over Ice']; // skip temperature
+// V60 protocol. Orthogonal to whether the brew is served over ice.
+export type PourPattern = '2 Pours' | '5 Pours';
+
+// What was built on the shot. Americano carries no milk at all, which is why
+// this is a drink and not a milk setting.
+export type EspressoDrink =
+  | 'Latte' | 'Macchiato' | 'Cortado' | 'Flat White'
+  | 'Cappuccino' | 'Mocha' | 'Americano';
 
 export type MilkType = 'Dairy' | 'Plant';
-export type MilkStyle = 'Steamed' | 'Thin' | 'Thick' | 'Extra-Thick' | 'Cold Foam';
-
-export interface MilkSettings {
-  type: MilkType;
-  style: MilkStyle;
-}
 
 export interface ShotLog {
   id: string;
   beanName: string;
-  brewType: BrewType;
+  method: BrewMethod;
+  pourPattern?: PourPattern; // V60 only
+  iced?: boolean; // hot-brewed onto ice; not a cold brew
+  iceGrams?: number; // part of doseOut when iced, so hot water = doseOut - iceGrams
   basket: Basket;
-  grindSize: number; // 1 fine, 25 coarse
-  temperature?: Temperature;
+  grindSize: number; // one continuous scale, espresso fine through filter coarse
+  waterTempC?: number; // brew water in degrees C
   strength: Strength;
-  rating?: Rating; // omitted when logged without tasting yet
-  milk?: MilkSettings;
-  notes?: string;
+  rating?: Rating; // where the extraction landed on sour <-> bitter
+  score?: number; // how good the cup was, 0-5 in half steps; independent of rating
+  drink?: EspressoDrink; // what was built on the shot
+  milkType?: MilkType;
+  milkMl?: number;
+  milkTempC?: number;
+  waterMl?: number; // Americano
+  notes?: string; // short tasting note
+  sessionLog?: string; // long-form: trial shots, what changed, conclusions
   extractionTime?: number; // seconds
-  doseIn?: number; // grams in
-  doseOut?: number; // grams out
+  doseIn?: number; // grams of coffee
+  doseOut?: number; // liquid out for espresso, total water for filter (see brew profile)
   timestamp: Date;
   isFavorite?: boolean;
 }
@@ -44,12 +57,15 @@ export interface SavedRecipe {
   id: string;
   name: string;
   beanName: string;
-  brewType: BrewType;
+  method: BrewMethod;
+  pourPattern?: PourPattern;
+  iced?: boolean;
   basket: Basket;
   grindSize: number;
-  temperature?: Temperature;
+  waterTempC?: number;
   strength: Strength;
-  milk?: MilkSettings;
+  drink?: EspressoDrink;
+  milkType?: MilkType;
   notes?: string;
   createdAt: Date;
 }
@@ -70,6 +86,22 @@ export interface BeanProfile {
   pricePaid?: number; // in the user's own currency
   isActive: boolean;
   createdAt: Date;
+}
+
+// A caffeine source that is not a logged shot (tea, cola, energy drink, ...).
+export interface CaffeineEntry {
+    id: string;
+    label: string;
+    mg: number;
+    timestamp: Date;
+}
+
+// Tuning for the half-life forecast. Half-life varies a lot between people,
+// so all three are user-adjustable.
+export interface CaffeinePrefs {
+    halfLifeHours: number;
+    bedtime: string; // 'HH:MM'
+    targetMg: number; // acceptable level at bedtime
 }
 
 export type MaintenanceTask = 'cleaning' | 'descaling';

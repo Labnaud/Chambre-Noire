@@ -1,7 +1,7 @@
 {
-    "name": "Luxe Cafe Dial-In",
-    "short_name": "Luxe Cafe",
-    "description": "Premium espresso calibration dashboard for dialing in the perfect shot",
+    "name": "Chambre Noire",
+    "short_name": "Chambre Noire",
+    "description": "Espresso dial-in log: track shots, beans, and recipes. Local-first, no account.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1A1412",

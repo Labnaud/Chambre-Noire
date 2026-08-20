@@ -1,15 +1,11 @@
-# Luxe Cafe Dashboard
+# Chambre Noire
 
 > [!WARNING]
-> **Personal project, heavy AI assistance.** This is a hobby web app built with substantial AI assistance. It is not production software. Use at your own discretion.
+> **Personal project, heavy AI assistance.** This is a hobby web app. It is not production software. Use at your own discretion.
 
-A small web app for logging espresso shots and dialing in beans.
-
-**Live:** [luxecafe.arishawke.com](https://luxecafe.arishawke.com/)
+A small web app for logging espresso shots and dialing in beans. Everything runs in your browser: no account, no backend, no telemetry.
 
 > Your data is saved in your browser's localStorage. Clearing browser data or switching browsers will erase it. Use Export Backup in Settings to save a copy.
-
-![Dashboard Overview](docs/screenshots/dashboard_overview.png)
 
 ## Features
 
@@ -33,6 +29,26 @@ A small web app for logging espresso shots and dialing in beans.
 | Ctrl+D | Cycle theme |
 | Esc | Close any open modal |
 
+## Development
+
+```bash
+npm install
+npm run dev      # Vite dev server
+npm test         # Vitest
+npm run lint
+npm run build
+```
+
+## Credits
+
+Chambre Noire is a fork of [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboard)
+by [Arishawke](https://github.com/Arishawke), which is copyright © 2026 Arishawke and
+licensed under the GNU General Public License v3.
+
+Changes in this fork include removing the one-time cross-domain data-migration
+module, dropping bundled analytics, and generalising the shot model away from the
+Ninja Luxe Cafe Pro's specific basket, froth, and strength presets.
+
 ## License
 
-[GPL v3](LICENSE). © 2026 Arishawke.
+[GPL v3](LICENSE). Original work © 2026 Arishawke. Modifications © 2026 Labnaud.

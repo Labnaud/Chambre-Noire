@@ -1544,7 +1544,7 @@ button.grind-control__value:hover {
   letter-spacing: 0.05em;
 }
 
-.froth-panel {
+.drink-panel {
   margin-top: -0.5rem;
   padding: 1rem;
   background: var(--color-dark-roast);
@@ -1554,15 +1554,15 @@ button.grind-control__value:hover {
   border-top-right-radius: 0;
 }
 
-.froth-panel__row {
+.drink-panel__row {
   margin-bottom: 0.875rem;
 }
 
-.froth-panel__row:last-child {
+.drink-panel__row:last-child {
   margin-bottom: 0;
 }
 
-.froth-panel .form-label {
+.drink-panel .form-label {
   font-size: var(--text-xs);
   margin-bottom: 0.5rem;
 }
@@ -1779,15 +1779,15 @@ button.grind-control__value:hover {
   }
 
   /* Ensure Froth Lab doesn't get squished */
-  .froth-panel {
+  .drink-panel {
     padding: 0.875rem;
   }
 
-  .froth-panel .pill-group {
+  .drink-panel .pill-group {
     gap: 0.375rem;
   }
 
-  .froth-panel .pill-btn--sm {
+  .drink-panel .pill-btn--sm {
     flex: 1 1 auto;
     min-width: calc(50% - 0.25rem);
     text-align: center;
@@ -5703,118 +5703,477 @@ textarea:focus-visible {
 }
 
 /* ============================================
-   Migration notice
-   One-time banner inviting data over from the old domain.
-   Temporary; removed when the old domain is retired.
+   Caffeine forecast (half-life model)
    ============================================ */
-@keyframes migrationNoticeIn {
-  0% { opacity: 0; transform: translateY(-6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.migration-notice {
+.caffeine-banner {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.25rem;
-  background: color-mix(in srgb, var(--color-caramel) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-caramel) 30%, transparent);
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
   border-radius: var(--radius-md);
-  animation: migrationNoticeIn 0.3s var(--ease);
-}
-
-.migration-notice__icon {
-  flex-shrink: 0;
-  color: var(--color-latte);
-}
-
-.migration-notice__content {
-  flex: 1;
-  min-width: 0;
-}
-
-.migration-notice__content h4 {
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-latte);
-  margin-bottom: 0.25rem;
-}
-
-.migration-notice__content p {
+  border: 1px solid var(--color-mocha);
+  background: color-mix(in srgb, var(--color-mocha) 35%, transparent);
   font-size: var(--text-sm);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.caffeine-banner--ok {
+  border-color: color-mix(in srgb, var(--color-balanced) 45%, transparent);
+  background: color-mix(in srgb, var(--color-balanced) 12%, transparent);
+}
+
+.caffeine-banner--alert {
+  border-color: color-mix(in srgb, var(--color-very-bitter) 45%, transparent);
+  background: color-mix(in srgb, var(--color-very-bitter) 12%, transparent);
+}
+
+.caffeine-banner__icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: var(--text-xs);
   color: var(--color-cream);
+  background: var(--color-mocha);
+}
+
+.caffeine-banner--ok .caffeine-banner__icon { background: var(--color-balanced); }
+.caffeine-banner--alert .caffeine-banner__icon { background: var(--color-very-bitter); }
+
+.caffeine-forecast {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.caffeine-forecast__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-mocha);
+  background: var(--color-espresso);
+  text-align: center;
+}
+
+.caffeine-forecast__stat--ok { border-color: color-mix(in srgb, var(--color-balanced) 50%, transparent); }
+.caffeine-forecast__stat--alert { border-color: color-mix(in srgb, var(--color-very-bitter) 50%, transparent); }
+
+.caffeine-forecast__value {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-cream);
+}
+
+.caffeine-forecast__label {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.caffeine-curve {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.caffeine-curve__line {
+  stroke: var(--color-balanced);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.caffeine-curve__area {
+  fill: color-mix(in srgb, var(--color-balanced) 18%, transparent);
+  stroke: none;
+}
+
+.caffeine-curve__grid {
+  stroke: var(--color-mocha);
+  stroke-width: 1;
+}
+
+.caffeine-curve__tick {
+  fill: var(--color-muted);
+  font-size: 9px;
+  font-family: var(--font-sans);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.caffeine-curve__target {
+  stroke: var(--color-very-bitter);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.caffeine-curve__bedtime {
+  stroke: var(--color-star);
+  stroke-width: 1.5;
+}
+
+.caffeine-curve__now {
+  stroke: var(--color-caramel);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.caffeine-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-bottom: 1.25rem;
+}
+
+.caffeine-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.caffeine-legend__swatch {
+  width: 12px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+}
+
+.caffeine-legend__swatch--level { background: var(--color-balanced); }
+.caffeine-legend__swatch--target { background: var(--color-very-bitter); }
+.caffeine-legend__swatch--bedtime { background: var(--color-star); }
+.caffeine-legend__swatch--now { background: var(--color-caramel); }
+
+.caffeine-section { margin-bottom: 1.5rem; }
+
+.caffeine-section h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--color-cream);
+  margin: 0 0 0.5rem;
+}
+
+.caffeine-section__note {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin: 0 0 0.75rem;
   line-height: 1.5;
 }
 
-.migration-notice__actions {
+.caffeine-params {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.caffeine-params .form-group { margin-bottom: 0; }
+
+.caffeine-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.caffeine-quick__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-mocha);
+  background: var(--color-espresso);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.caffeine-quick__btn:hover {
+  border-color: var(--color-caramel);
+  background: var(--color-mocha);
+}
+
+.caffeine-quick__btn--ghost {
+  justify-content: center;
+  align-items: center;
+  color: var(--color-muted);
+}
+
+.caffeine-quick__mg {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.caffeine-add {
+  padding: 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-mocha);
+  background: var(--color-espresso);
+  margin-bottom: 0.9rem;
+}
+
+.caffeine-add__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.caffeine-add .form-group { margin-bottom: 0.7rem; }
+
+.caffeine-intake-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.caffeine-intake-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-espresso);
+  border: 1px solid transparent;
 }
 
-.migration-notice__migrate {
+.caffeine-intake-row:hover { border-color: var(--color-mocha); }
+
+.caffeine-intake-row__label {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-cream);
+}
+
+.caffeine-intake-row__meta {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.caffeine-intake-row__delete {
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: var(--radius-xs);
+  transition: var(--transition-base);
+}
+
+.caffeine-intake-row__delete:hover { color: var(--color-very-bitter); }
+
+.caffeine-disclaimer {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-mocha);
+}
+
+@media (max-width: 640px) {
+  .caffeine-forecast { grid-template-columns: repeat(2, 1fr); }
+  .caffeine-params { grid-template-columns: 1fr; }
+  .caffeine-add__row { grid-template-columns: 1fr; }
+}
+
+/* ============================================
+   Quality score (0-5) and session log
+   Score is a separate axis from the sour/bitter rating.
+   ============================================ */
+.score-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.score-input__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.score-stars {
+  display: inline-flex;
+  gap: 0.15rem;
+  color: var(--color-mocha);
+}
+
+.score-stars__star--full,
+.score-stars__star--half { color: var(--color-star); }
+.score-stars__star--half { opacity: 0.55; }
+
+.score-input__value {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-cream);
+}
+
+.score-input__max {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.setting-tag--score {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.2rem;
+  color: var(--color-star);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.setting-tag--score .icon { width: 0.85em; height: 0.85em; }
+
+.shot-detail__score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-star);
+}
+
+.shot-detail__score-value {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.shot-detail__score-max {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.session-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem;
+}
+
+.session-log__field {
+  min-height: 9rem;
+  resize: vertical;
+  line-height: 1.55;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.shot-detail__session-log {
+  margin: 0.35rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-espresso);
+  border: 1px solid var(--color-mocha);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-cream);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+/* ============================================
+   Brew method modifiers and drink builder
+   ============================================ */
+.temp-readout {
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 600;
-  font-family: var(--font-sans);
-  white-space: nowrap;
-  background: var(--color-caramel);
-  border: 1px solid var(--color-caramel);
-  border-radius: var(--radius-sm);
-  color: var(--color-black-coffee);
-  cursor: pointer;
-  transition: var(--transition-base);
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-latte);
 }
 
-.migration-notice__migrate:hover {
-  background: var(--color-latte);
-  border-color: var(--color-latte);
-}
-
-.migration-notice__dismiss {
-  display: inline-flex;
+.ice-field {
+  display: grid;
+  grid-template-columns: auto 6rem;
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.85rem;
   border-radius: var(--radius-sm);
-  color: var(--color-subtle);
-  cursor: pointer;
-  transition: var(--transition-base);
+  background: var(--color-espresso);
+  border: 1px solid var(--color-mocha);
 }
 
-.migration-notice__dismiss:hover {
+.ice-field .form-label { margin: 0; }
+
+.ice-field__hint {
+  grid-column: 1 / -1;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.drink-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.85rem;
+}
+
+.drink-target {
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-caramel) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-caramel) 30%, transparent);
+}
+
+.drink-target__label {
+  display: block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-latte);
+  margin-bottom: 0.35rem;
+}
+
+.drink-target__rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: var(--text-sm);
   color: var(--color-cream);
-  background: color-mix(in srgb, var(--color-mocha) 50%, transparent);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
-@media (max-width: 540px) {
-  .migration-notice {
-    flex-wrap: wrap;
-  }
+.drink-target__note {
+  margin: 0.45rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
 
-  .migration-notice__migrate {
-    flex: 1;
-    justify-content: center;
-  }
+.drink-panel__inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
 
-  .migration-notice__actions {
-    width: 100%;
-  }
+.drink-panel__inputs .form-group { margin-bottom: 0; }
 
-  .migration-notice__migrate,
-  .migration-notice__dismiss {
-    min-height: 44px;
-  }
-
-  .migration-notice__dismiss {
-    min-width: 44px;
-  }
+@media (max-width: 640px) {
+  .drink-panel__inputs { grid-template-columns: 1fr; }
 }

@@ -1,8 +1,6 @@
-import type { BrewType, ShotLog, Rating } from '../types';
+import type { BrewMethod, ShotLog, Rating } from '../types';
 import { RATINGS, BALANCED_RATING_INDEX } from '../constants';
-
-// Ratio labels apply to espresso-style pulls only.
-const ESPRESSO_STYLE_BREWS: BrewType[] = ['Espresso', 'Cold Pressed'];
+import { profileFor } from './brew';
 
 // Ratio r = doseOut / doseIn. Below RISTRETTO_MAX is restricted, above
 // LUNGO_MIN is long, the band between is a normal shot.
@@ -14,9 +12,9 @@ export type RatioLabel = 'Ristretto' | 'Normale' | 'Lungo';
 export function getRatioLabel(
     doseIn: number | undefined,
     doseOut: number | undefined,
-    brewType: BrewType,
+    method: BrewMethod,
 ): RatioLabel | null {
-    if (!ESPRESSO_STYLE_BREWS.includes(brewType)) return null;
+    if (profileFor(method).ratioStyle !== 'espresso') return null;
     if (!doseIn || doseIn <= 0 || !doseOut) return null;
 
     const ratio = doseOut / doseIn;

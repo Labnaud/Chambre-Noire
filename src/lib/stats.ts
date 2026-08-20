@@ -1,5 +1,6 @@
 import type { ShotLog, Rating } from '../types';
 import { RATINGS } from '../constants';
+import { describeBrew } from './brew';
 
 export interface DayStat {
     date: string;
@@ -78,7 +79,8 @@ export function computeStats(shots: ShotLog[]): ShotStats {
     const hasWeekData = !days.every(d => d.total === 0);
 
     const brewCounts = shots.reduce((acc, s) => {
-        acc[s.brewType] = (acc[s.brewType] || 0) + 1;
+        const label = describeBrew(s);
+        acc[label] = (acc[label] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
     const brewEntries = Object.entries(brewCounts).sort((a, b) => b[1] - a[1]);

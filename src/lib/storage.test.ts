@@ -12,6 +12,8 @@ import {
     saveMaintenance,
     loadStringArray,
     saveStorageValue,
+    loadIntake,
+    loadCaffeinePrefs
 } from './storage';
 import type { ShotLog, SavedRecipe, BeanProfile, MaintenanceEvent } from '../types';
 
@@ -46,7 +48,7 @@ describe('shots storage', () => {
         const shot: ShotLog = {
             id: '1',
             beanName: 'Ethiopia',
-            brewType: 'Espresso',
+            method: 'Espresso',
             basket: 'Double',
             grindSize: 12,
             strength: 2,
@@ -64,7 +66,7 @@ describe('shots storage', () => {
         const shot: ShotLog = {
             id: '1',
             beanName: 'Ethiopia',
-            brewType: 'Espresso',
+            method: 'Espresso',
             basket: 'Double',
             grindSize: 12,
             strength: 2,
@@ -78,20 +80,20 @@ describe('shots storage', () => {
     });
 
     it('returns an empty array when stored JSON is corrupt', () => {
-        localStorage.setItem('espresso-shots', '{not json');
+        localStorage.setItem('chambre-noire-shots', '{not json');
         expect(loadShots()).toEqual([]);
     });
 
     it('skips malformed and duplicate records without overwriting the raw data', () => {
         const raw = JSON.stringify([
-            { id: '1', beanName: 'Ethiopia', brewType: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, timestamp: '2026-05-01T10:00:00Z' },
-            { id: '1', beanName: 'Duplicate', brewType: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, timestamp: '2026-05-01T10:00:00Z' },
+            { id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, timestamp: '2026-05-01T10:00:00Z' },
+            { id: '1', beanName: 'Duplicate', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, timestamp: '2026-05-01T10:00:00Z' },
             { id: '2', beanName: null, timestamp: '2026-05-01T10:00:00Z' },
         ]);
-        localStorage.setItem('espresso-shots', raw);
+        localStorage.setItem('chambre-noire-shots', raw);
         expect(loadShots().map(shot => shot.beanName)).toEqual(['Ethiopia']);
-        expect(localStorage.getItem('espresso-shots')).toBe(raw);
-        expect(localStorage.getItem('espresso-shots:corrupt')).toBe(raw);
+        expect(localStorage.getItem('chambre-noire-shots')).toBe(raw);
+        expect(localStorage.getItem('chambre-noire-shots:corrupt')).toBe(raw);
     });
 });
 
@@ -106,7 +108,7 @@ describe('favorites storage', () => {
     });
 
     it('falls back to an empty object on corrupt JSON', () => {
-        localStorage.setItem('espresso-favorites', '{');
+        localStorage.setItem('chambre-noire-favorites', '{');
         expect(loadFavorites()).toEqual({});
     });
 });
@@ -116,7 +118,7 @@ describe('recipes storage', () => {
         id: 'r1',
         name: 'Morning Latte',
         beanName: 'Ethiopia',
-        brewType: 'Espresso',
+        method: 'Espresso',
         basket: 'Double',
         grindSize: 12,
         strength: 2,
@@ -135,7 +137,7 @@ describe('recipes storage', () => {
     });
 
     it('returns an empty array on corrupt JSON', () => {
-        localStorage.setItem('espresso-recipes', 'nope');
+        localStorage.setItem('chambre-noire-recipes', 'nope');
         expect(loadRecipes()).toEqual([]);
     });
 });
@@ -161,7 +163,7 @@ describe('beans storage', () => {
     });
 
     it('returns an empty array on corrupt JSON', () => {
-        localStorage.setItem('espresso-beans', 'broken');
+        localStorage.setItem('chambre-noire-beans', 'broken');
         expect(loadBeans()).toEqual([]);
     });
 });
@@ -183,7 +185,7 @@ describe('maintenance storage', () => {
     });
 
     it('returns an empty array on corrupt JSON', () => {
-        localStorage.setItem('luxe-cafe-maintenance', '{');
+        localStorage.setItem('chambre-noire-maintenance', '{');
         expect(loadMaintenance()).toEqual([]);
     });
 });
@@ -200,29 +202,29 @@ describe('storage robustness', () => {
     });
 
     it('returns the array default when stored JSON is the wrong type (object)', () => {
-        localStorage.setItem('espresso-shots', '{}');
+        localStorage.setItem('chambre-noire-shots', '{}');
         expect(loadShots()).toEqual([]);
     });
 
     it('returns the array default when stored JSON is the wrong type (number)', () => {
-        localStorage.setItem('espresso-recipes', '5');
+        localStorage.setItem('chambre-noire-recipes', '5');
         expect(loadRecipes()).toEqual([]);
     });
 
     it('returns the object default when favorites JSON is an array', () => {
-        localStorage.setItem('espresso-favorites', '[1,2,3]');
+        localStorage.setItem('chambre-noire-favorites', '[1,2,3]');
         expect(loadFavorites()).toEqual({});
     });
 
     it('preserves the raw value under a :corrupt key before falling back', () => {
-        localStorage.setItem('espresso-shots', '{not json');
+        localStorage.setItem('chambre-noire-shots', '{not json');
         loadShots();
-        expect(localStorage.getItem('espresso-shots:corrupt')).toBe('{not json');
+        expect(localStorage.getItem('chambre-noire-shots:corrupt')).toBe('{not json');
     });
 
     it('treats a stored JSON null as empty without logging a warning', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
-        localStorage.setItem('espresso-shots', 'null');
+        localStorage.setItem('chambre-noire-shots', 'null');
         expect(loadShots()).toEqual([]);
         expect(warn).not.toHaveBeenCalled();
     });
@@ -256,7 +258,7 @@ describe('storage robustness', () => {
         vi.stubGlobal('window', { dispatchEvent: dispatch });
         saveShots([]);
         expect(dispatch).toHaveBeenCalledOnce();
-        expect(dispatch.mock.calls[0][0].type).toBe('luxe:storage-error');
+        expect(dispatch.mock.calls[0][0].type).toBe('chambre-noire:storage-error');
     });
 
     it('guards raw preference writes with the same storage-error event', () => {
@@ -268,7 +270,110 @@ describe('storage robustness', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => { });
         const dispatch = vi.fn();
         vi.stubGlobal('window', { dispatchEvent: dispatch });
-        expect(() => saveStorageValue('theme', 'dark')).not.toThrow();
+        expect(() => saveStorageValue('chambre-noire-theme', 'dark')).not.toThrow();
         expect(dispatch).toHaveBeenCalledOnce();
+    });
+});
+
+describe('loadIntake', () => {
+    it('keeps well-formed entries and revives the timestamp', () => {
+        localStorage.setItem('chambre-noire-intake', JSON.stringify([
+            { id: 'i1', label: 'Coke', mg: 34, timestamp: '2026-05-01T14:00:00Z' },
+        ]));
+        const entries = loadIntake();
+        expect(entries).toHaveLength(1);
+        expect(entries[0].timestamp).toBeInstanceOf(Date);
+    });
+
+    it('drops entries with a missing label, bad mg, or bad date', () => {
+        localStorage.setItem('chambre-noire-intake', JSON.stringify([
+            { id: 'i1', label: '', mg: 34, timestamp: '2026-05-01T14:00:00Z' },
+            { id: 'i2', label: 'Tea', mg: 'lots', timestamp: '2026-05-01T14:00:00Z' },
+            { id: 'i3', label: 'Tea', mg: -5, timestamp: '2026-05-01T14:00:00Z' },
+            { id: 'i4', label: 'Tea', mg: 47, timestamp: 'never' },
+            { id: 'i5', label: 'Tea', mg: 47, timestamp: '2026-05-01T14:00:00Z' },
+        ]));
+        expect(loadIntake().map(e => e.id)).toEqual(['i5']);
+    });
+
+    it('rejects duplicate ids', () => {
+        localStorage.setItem('chambre-noire-intake', JSON.stringify([
+            { id: 'i1', label: 'Coke', mg: 34, timestamp: '2026-05-01T14:00:00Z' },
+            { id: 'i1', label: 'Tea', mg: 47, timestamp: '2026-05-01T15:00:00Z' },
+        ]));
+        expect(loadIntake()).toHaveLength(1);
+    });
+});
+
+describe('loadCaffeinePrefs', () => {
+    const fallback = { halfLifeHours: 5.7, bedtime: '22:30', targetMg: 40 };
+
+    it('returns the fallback when nothing is stored', () => {
+        expect(loadCaffeinePrefs(fallback)).toEqual(fallback);
+    });
+
+    it('keeps stored values that are usable', () => {
+        localStorage.setItem('chambre-noire-caffeine-prefs', JSON.stringify({
+            halfLifeHours: 4, bedtime: '23:15', targetMg: 25,
+        }));
+        expect(loadCaffeinePrefs(fallback)).toEqual({ halfLifeHours: 4, bedtime: '23:15', targetMg: 25 });
+    });
+
+    it('falls back field by field rather than rejecting the whole record', () => {
+        localStorage.setItem('chambre-noire-caffeine-prefs', JSON.stringify({
+            halfLifeHours: 0, bedtime: 'bedtime', targetMg: 25,
+        }));
+        expect(loadCaffeinePrefs(fallback)).toEqual({
+            halfLifeHours: 5.7, bedtime: '22:30', targetMg: 25,
+        });
+    });
+});
+
+describe('score and session log validation', () => {
+    const base = {
+        id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+        grindSize: 12, strength: 2, timestamp: '2026-05-01T10:00:00Z',
+    };
+    const store = (extra: object) =>
+        localStorage.setItem('chambre-noire-shots', JSON.stringify([{ ...base, ...extra }]));
+
+    it('accepts a half-step score', () => {
+        store({ score: 4.5 });
+        expect(loadShots()[0].score).toBe(4.5);
+    });
+
+    it('accepts the bounds', () => {
+        store({ score: 0 });
+        expect(loadShots()[0].score).toBe(0);
+        store({ score: 5 });
+        expect(loadShots()[0].score).toBe(5);
+    });
+
+    it('rejects a score outside 0-5', () => {
+        store({ score: 6 });
+        expect(loadShots()).toHaveLength(0);
+        store({ score: -1 });
+        expect(loadShots()).toHaveLength(0);
+    });
+
+    it('rejects a non-numeric score', () => {
+        store({ score: 'great' });
+        expect(loadShots()).toHaveLength(0);
+    });
+
+    it('treats an absent score as valid', () => {
+        store({});
+        expect(loadShots()[0].score).toBeUndefined();
+    });
+
+    it('keeps a multi-line session log intact', () => {
+        const log = 'shot 1: 24s, sour\n-> 2 finer\nshot 2: 29s, balanced';
+        store({ sessionLog: log });
+        expect(loadShots()[0].sessionLog).toBe(log);
+    });
+
+    it('rejects a non-string session log', () => {
+        store({ sessionLog: 42 });
+        expect(loadShots()).toHaveLength(0);
     });
 });

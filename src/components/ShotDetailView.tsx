@@ -1,7 +1,8 @@
 import type { Rating, ShotLog } from '../types';
-import { RATINGS, RATING_COLORS } from '../constants';
+import { RATINGS, RATING_COLORS, SCORE_MAX } from '../constants';
 import { formatDateLong } from '../lib/format';
 import { getRatioLabel } from '../lib/dialIn';
+import { describeBrew, hotWaterGrams, yieldLabel } from '../lib/brew';
 import Icons from './Icons';
 
 interface ShotDetailViewProps {
@@ -15,7 +16,7 @@ interface ShotDetailViewProps {
 export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConfig, onRate }: ShotDetailViewProps) {
     const config = shot.rating ? ratingConfig[shot.rating] : null;
     const ShotIcon = config?.icon;
-    const ratioLabel = getRatioLabel(shot.doseIn, shot.doseOut, shot.brewType);
+    const ratioLabel = getRatioLabel(shot.doseIn, shot.doseOut, shot.method);
 
     return (
         <>
@@ -44,37 +45,61 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
                 </div>
             )}
 
+            {shot.score !== undefined && (
+                <div className="shot-detail__score">
+                    <Icons.Star filled />
+                    <span className="shot-detail__score-value">{shot.score.toFixed(1)}</span>
+                    <span className="shot-detail__score-max">/ {SCORE_MAX}</span>
+                </div>
+            )}
+
             <div className="shot-detail__timestamp">
                 {formatDateLong(shot.timestamp, use24Hour)}
             </div>
 
             <div className="shot-detail__grid">
                 <div className="shot-detail__item">
-                    <span className="shot-detail__label">Brew Type</span>
-                    <span className="shot-detail__value">{shot.brewType}</span>
+                    <span className="shot-detail__label">Brew</span>
+                    <span className="shot-detail__value">{describeBrew(shot)}</span>
                 </div>
                 <div className="shot-detail__item">
                     <span className="shot-detail__label">Grind Size</span>
                     <span className="shot-detail__value">{shot.grindSize}</span>
                 </div>
-                {shot.temperature && (
+                {shot.waterTempC !== undefined && (
                     <div className="shot-detail__item">
-                        <span className="shot-detail__label">Temperature</span>
-                        <span className="shot-detail__value">{shot.temperature}</span>
+                        <span className="shot-detail__label">Water Temperature</span>
+                        <span className="shot-detail__value">{shot.waterTempC} &deg;C</span>
                     </div>
                 )}
-                <div className="shot-detail__item">
-                    <span className="shot-detail__label">Basket</span>
-                    <span className="shot-detail__value">{shot.basket}</span>
-                </div>
+                {shot.method === 'Espresso' && (
+                    <div className="shot-detail__item">
+                        <span className="shot-detail__label">Basket</span>
+                        <span className="shot-detail__value">{shot.basket}</span>
+                    </div>
+                )}
+                {shot.iced && (
+                    <div className="shot-detail__item">
+                        <span className="shot-detail__label">Ice / Hot Water</span>
+                        <span className="shot-detail__value">
+                            {shot.iceGrams ?? 0}g ice &rarr; {hotWaterGrams(shot) ?? '-'}g hot
+                        </span>
+                    </div>
+                )}
                 <div className="shot-detail__item">
                     <span className="shot-detail__label">Strength</span>
                     <span className="shot-detail__value">{shot.strength}</span>
                 </div>
-                {shot.milk && (
+                {shot.drink && (
                     <div className="shot-detail__item">
-                        <span className="shot-detail__label">Milk</span>
-                        <span className="shot-detail__value">{shot.milk.type} {shot.milk.style}</span>
+                        <span className="shot-detail__label">Drink</span>
+                        <span className="shot-detail__value">
+                            {shot.drink}
+                            {shot.milkType ? ` · ${shot.milkType}` : ''}
+                            {shot.milkMl !== undefined ? ` · ${shot.milkMl} mL` : ''}
+                            {shot.milkTempC !== undefined ? ` · ${shot.milkTempC} °C` : ''}
+                            {shot.waterMl !== undefined ? ` · ${shot.waterMl} mL water` : ''}
+                        </span>
                     </div>
                 )}
                 {shot.extractionTime && (
@@ -85,7 +110,7 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
                 )}
                 {shot.doseIn && shot.doseOut && (
                     <div className="shot-detail__item">
-                        <span className="shot-detail__label">Dose / Yield</span>
+                        <span className="shot-detail__label">Dose / {yieldLabel(shot.method)}</span>
                         <span className="shot-detail__value">
                             {shot.doseIn}g → {shot.doseOut}g (1:{(shot.doseOut / shot.doseIn).toFixed(1)})
                             {ratioLabel && <span className="ratio-label">{ratioLabel}</span>}
@@ -96,8 +121,15 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
 
             {shot.notes && (
                 <div className="shot-detail__notes">
-                    <span className="shot-detail__label">Notes</span>
+                    <span className="shot-detail__label">Tasting Notes</span>
                     <p>{shot.notes}</p>
+                </div>
+            )}
+
+            {shot.sessionLog && (
+                <div className="shot-detail__notes">
+                    <span className="shot-detail__label">Session Log</span>
+                    <pre className="shot-detail__session-log">{shot.sessionLog}</pre>
                 </div>
             )}
         </>

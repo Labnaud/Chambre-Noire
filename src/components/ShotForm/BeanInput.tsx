@@ -120,7 +120,7 @@ export default function BeanInput({
                     </div>
                     <div className="target-recipe__settings">
                         <span className="setting-tag setting-tag--gold">Grind {favoriteShot.grindSize}</span>
-                        {favoriteShot.temperature && <span className="setting-tag setting-tag--gold">{favoriteShot.temperature}</span>}
+                        {favoriteShot.waterTempC !== undefined && <span className="setting-tag setting-tag--gold">{favoriteShot.waterTempC} &deg;C</span>}
                         <span className="setting-tag setting-tag--gold">{favoriteShot.basket}</span>
                         <span className="setting-tag setting-tag--gold">S{favoriteShot.strength}</span>
                     </div>

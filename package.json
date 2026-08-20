@@ -1,5 +1,5 @@
 {
-  "name": "luxe_cafe_dashboard",
+  "name": "chambre-noire",
   "private": true,
   "version": "1.16.0",
   "type": "module",
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "@vercel/analytics": "^2.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

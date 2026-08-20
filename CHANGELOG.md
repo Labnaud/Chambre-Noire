@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased] - Chambre Noire fork
+
+Forked from [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboard) v1.16.0.
+
+### Removed
+- The one-time cross-domain data-migration module. It existed only to move data to the upstream author's new domain, and its landing path applied any `#migrate=` URL payload over your entire dataset with no host check, no confirmation, and no undo.
+- Bundled Vercel Web Analytics. The app now makes no outbound network requests.
+- The upstream author's funding and personal links.
+
+### Changed
+- Renamed to Chambre Noire throughout, including the PWA manifest, service-worker cache name, and all localStorage keys (`espresso-*` / `luxe-cafe-*` are now `chambre-noire-*`).
+- Generalised the shot model away from the Ninja Luxe Cafe Pro's presets: the `Luxe` basket is now `Triple`, froth styles use barista vocabulary (`Microfoam`, `Light Foam`, `Thick Foam`) instead of the machine's, and strength reads `Mild` / `Medium` / `Strong`.
+- Caffeine estimates updated for the `Triple` basket (95 mg, 3 shots).
+
 ## [1.16.0] - 2026-08-06
 
 ### Changed

@@ -320,7 +320,7 @@ export default function BeanLibraryModal({
                                                                     <span className="bean-card__best-label">Best dial-in</span>
                                                                     <span className="bean-card__best-settings">
                                                                         Grind {bestDialIn.grindSize} • {bestDialIn.basket}
-                                                                        {bestDialIn.temperature ? ` • ${bestDialIn.temperature}` : ''} • Str {bestDialIn.strength}
+                                                                        {bestDialIn.waterTempC !== undefined ? ` • ${bestDialIn.waterTempC} °C` : ''} • Str {bestDialIn.strength}
                                                                     </span>
                                                                 </div>
                                                                 <button

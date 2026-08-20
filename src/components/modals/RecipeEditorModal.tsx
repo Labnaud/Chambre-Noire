@@ -1,7 +1,7 @@
 import type { useShotForm } from '../../hooks/useShotForm';
 import type { SavedRecipe } from '../../types';
-import { COLD_BREW_TYPES } from '../../types';
-import { BASKETS, TEMPERATURES, STRENGTHS } from '../../constants';
+import { BASKETS, STRENGTHS, GRIND_MIN, GRIND_MAX } from '../../constants';
+import { describeBrew, profileFor } from '../../lib/brew';
 import { useFocusTrap } from '../../hooks';
 import Icons from '../Icons';
 
@@ -26,7 +26,6 @@ export default function RecipeEditorModal({
 }: RecipeEditorModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
     if (!open) return null;
-    const isColdBrew = COLD_BREW_TYPES.includes(form.brewType);
     const isEdit = editingRecipe !== null;
 
     return (
@@ -81,8 +80,8 @@ export default function RecipeEditorModal({
                                     <input
                                         type="number"
                                         className="form-input form-input--sm"
-                                        min={1}
-                                        max={25}
+                                        min={GRIND_MIN}
+                                        max={GRIND_MAX}
                                         value={form.grindSize}
                                         onChange={(e) => form.setGrindSize(Number(e.target.value))}
                                     />
@@ -105,22 +104,21 @@ export default function RecipeEditorModal({
                                 </div>
                             </div>
 
-                            {!isColdBrew && (
+                            {profileFor(form.method).hasWaterTemp && (
                                 <div className="form-group">
-                                    <label className="form-label">Temperature</label>
-                                    <div className="pill-group pill-group--sm">
-                                        {TEMPERATURES.map((t) => (
-                                            <button
-                                                key={t}
-                                                type="button"
-                                                className={`pill-btn pill-btn--sm ${form.temperature === t ? 'pill-btn--active' : ''}`}
-                                                onClick={() => form.setTemperature(t)}
-                                                aria-pressed={form.temperature === t}
-                                            >
-                                                {t}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <label className="form-label" htmlFor="recipe-water-temp">
+                                        Water Temperature ({form.waterTempC} &deg;C)
+                                    </label>
+                                    <input
+                                        id="recipe-water-temp"
+                                        type="range"
+                                        className="slider slider--thick"
+                                        min={profileFor(form.method).tempRangeC[0]}
+                                        max={profileFor(form.method).tempRangeC[1]}
+                                        step={1}
+                                        value={form.waterTempC}
+                                        onChange={(e) => form.setWaterTempC(Number(e.target.value))}
+                                    />
                                 </div>
                             )}
 
@@ -157,13 +155,13 @@ export default function RecipeEditorModal({
                     <div className="modal__preview">
                         <div className="modal__preview-label">{isEdit ? 'Updated recipe:' : 'Will save:'}</div>
                         <div className="setting-tags-wrap">
-                            <span className="setting-tag">{form.brewType}</span>
+                            <span className="setting-tag">{describeBrew({ method: form.method, pourPattern: form.pourPattern, iced: form.iced, drink: undefined })}</span>
                             <span className="setting-tag">{form.beanName}</span>
                             <span className="setting-tag">Grind {form.grindSize}</span>
-                            {!isColdBrew && <span className="setting-tag">{form.temperature}</span>}
-                            <span className="setting-tag">{form.basket}</span>
+                            {profileFor(form.method).hasWaterTemp && <span className="setting-tag">{form.waterTempC} &deg;C</span>}
+                            {form.method === 'Espresso' && <span className="setting-tag">{form.basket}</span>}
                             <span className="setting-tag">Str {form.strength}</span>
-                            {form.showMilk && <span className="setting-tag setting-tag--milk">{form.milkType} {form.milkStyle}</span>}
+                            {form.showDrink && <span className="setting-tag setting-tag--milk">{form.milkType} {form.drink}</span>}
                             {form.notes && <span className="setting-tag">{form.notes}</span>}
                         </div>
                     </div>

@@ -1,42 +1,50 @@
 import { useState } from 'react';
-import type { Basket, Temperature, Strength } from '../../types';
-import { BASKETS, TEMPERATURES, STRENGTHS } from '../../constants';
+import type { Basket, Strength, BrewMethod, PourPattern } from '../../types';
+import { BASKETS, STRENGTHS, POUR_PATTERNS, GRIND_MIN, GRIND_MAX } from '../../constants';
+import { BREW_METHODS, profileFor } from '../../lib/brew';
 import Icons from '../Icons';
 
 interface BrewControlsProps {
+    method: BrewMethod;
+    setMethod: (m: BrewMethod) => void;
+    pourPattern: PourPattern;
+    setPourPattern: (p: PourPattern) => void;
+    iced: boolean;
+    setIced: (v: boolean) => void;
+    iceGrams: string;
+    setIceGrams: (v: string) => void;
     basket: Basket;
     setBasket: (b: Basket) => void;
     grindSize: number;
     setGrindSize: (g: number) => void;
-    temperature: Temperature;
-    setTemperature: (t: Temperature) => void;
+    waterTempC: number;
+    setWaterTempC: (t: number) => void;
     strength: Strength;
     setStrength: (s: Strength) => void;
-    isColdBrew: boolean;
     onIncrementGrind: () => void;
     onDecrementGrind: () => void;
 }
 
 export default function BrewControls({
-    basket,
-    setBasket,
-    grindSize,
-    setGrindSize,
-    temperature,
-    setTemperature,
-    strength,
-    setStrength,
-    isColdBrew,
+    method, setMethod,
+    pourPattern, setPourPattern,
+    iced, setIced,
+    iceGrams, setIceGrams,
+    basket, setBasket,
+    grindSize, setGrindSize,
+    waterTempC, setWaterTempC,
+    strength, setStrength,
     onIncrementGrind,
     onDecrementGrind,
 }: BrewControlsProps) {
     const [editingGrind, setEditingGrind] = useState(false);
     const [grindDraft, setGrindDraft] = useState('');
+    const profile = profileFor(method);
 
     const commitGrind = () => {
         const n = Math.round(Number(grindDraft));
         if (grindDraft.trim() !== '' && Number.isFinite(n)) {
-            setGrindSize(Math.min(25, Math.max(1, n)));
+            setGrindSize(Math.min(GRIND_MAX, Math.max(GRIND_MIN, n)));
         }
         setEditingGrind(false);
     };
@@ -44,21 +52,95 @@ export default function BrewControls({
     return (
         <>
             <div className="form-group">
-                <span className="form-label" id="shot-basket-label">Basket Size</span>
-                <div className="pill-group" role="group" aria-labelledby="shot-basket-label">
-                    {BASKETS.map((b) => (
+                <span className="form-label" id="shot-method-label">Method</span>
+                <div className="pill-group" role="group" aria-labelledby="shot-method-label">
+                    {BREW_METHODS.map((m) => (
                         <button
-                            key={b}
+                            key={m}
                             type="button"
-                            className={`pill-btn ${basket === b ? 'pill-btn--active' : ''}`}
-                            onClick={() => setBasket(b)}
-                            aria-pressed={basket === b}
+                            className={`pill-btn ${method === m ? 'pill-btn--active' : ''}`}
+                            onClick={() => setMethod(m)}
+                            aria-pressed={method === m}
                         >
-                            {b}
+                            {m}
                         </button>
                     ))}
                 </div>
             </div>
+
+            {profile.hasPourPattern && (
+                <div className="form-group">
+                    <span className="form-label" id="shot-pour-label">Pour Pattern</span>
+                    <div className="pill-group" role="group" aria-labelledby="shot-pour-label">
+                        {POUR_PATTERNS.map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                className={`pill-btn ${pourPattern === p ? 'pill-btn--active' : ''}`}
+                                onClick={() => setPourPattern(p)}
+                                aria-pressed={pourPattern === p}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {profile.supportsIce && (
+                <div className="form-group">
+                    <div className="rating-header">
+                        <span className="form-label" id="shot-iced-label">Served over ice</span>
+                        <button
+                            type="button"
+                            className="rating-later-toggle"
+                            onClick={() => setIced(!iced)}
+                            aria-pressed={iced}
+                            aria-labelledby="shot-iced-label"
+                        >
+                            {iced ? 'Iced' : 'Hot'}
+                        </button>
+                    </div>
+                    {iced && (
+                        <div className="ice-field">
+                            <label className="form-label" htmlFor="shot-ice">Ice (g)</label>
+                            <input
+                                id="shot-ice"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="5"
+                                className="form-input form-input--sm"
+                                placeholder="100"
+                                value={iceGrams}
+                                onChange={(e) => setIceGrams(e.target.value)}
+                            />
+                            <span className="ice-field__hint">
+                                Counts inside total water, so hot water = total &minus; ice.
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {method === 'Espresso' && (
+                <div className="form-group">
+                    <span className="form-label" id="shot-basket-label">Basket Size</span>
+                    <div className="pill-group" role="group" aria-labelledby="shot-basket-label">
+                        {BASKETS.map((b) => (
+                            <button
+                                key={b}
+                                type="button"
+                                className={`pill-btn ${basket === b ? 'pill-btn--active' : ''}`}
+                                onClick={() => setBasket(b)}
+                                aria-pressed={basket === b}
+                            >
+                                {b}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="form-group">
                 <label className="form-label" htmlFor="shot-grind-size">Grind Size</label>
@@ -67,7 +149,7 @@ export default function BrewControls({
                         type="button"
                         className="grind-control__btn"
                         onClick={onDecrementGrind}
-                        disabled={grindSize <= 1}
+                        disabled={grindSize <= GRIND_MIN}
                         aria-label="Decrease grind size"
                     >
                         <Icons.Minus />
@@ -77,8 +159,8 @@ export default function BrewControls({
                             id="shot-grind-size"
                             type="range"
                             className="slider slider--thick"
-                            min={1}
-                            max={25}
+                            min={GRIND_MIN}
+                            max={GRIND_MAX}
                             value={grindSize}
                             onChange={(e) => setGrindSize(Number(e.target.value))}
                         />
@@ -87,8 +169,8 @@ export default function BrewControls({
                                 type="number"
                                 inputMode="numeric"
                                 className="grind-control__value grind-control__value--input"
-                                min={1}
-                                max={25}
+                                min={GRIND_MIN}
+                                max={GRIND_MAX}
                                 value={grindDraft}
                                 autoFocus
                                 aria-label="Grind size"
@@ -114,33 +196,38 @@ export default function BrewControls({
                         type="button"
                         className="grind-control__btn"
                         onClick={onIncrementGrind}
-                        disabled={grindSize >= 25}
+                        disabled={grindSize >= GRIND_MAX}
                         aria-label="Increase grind size"
                     >
                         <Icons.Plus />
                     </button>
                 </div>
                 <div className="slider-labels">
-                    <span>1 Fine</span>
-                    <span>25 Coarse</span>
+                    <span>{GRIND_MIN} Fine</span>
+                    <span>{GRIND_MAX} Coarse</span>
                 </div>
             </div>
 
-            {!isColdBrew && (
+            {profile.hasWaterTemp && (
                 <div className="form-group">
-                    <span className="form-label" id="shot-temperature-label">Temperature</span>
-                    <div className="pill-group" role="group" aria-labelledby="shot-temperature-label">
-                        {TEMPERATURES.map((t) => (
-                            <button
-                                key={t}
-                                type="button"
-                                className={`pill-btn ${temperature === t ? 'pill-btn--active' : ''}`}
-                                onClick={() => setTemperature(t)}
-                                aria-pressed={temperature === t}
-                            >
-                                {t}
-                            </button>
-                        ))}
+                    <div className="rating-header">
+                        <label className="form-label" htmlFor="shot-water-temp">Water Temperature</label>
+                        <span className="temp-readout">{waterTempC} &deg;C</span>
+                    </div>
+                    <input
+                        id="shot-water-temp"
+                        type="range"
+                        className="slider slider--thick"
+                        min={profile.tempRangeC[0]}
+                        max={profile.tempRangeC[1]}
+                        step={1}
+                        value={waterTempC}
+                        onChange={(e) => setWaterTempC(Number(e.target.value))}
+                        aria-valuetext={`${waterTempC} degrees Celsius`}
+                    />
+                    <div className="slider-labels">
+                        <span>{profile.tempRangeC[0]} &deg;C</span>
+                        <span>{profile.tempRangeC[1]} &deg;C</span>
                     </div>
                 </div>
             )}

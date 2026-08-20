@@ -1,6 +1,7 @@
 import type { ShotLog, Rating } from '../types';
 import { formatDate } from '../lib/format';
 import { getRatioLabel } from '../lib/dialIn';
+import { describeBrew, hotWaterGrams } from '../lib/brew';
 import Icons from './Icons';
 
 interface ShotHistoryRowProps {
@@ -34,7 +35,7 @@ export default function ShotHistoryRow({
 }: ShotHistoryRowProps) {
     const config = shot.rating ? ratingConfig[shot.rating] : null;
     const ShotIcon = config?.icon;
-    const ratioLabel = getRatioLabel(shot.doseIn, shot.doseOut, shot.brewType);
+    const ratioLabel = getRatioLabel(shot.doseIn, shot.doseOut, shot.method);
 
     return (
         <div
@@ -52,13 +53,21 @@ export default function ShotHistoryRow({
                 <span className="history-item__details">
                     <span className="history-item__bean">{shot.beanName}</span>
                     <span className="history-item__meta">
-                        {shot.brewType} • {formatDate(shot.timestamp, use24Hour)}
+                        {describeBrew(shot)} • {formatDate(shot.timestamp, use24Hour)}
                     </span>
                     <span className="history-item__settings">
                         <span className="setting-tag">Grind {shot.grindSize}</span>
-                        {shot.temperature && <span className="setting-tag">{shot.temperature}</span>}
-                        <span className="setting-tag">{shot.basket}</span>
+                        {shot.waterTempC !== undefined && <span className="setting-tag">{shot.waterTempC} &deg;C</span>}
+                        {shot.method === 'Espresso' && <span className="setting-tag">{shot.basket}</span>}
+                        {shot.iced && shot.iceGrams !== undefined && (
+                            <span className="setting-tag">{shot.iceGrams}g ice &rarr; {hotWaterGrams(shot)}g hot</span>
+                        )}
                         <span className="setting-tag">Str {shot.strength}</span>
+                        {shot.score !== undefined && (
+                            <span className="setting-tag setting-tag--score">
+                                <Icons.Star filled /> {shot.score.toFixed(1)}
+                            </span>
+                        )}
                         {shot.extractionTime && (
                             <span className="setting-tag setting-tag--timer"><Icons.Timer /> {shot.extractionTime}s</span>
                         )}
@@ -68,9 +77,9 @@ export default function ShotHistoryRow({
                                 {ratioLabel && <span className="ratio-label">{ratioLabel}</span>}
                             </span>
                         )}
-                        {shot.milk && (
+                        {shot.drink && (
                             <span className="setting-tag setting-tag--milk">
-                                {shot.milk.type} {shot.milk.style}
+                                {shot.milkType ? `${shot.milkType} ` : ''}{shot.drink}
                             </span>
                         )}
                     </span>

@@ -5,7 +5,7 @@ import type { ShotLog } from '../types';
 const baseShot = (over: Partial<ShotLog>): ShotLog => ({
     id: 'a',
     beanName: 'Ethiopia Yirgacheffe',
-    brewType: 'Espresso',
+    method: 'Espresso',
     basket: 'Double',
     grindSize: 12,
     strength: 2,

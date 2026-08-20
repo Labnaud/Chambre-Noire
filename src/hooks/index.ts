@@ -24,6 +24,10 @@ export { useBeanAutocomplete } from './useBeanAutocomplete';
 
 export { useMaintenance } from './useMaintenance';
 
+export { useIntake } from './useIntake';
+
+export { useCaffeinePrefs } from './useCaffeinePrefs';
+
 export { useFocusTrap } from './useFocusTrap';
 
 export { useScrollLock } from './useScrollLock';

@@ -5,12 +5,12 @@ import { saveStorageValue } from '../lib/storage';
 const VALID_THEMES: ThemeType[] = ['dark', 'light', 'catppuccin', 'rosepine', 'rosepine-moon', 'fadetouched'];
 
 function loadTheme(): ThemeType {
-    const saved = localStorage.getItem('theme');
+    const saved = localStorage.getItem('chambre-noire-theme');
     return VALID_THEMES.includes(saved as ThemeType) ? (saved as ThemeType) : 'dark';
 }
 
 function load24Hour(): boolean {
-    return localStorage.getItem('luxe-cafe-24hour') === 'true';
+    return localStorage.getItem('chambre-noire-24hour') === 'true';
 }
 
 export function useTheme() {
@@ -19,12 +19,12 @@ export function useTheme() {
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
-        saveStorageValue('theme', theme);
+        saveStorageValue('chambre-noire-theme', theme);
     }, [theme]);
 
     const setUse24Hour = (v: boolean) => {
         setUse24HourState(v);
-        saveStorageValue('luxe-cafe-24hour', String(v));
+        saveStorageValue('chambre-noire-24hour', String(v));
     };
 
     const cycleTheme = () =>

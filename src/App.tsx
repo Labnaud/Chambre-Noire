@@ -1,31 +1,29 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { FormEvent } from 'react';
-import type { ShotLog, Rating, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent } from './types';
-import { COLD_BREW_TYPES } from './types';
+import type { ShotLog, Rating, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from './types';
 import { generateId } from './lib/format';
 import { getFreshnessAlert } from './lib/beans';
 import { getBeanInventory } from './lib/inventory';
 import { getLogMessage } from './lib/milestones';
 import { getSuggestedSettings } from './lib/suggestions';
 import { getMaintenanceAlerts } from './lib/maintenance';
-import { RATINGS, RATING_COLORS, BALANCED_RATING_INDEX } from './constants';
-import { useToast, useConfirm, useTimer, useShots, useBeans, useRecipes, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock } from './hooks';
+import { RATINGS, RATING_COLORS, BALANCED_RATING_INDEX, GRIND_MIN, GRIND_MAX } from './constants';
+import { useToast, useConfirm, useTimer, useShots, useBeans, useRecipes, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock, useIntake, useCaffeinePrefs } from './hooks';
 import Icons from './components/Icons';
 import Header from './components/Header';
 import ShotForm from './components/ShotForm/ShotForm';
 import ConfirmDialog from './components/modals/ConfirmDialog';
 import ShotDetailModal from './components/modals/ShotDetailModal';
-import { buildJSONBackup, buildCSV, downloadFile, parseImportFile, parseBackup } from './lib/dataIO';
+import { buildJSONBackup, buildCSV, downloadFile, parseImportFile } from './lib/dataIO';
 import type { ImportResult } from './lib/dataIO';
-import { readMigrationLanding, clearMigrationHash, shouldOfferMigration, startMigration, dismissMigration } from './lib/migration';
 import Toast from './components/Toast';
-import MigrationNotice from './components/MigrationNotice';
 import SuggestionCard from './components/SuggestionCard';
 import ShotHistory from './components/ShotHistory';
 import ShotComparison from './components/ShotComparison';
 import { RATING_COLOR_CLASS } from './lib/ratings';
 import { saveStorageValue } from './lib/storage';
 import { getRecentShotsForBean } from './lib/shots';
+import { profileFor, describeBrew } from './lib/brew';
 
 const RecipeEditorModal = lazy(() => import('./components/modals/RecipeEditorModal'));
 const BeanLibraryModal = lazy(() => import('./components/modals/BeanLibraryModal'));
@@ -61,9 +59,9 @@ function App() {
     beans: BeanProfile[];
     favorites: FavoritesMap;
     maintenance: MaintenanceEvent[];
+    intake: CaffeineEntry[];
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showMigration, setShowMigration] = useState(() => shouldOfferMigration());
   const [showCaffeine, setShowCaffeine] = useState(false);
   const [beanFilter, setBeanFilter] = useState<string>('');
   const [notesSearch, setNotesSearch] = useState<string>('');
@@ -79,6 +77,8 @@ function App() {
   const { favorites, toggleFavorite, replaceAll: setFavorites } = useFavorites();
   const { theme, setTheme, use24Hour, setUse24Hour, cycleTheme } = useTheme();
   const { events: maintenanceEvents, recordCleaning, recordDescaling, lastEventFor: lastMaintenanceFor, replaceAll: setMaintenance } = useMaintenance();
+  const { entries: intake, addEntry: addIntake, deleteEntry: deleteIntake, replaceAll: setIntake } = useIntake();
+  const { prefs: caffeinePrefs, setPref: setCaffeinePref } = useCaffeinePrefs();
 
   const autocomplete = useBeanAutocomplete(beans, shots);
 
@@ -93,46 +93,18 @@ function App() {
   }, [justLoggedId]);
 
   const [showShortcuts, setShowShortcuts] = useState(() => {
-    const stored = localStorage.getItem('luxe-cafe-show-shortcuts');
+    const stored = localStorage.getItem('chambre-noire-show-shortcuts');
     return stored === null ? false : stored === 'true';
   });
 
   useEffect(() => {
     const onStorageError = () =>
       showToast('Storage full. Your latest change was not saved. Export a backup.', 'error');
-    window.addEventListener('luxe:storage-error', onStorageError);
-    return () => window.removeEventListener('luxe:storage-error', onStorageError);
+    window.addEventListener('chambre-noire:storage-error', onStorageError);
+    return () => window.removeEventListener('chambre-noire:storage-error', onStorageError);
   }, [showToast]);
 
-  // Land a one-time migration payload from the old domain (see lib/migration).
-  const migrationLanded = useRef(false);
-  useEffect(() => {
-    if (migrationLanded.current) return;
-    migrationLanded.current = true;
-    const landing = readMigrationLanding();
-    if (!landing) return;
-    clearMigrationHash();
-    if (landing.invalid) {
-      showToast('Could not read the data from the old site. Try Export and Import instead.', 'error');
-      return;
-    }
-    if (landing.tooBig) {
-      showToast('Your data is large. On the old site use Settings, Export, then Import here.', 'error');
-      return;
-    }
-    try {
-      const data = parseBackup(landing.json!);
-      applyResult(data);
-      setShowMigration(false);
-      showToast(`Brought over ${data.shots.length} shots, ${data.recipes.length} recipes, ${data.beans.length} beans`, 'success');
-    } catch {
-      showToast('Could not read the data from the old site. Try Export and Import instead.', 'error');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const rating = RATINGS[form.ratingIndex];
-  const isColdBrew = COLD_BREW_TYPES.includes(form.brewType);
 
   const anyModalOpen =
     showRecipeModal || showRecipeLibrary || showBeanLibrary || showStats || showCaffeine
@@ -178,7 +150,7 @@ function App() {
     if (!suggestedSettings || !lastShotForBean) return;
     form.applyFromShot(lastShotForBean);
     form.setGrindSize(suggestedSettings.grindSize);
-    form.setTemperature(suggestedSettings.temperature);
+    form.setWaterTempC(suggestedSettings.waterTempC);
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
   };
@@ -190,12 +162,15 @@ function App() {
       id: generateId(),
       name: recipeName.trim(),
       beanName: form.beanName.trim(),
-      brewType: form.brewType,
+      method: form.method,
+      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
+      iced: form.iced || undefined,
       basket: form.basket,
       grindSize: form.grindSize,
-      temperature: isColdBrew ? undefined : form.temperature,
+      waterTempC: form.waterTempC,
       strength: form.strength,
-      milk: form.showMilk ? { type: form.milkType, style: form.milkStyle } : undefined,
+      drink: form.showDrink ? form.drink : undefined,
+      milkType: form.showDrink ? form.milkType : undefined,
       notes: form.notes.trim() || undefined,
       createdAt: new Date(),
     };
@@ -222,20 +197,7 @@ function App() {
   const openEditRecipe = (recipe: SavedRecipe) => {
     setEditingRecipe(recipe);
     setRecipeName(recipe.name);
-    form.setBeanName(recipe.beanName);
-    form.setBrewType(recipe.brewType);
-    form.setBasket(recipe.basket);
-    form.setGrindSize(recipe.grindSize);
-    form.setStrength(recipe.strength);
-    if (recipe.temperature) form.setTemperature(recipe.temperature);
-    if (recipe.milk) {
-      form.setShowMilk(true);
-      form.setMilkType(recipe.milk.type);
-      form.setMilkStyle(recipe.milk.style);
-    } else {
-      form.setShowMilk(false);
-    }
-    form.setNotes(recipe.notes || '');
+    form.applyFromRecipe(recipe);
     setShowRecipeLibrary(false);
     setShowRecipeModal(true);
   };
@@ -247,12 +209,15 @@ function App() {
       ...editingRecipe,
       name: recipeName.trim(),
       beanName: form.beanName,
-      brewType: form.brewType,
+      method: form.method,
+      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
+      iced: form.iced || undefined,
       basket: form.basket,
       grindSize: form.grindSize,
-      temperature: isColdBrew ? undefined : form.temperature,
+      waterTempC: form.waterTempC,
       strength: form.strength,
-      milk: form.showMilk ? { type: form.milkType, style: form.milkStyle } : undefined,
+      drink: form.showDrink ? form.drink : undefined,
+      milkType: form.showDrink ? form.milkType : undefined,
       notes: form.notes.trim() || undefined,
     };
 
@@ -339,14 +304,23 @@ function App() {
     const updated: ShotLog = {
       ...editingShot,
       beanName: form.beanName.trim(),
-      brewType: form.brewType,
+      method: form.method,
+      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
+      iced: form.iced || undefined,
+      iceGrams: form.iced && form.iceGrams ? parseFloat(form.iceGrams) : undefined,
       basket: form.basket,
       grindSize: form.grindSize,
-      temperature: isColdBrew ? undefined : form.temperature,
+      waterTempC: form.waterTempC,
       strength: form.strength,
       rating: form.rated ? rating : undefined,
-      milk: form.showMilk ? { type: form.milkType, style: form.milkStyle } : undefined,
+      score: form.scored ? form.score : undefined,
+      drink: form.showDrink ? form.drink : undefined,
+      milkType: form.showDrink ? form.milkType : undefined,
+      milkMl: form.showDrink && form.milkMl ? parseFloat(form.milkMl) : undefined,
+      milkTempC: form.showDrink && form.milkTempC ? parseFloat(form.milkTempC) : undefined,
+      waterMl: form.showDrink && form.waterMl ? parseFloat(form.waterMl) : undefined,
       notes: form.notes.trim() || undefined,
+      sessionLog: form.sessionLog.trim() || undefined,
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
     };
@@ -381,9 +355,9 @@ function App() {
   };
 
   const exportData = () => {
-    const json = buildJSONBackup(shots, recipes, beans, favorites, maintenanceEvents);
+    const json = buildJSONBackup(shots, recipes, beans, favorites, maintenanceEvents, intake);
     const date = new Date().toISOString().slice(0, 10);
-    downloadFile(`luxe-cafe-backup-${date}.json`, json, 'application/json');
+    downloadFile(`chambre-noire-backup-${date}.json`, json, 'application/json');
     showToast('Backup exported', 'success');
   };
 
@@ -394,7 +368,7 @@ function App() {
     }
     const csv = buildCSV(shots);
     const date = new Date().toISOString().slice(0, 10);
-    downloadFile(`luxe-cafe-shots-${date}.csv`, csv, 'text/csv;charset=utf-8;');
+    downloadFile(`chambre-noire-shots-${date}.csv`, csv, 'text/csv;charset=utf-8;');
     showToast(`Exported ${shots.length} shots to CSV`, 'success');
   };
 
@@ -404,17 +378,18 @@ function App() {
     setBeans(data.beans);
     setFavorites(data.favorites);
     setMaintenance(data.maintenance);
+    setIntake(data.intake);
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      const previous = { shots, recipes, beans, favorites, maintenance: maintenanceEvents };
+      const previous = { shots, recipes, beans, favorites, maintenance: maintenanceEvents, intake };
       const data = await parseImportFile(file);
       applyResult(data);
       setImportBackup(previous); // enables one-click Undo import
-      const skipped = data.skipped.shots + data.skipped.recipes + data.skipped.beans + data.skipped.maintenance;
+      const skipped = data.skipped.shots + data.skipped.recipes + data.skipped.beans + data.skipped.maintenance + data.skipped.intake;
       let message = `Imported ${data.shots.length} shots, ${data.recipes.length} recipes, ${data.beans.length} beans`;
       if (skipped > 0) message += `; skipped ${skipped} unreadable ${skipped === 1 ? 'entry' : 'entries'}`;
       setImportStatus({ type: 'success', message });
@@ -433,13 +408,14 @@ function App() {
     setBeans(importBackup.beans);
     setFavorites(importBackup.favorites);
     setMaintenance(importBackup.maintenance);
+    setIntake(importBackup.intake);
     setImportBackup(null);
     setImportStatus({ type: 'success', message: 'Import reverted' });
     showToast('Import reverted', 'info');
   };
 
-  const decrementGrind = () => form.setGrindSize(Math.max(1, form.grindSize - 1));
-  const incrementGrind = () => form.setGrindSize(Math.min(25, form.grindSize + 1));
+  const decrementGrind = () => form.setGrindSize(Math.max(GRIND_MIN, form.grindSize - 1));
+  const incrementGrind = () => form.setGrindSize(Math.min(GRIND_MAX, form.grindSize + 1));
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -464,14 +440,23 @@ function App() {
     const newShot: ShotLog = {
       id: generateId(),
       beanName: form.beanName.trim(),
-      brewType: form.brewType,
+      method: form.method,
+      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
+      iced: form.iced || undefined,
+      iceGrams: form.iced && form.iceGrams ? parseFloat(form.iceGrams) : undefined,
       basket: form.basket,
       grindSize: form.grindSize,
-      temperature: isColdBrew ? undefined : form.temperature,
+      waterTempC: form.waterTempC,
       strength: form.strength,
       rating: form.rated ? rating : undefined,
-      milk: form.showMilk ? { type: form.milkType, style: form.milkStyle } : undefined,
+      score: form.scored ? form.score : undefined,
+      drink: form.showDrink ? form.drink : undefined,
+      milkType: form.showDrink ? form.milkType : undefined,
+      milkMl: form.showDrink && form.milkMl ? parseFloat(form.milkMl) : undefined,
+      milkTempC: form.showDrink && form.milkTempC ? parseFloat(form.milkTempC) : undefined,
+      waterMl: form.showDrink && form.waterMl ? parseFloat(form.waterMl) : undefined,
       notes: form.notes.trim() || undefined,
+      sessionLog: form.sessionLog.trim() || undefined,
       extractionTime: getExtractionTime(),
       doseIn: form.doseIn ? parseFloat(form.doseIn) : undefined,
       doseOut: form.doseOut ? parseFloat(form.doseOut) : undefined,
@@ -513,13 +498,6 @@ function App() {
         onOpenSettings={openModal(setShowSettings)}
       />
 
-      {showMigration && (
-        <MigrationNotice
-          onMigrate={() => startMigration()}
-          onDismiss={() => { dismissMigration(); setShowMigration(false); }}
-        />
-      )}
-
       {recipes.filter(r => pinnedRecipes.has(r.id)).length > 0 && (
         <div className="recipe-menu">
           <div className="recipe-menu__label">
@@ -536,7 +514,7 @@ function App() {
                       form.applyFromRecipe(recipe);
                       showToast(`Applied "${recipe.name}"`, 'success');
                     }}
-                    title={`${recipe.beanName} • ${recipe.brewType}${recipe.notes ? ` • ${recipe.notes}` : ''}`}
+                    title={`${recipe.beanName} • ${describeBrew(recipe)}${recipe.notes ? ` • ${recipe.notes}` : ''}`}
                   >
                     {recipe.name}
                   </button>
@@ -565,7 +543,6 @@ function App() {
           <ShotForm
             form={form}
             timer={{ timerRunning, timerSeconds, startTimer, stopTimer, resetTimer }}
-            isColdBrew={isColdBrew}
             onSubmit={handleSubmit}
             onIncrementGrind={incrementGrind}
             onDecrementGrind={decrementGrind}
@@ -578,6 +555,7 @@ function App() {
               setEditingShot(null);
               form.setBeanName('');
               form.setNotes('');
+              form.setSessionLog('');
               form.setDoseIn('');
               form.setDoseOut('');
               showToast('Edit cancelled', 'info');
@@ -761,6 +739,11 @@ function App() {
           <CaffeineModal
             open={true}
             shots={shots}
+            intake={intake}
+            prefs={caffeinePrefs}
+            setPref={setCaffeinePref}
+            onAddIntake={addIntake}
+            onDeleteIntake={deleteIntake}
             onClose={() => setShowCaffeine(false)}
           />
         )}
@@ -820,6 +803,7 @@ function App() {
                   setBeans([]);
                   setFavorites({});
                   setMaintenance([]);
+                  setIntake([]);
                   setImportBackup(null);
                   showToast('All data cleared', 'success');
                   setShowSettings(false);
@@ -865,7 +849,7 @@ function App() {
                 className="shortcuts-panel__close"
                 onClick={() => {
                   setShowShortcuts(false);
-                  saveStorageValue('luxe-cafe-show-shortcuts', 'false');
+                  saveStorageValue('chambre-noire-show-shortcuts', 'false');
                 }}
                 title="Hide shortcuts"
               >
@@ -896,7 +880,7 @@ function App() {
             className="shortcuts-panel__toggle"
             onClick={() => {
               setShowShortcuts(true);
-              saveStorageValue('luxe-cafe-show-shortcuts', 'true');
+              saveStorageValue('chambre-noire-show-shortcuts', 'true');
             }}
             title="Show keyboard shortcuts"
             aria-label="Show keyboard shortcuts"

@@ -37,7 +37,7 @@ export default function ShotComparison({ shot1, shot2, onClear, onRemoveAt }: Sh
                                     </div>
                                     <div className="compare-panel__detail">
                                         <span className="compare-panel__label">Temp</span>
-                                        <span className="compare-panel__value">{shot.temperature || '-'}</span>
+                                        <span className="compare-panel__value">{shot.waterTempC !== undefined ? `${shot.waterTempC} °C` : '-'}</span>
                                     </div>
                                     <div className="compare-panel__detail">
                                         <span className="compare-panel__label">Basket</span>

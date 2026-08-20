@@ -1,4 +1,4 @@
-import type { Rating, BrewType, Basket, Temperature, Strength, MilkType, MilkStyle, ProcessMethod, RoastLevel } from './types';
+import type { Rating, Basket, Strength, MilkType, PourPattern, ProcessMethod, RoastLevel } from './types';
 
 export const RATINGS: Rating[] = ['Very Sour', 'Sour', 'Balanced', 'Bitter', 'Very Bitter'];
 
@@ -11,17 +11,25 @@ export const RATING_COLORS: Record<Rating, string> = {
     'Very Bitter': 'var(--color-very-bitter)',
 };
 
-export const BREW_TYPES: BrewType[] = ['Espresso', 'Drip Coffee', 'Cold Brew', 'Cold Pressed', 'Over Ice'];
-export const BASKETS: Basket[] = ['Single', 'Double', 'Luxe'];
-export const TEMPERATURES: Temperature[] = ['Low', 'Med', 'High'];
+export const BASKETS: Basket[] = ['Single', 'Double'];
+export const POUR_PATTERNS: PourPattern[] = ['2 Pours', '5 Pours'];
 export const STRENGTHS: { value: Strength; label: string }[] = [
     { value: 1, label: '1 Mild' },
-    { value: 2, label: '2 Classic' },
-    { value: 3, label: '3 Rich' },
+    { value: 2, label: '2 Medium' },
+    { value: 3, label: '3 Strong' },
 ];
 export const MILK_TYPES: MilkType[] = ['Dairy', 'Plant'];
-export const MILK_STYLES: MilkStyle[] = ['Steamed', 'Thin', 'Thick', 'Extra-Thick', 'Cold Foam'];
 export const PROCESS_METHODS: ProcessMethod[] = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Other'];
 export const ROAST_LEVELS: RoastLevel[] = ['Light', 'Medium', 'Medium-Dark', 'Dark'];
 
 export const BALANCED_RATING_INDEX = 2;
+
+// One continuous grinder scale covering espresso (finer) through filter
+// (coarser), so a single setting is comparable across brew methods.
+export const GRIND_MIN = 1;
+export const GRIND_MAX = 80;
+
+// Quality score, separate from the sour <-> bitter rating axis.
+export const SCORE_MIN = 0;
+export const SCORE_MAX = 5;
+export const SCORE_STEP = 0.5;

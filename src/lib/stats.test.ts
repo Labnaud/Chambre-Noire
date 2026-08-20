@@ -16,7 +16,7 @@ afterEach(() => {
 const shot = (over: Partial<ShotLog> & { rating?: Rating }): ShotLog => ({
     id: Math.random().toString(),
     beanName: 'Ethiopia',
-    brewType: 'Espresso',
+    method: 'Espresso',
     basket: 'Double',
     grindSize: 12,
     strength: 2,
@@ -112,8 +112,8 @@ describe('computeStats', () => {
 
     it('shows the brew breakdown when multiple brew types are present', () => {
         const s = computeStats([
-            shot({ brewType: 'Espresso' }),
-            shot({ brewType: 'Drip Coffee' }),
+            shot({ method: 'Espresso' }),
+            shot({ method: 'V60' }),
         ]);
         expect(s.showBrewBreakdown).toBe(true);
     });

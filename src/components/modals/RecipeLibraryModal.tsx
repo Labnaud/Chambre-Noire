@@ -1,5 +1,6 @@
 import type { SavedRecipe } from '../../types';
 import { useFocusTrap } from '../../hooks';
+import { describeBrew } from '../../lib/brew';
 import Icons from '../Icons';
 
 interface RecipeLibraryModalProps {
@@ -98,14 +99,14 @@ export default function RecipeLibraryModal({
                                                 <Icons.Bean /> {recipe.beanName}
                                             </span>
                                             <div className="recipe-library__settings">
-                                                <span className="setting-tag">{recipe.brewType}</span>
+                                                <span className="setting-tag">{describeBrew(recipe)}</span>
                                                 <span className="setting-tag">Grind {recipe.grindSize}</span>
-                                                {recipe.temperature && <span className="setting-tag">{recipe.temperature}</span>}
-                                                <span className="setting-tag">{recipe.basket}</span>
+                                                {recipe.waterTempC !== undefined && <span className="setting-tag">{recipe.waterTempC} &deg;C</span>}
+                                                {recipe.method === 'Espresso' && <span className="setting-tag">{recipe.basket}</span>}
                                                 <span className="setting-tag">Str {recipe.strength}</span>
-                                                {recipe.milk && (
+                                                {recipe.drink && (
                                                     <span className="setting-tag setting-tag--milk">
-                                                        <Icons.Milk /> {recipe.milk.type} {recipe.milk.style}
+                                                        <Icons.Milk /> {recipe.milkType ? `${recipe.milkType} ` : ''}{recipe.drink}
                                                     </span>
                                                 )}
                                             </div>

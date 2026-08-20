@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { SavedRecipe } from '../types';
 import { loadRecipes, loadStringArray, saveRecipes, saveStringArray } from '../lib/storage';
 
-const PINNED_KEY = 'luxe-cafe-pinned-recipes';
+const PINNED_KEY = 'chambre-noire-pinned-recipes';
 
 function loadPinned(): Set<string> {
     return new Set(loadStringArray(PINNED_KEY));

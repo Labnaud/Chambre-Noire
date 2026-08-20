@@ -1,6 +1,7 @@
 import type { useTimer } from '../../hooks/useTimer';
-import type { BrewType } from '../../types';
+import type { BrewMethod } from '../../types';
 import { getRatioLabel } from '../../lib/dialIn';
+import { yieldLabel } from '../../lib/brew';
 import Icons from '../Icons';
 
 interface TimerInputProps {
@@ -16,7 +17,7 @@ interface TimerInputProps {
     setDoseIn: (v: string) => void;
     doseOut: string;
     setDoseOut: (v: string) => void;
-    brewType: BrewType;
+    method: BrewMethod;
     timer: ReturnType<typeof useTimer>;
 }
 
@@ -33,12 +34,12 @@ export default function TimerInput({
     setDoseIn,
     doseOut,
     setDoseOut,
-    brewType,
+    method,
     timer,
 }: TimerInputProps) {
     const { timerRunning, timerSeconds, startTimer, stopTimer, resetTimer } = timer;
     const ratioLabel = doseIn && doseOut
-        ? getRatioLabel(parseFloat(doseIn), parseFloat(doseOut), brewType)
+        ? getRatioLabel(parseFloat(doseIn), parseFloat(doseOut), method)
         : null;
     return (
         <div className="advanced-tools">
@@ -148,7 +149,7 @@ export default function TimerInput({
                                 </div>
                                 <span className="dose-yield__arrow" aria-hidden="true">→</span>
                                 <div className="dose-yield__field">
-                                    <label htmlFor="shot-dose-out">Out (g)</label>
+                                    <label htmlFor="shot-dose-out">{yieldLabel(method)}</label>
                                     <input
                                         id="shot-dose-out"
                                         type="number"

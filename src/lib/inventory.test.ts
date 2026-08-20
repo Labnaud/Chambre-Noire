@@ -13,7 +13,7 @@ const bean = (over: Partial<BeanProfile> = {}): BeanProfile => ({
 const shot = (over: Partial<ShotLog> = {}): ShotLog => ({
     id: Math.random().toString(),
     beanName: 'Ethiopia',
-    brewType: 'Espresso',
+    method: 'Espresso',
     basket: 'Double',
     grindSize: 12,
     strength: 2,

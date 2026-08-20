@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { parseBackup, buildJSONBackup, buildCSV } from './dataIO';
-import type { ShotLog, SavedRecipe, BeanProfile, MaintenanceEvent } from '../types';
+import type { ShotLog, SavedRecipe, BeanProfile, MaintenanceEvent, CaffeineEntry } from '../types';
 
 afterEach(() => { vi.restoreAllMocks(); });
 
 const validShot = {
     id: '1',
     beanName: 'Ethiopia',
-    brewType: 'Espresso',
+    method: 'Espresso',
     basket: 'Double',
     grindSize: 12,
     strength: 2,
@@ -91,7 +91,7 @@ describe('parseBackup', () => {
         const text = JSON.stringify({ shots: [
             validShot,
             { ...validShot, id: ' ' },
-            { ...validShot, id: '2', brewType: 'Tea' },
+            { ...validShot, id: '2', method: 'Tea' },
             { ...validShot, id: '3', strength: 9 },
         ] });
         const result = parseBackup(text);
@@ -126,7 +126,7 @@ describe('parseBackup', () => {
     });
 
     it('skips a recipe with an unparseable createdAt and counts it', () => {
-        const goodRecipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', brewType: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
+        const goodRecipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
         const text = JSON.stringify({ shots: [validShot], recipes: [goodRecipe, { ...goodRecipe, id: 'r2', createdAt: 'nope' }] });
         const result = parseBackup(text);
         expect(result.recipes).toHaveLength(1);
@@ -135,11 +135,11 @@ describe('parseBackup', () => {
     });
 
     it('skips recipes and beans with invalid required fields', () => {
-        const recipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', brewType: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
+        const recipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
         const bean = { id: 'b1', name: 'Ethiopia', isActive: true, createdAt: '2026-05-01T10:00:00.000Z' };
         const result = parseBackup(JSON.stringify({
             shots: [validShot],
-            recipes: [recipe, { ...recipe, id: '', basket: 'Triple' }],
+            recipes: [recipe, { ...recipe, id: '', basket: 'Quadruple' }],
             beans: [bean, { ...bean, id: 'b2', isActive: 'yes' }],
         }));
         expect(result.recipes.map((r: SavedRecipe) => r.id)).toEqual(['r1']);
@@ -151,7 +151,7 @@ describe('parseBackup', () => {
 
 describe('buildCSV formula-injection safety', () => {
     const base: ShotLog = {
-        id: '1', beanName: 'Ethiopia', brewType: 'Espresso', basket: 'Double',
+        id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
         grindSize: 12, strength: 2, rating: 'Balanced', timestamp: new Date('2026-05-01T10:00:00Z'),
     };
 
@@ -180,11 +180,11 @@ describe('buildCSV formula-injection safety', () => {
 describe('buildJSONBackup -> parseBackup round-trip', () => {
     it('preserves every collection a real export produces, with no entries skipped', () => {
         const shots: ShotLog[] = [{
-            id: 's1', beanName: 'Ethiopia', brewType: 'Espresso', basket: 'Double',
+            id: 's1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
             grindSize: 12, strength: 2, rating: 'Balanced', timestamp: new Date('2026-05-01T10:00:00Z'),
         }];
         const recipes: SavedRecipe[] = [{
-            id: 'r1', name: 'Latte', beanName: 'Ethiopia', brewType: 'Espresso',
+            id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso',
             basket: 'Double', grindSize: 12, strength: 2, createdAt: new Date('2026-05-01T10:00:00Z'),
         }];
         const beans: BeanProfile[] = [{
@@ -192,10 +192,13 @@ describe('buildJSONBackup -> parseBackup round-trip', () => {
         }];
         const favorites = { ethiopia: 's1' };
         const maintenance: MaintenanceEvent[] = [{ task: 'cleaning', performedAt: '2026-05-01T10:00:00.000Z', shotCountAtTime: 200 }];
+        const intake: CaffeineEntry[] = [{ id: 'i1', label: 'Coke', mg: 34, timestamp: new Date('2026-05-01T14:00:00Z') }];
 
-        const result = parseBackup(buildJSONBackup(shots, recipes, beans, favorites, maintenance));
+        const result = parseBackup(buildJSONBackup(shots, recipes, beans, favorites, maintenance, intake));
 
-        expect(result.skipped).toEqual({ shots: 0, recipes: 0, beans: 0, maintenance: 0 });
+        expect(result.skipped).toEqual({ shots: 0, recipes: 0, beans: 0, maintenance: 0, intake: 0 });
+        expect(result.intake[0].timestamp).toBeInstanceOf(Date);
+        expect(result.intake[0].mg).toBe(34);
         expect(result.shots[0].timestamp).toBeInstanceOf(Date);
         expect(result.recipes[0].createdAt).toBeInstanceOf(Date);
         expect(result.beans[0].createdAt).toBeInstanceOf(Date);
@@ -255,5 +258,29 @@ describe('parseBackup maintenance and favorites validation', () => {
         const text = JSON.stringify({ shots: [validShot], favorites: { ethiopia: 'shot-1', bad: 5 } });
         const result = parseBackup(text);
         expect(result.favorites).toEqual({ ethiopia: 'shot-1' });
+    });
+});
+
+describe('CSV score and session log', () => {
+    const shot = {
+        id: 's1', beanName: 'Ethiopia', method: 'Espresso' as const, basket: 'Double' as const,
+        grindSize: 12, strength: 2 as const, timestamp: new Date('2026-05-01T10:00:00Z'),
+    };
+
+    it('includes both new columns in the header', () => {
+        const header = buildCSV([]).split('\n')[0];
+        expect(header).toContain('Score');
+        expect(header).toContain('Session Log');
+    });
+
+    it('writes a score and quotes a multi-line session log', () => {
+        const csv = buildCSV([{ ...shot, score: 4.5, sessionLog: 'line one\nline two' }]);
+        expect(csv).toContain('4.5');
+        expect(csv).toContain('"line one\nline two"');
+    });
+
+    it('leaves the score cell empty when unscored', () => {
+        const row = buildCSV([shot]).split('\n')[1];
+        expect(row).toContain(',,');
     });
 });

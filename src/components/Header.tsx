@@ -23,8 +23,8 @@ export default function Header({
 }: HeaderProps) {
     return (
         <header className="header">
-            <h1 className="header__title">Luxe Cafe Dial-In</h1>
-            <p className="header__subtitle">Ninja Luxe Cafe Pro Calibration Dashboard</p>
+            <h1 className="header__title">Chambre Noire</h1>
+            <p className="header__subtitle">Espresso Dial-In Log</p>
 
             <button
                 className="header__hamburger"

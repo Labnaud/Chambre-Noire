@@ -5,7 +5,7 @@ import type { ShotLog, Rating } from '../types';
 function shot(overrides: Partial<ShotLog> & { id: string }): ShotLog {
     return {
         beanName: 'Ethiopia',
-        brewType: 'Espresso',
+        method: 'Espresso',
         basket: 'Double',
         grindSize: 12,
         strength: 2,
@@ -39,14 +39,13 @@ describe('getRatioLabel', () => {
         expect(getRatioLabel(100, 241, 'Espresso')).toBe('Lungo'); // 2.41
     });
 
-    it('applies to Cold Pressed espresso too', () => {
-        expect(getRatioLabel(18, 27, 'Cold Pressed')).toBe('Ristretto');
+    it('applies to every espresso-profile method', () => {
+        expect(getRatioLabel(18, 27, 'Espresso')).toBe('Ristretto');
     });
 
     it('returns null for non-espresso brews where ratio is meaningless', () => {
-        expect(getRatioLabel(18, 27, 'Drip Coffee')).toBeNull();
-        expect(getRatioLabel(18, 27, 'Cold Brew')).toBeNull();
-        expect(getRatioLabel(18, 27, 'Over Ice')).toBeNull();
+        expect(getRatioLabel(18, 27, 'V60')).toBeNull();
+        expect(getRatioLabel(18, 27, 'French Press')).toBeNull();
     });
 
     it('returns null when dose data is missing or zero', () => {
