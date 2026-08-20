@@ -13,11 +13,14 @@ export const RATING_COLORS: Record<Rating, string> = {
 
 export const BASKETS: Basket[] = ['Single', 'Double'];
 export const POUR_PATTERNS: PourPattern[] = ['2 Pours', '5 Pours'];
-export const STRENGTHS: { value: Strength; label: string }[] = [
-    { value: 1, label: '1 Mild' },
-    { value: 2, label: '2 Medium' },
-    { value: 3, label: '3 Strong' },
+export const STRENGTHS: { value: Strength; label: string; tone: 'under' | 'target' | 'over' }[] = [
+    { value: 1, label: 'Weak', tone: 'under' },
+    { value: 2, label: 'Strong', tone: 'target' },
+    { value: 3, label: 'Overwhelming', tone: 'over' },
 ];
+
+// Strong is the goal; the two ends both mean the shot needs adjusting.
+export const TARGET_STRENGTH: Strength = 2;
 export const MILK_TYPES: MilkType[] = ['Dairy', 'Plant'];
 export const PROCESS_METHODS: ProcessMethod[] = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Other'];
 export const ROAST_LEVELS: RoastLevel[] = ['Light', 'Medium', 'Medium-Dark', 'Dark'];

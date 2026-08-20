@@ -377,3 +377,23 @@ describe('score and session log validation', () => {
         expect(loadShots()).toHaveLength(0);
     });
 });
+
+describe('strength as a target scale', () => {
+    it('still accepts all three stored values after the relabel', () => {
+        for (const v of [1, 2, 3]) {
+            localStorage.setItem('chambre-noire-shots', JSON.stringify([{
+                id: 's', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+                grindSize: 12, strength: v, timestamp: '2026-05-01T10:00:00Z',
+            }]));
+            expect(loadShots()).toHaveLength(1);
+        }
+    });
+
+    it('rejects a strength outside the scale', () => {
+        localStorage.setItem('chambre-noire-shots', JSON.stringify([{
+            id: 's', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+            grindSize: 12, strength: 4, timestamp: '2026-05-01T10:00:00Z',
+        }]));
+        expect(loadShots()).toHaveLength(0);
+    });
+});

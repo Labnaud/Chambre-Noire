@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { STRENGTHS, TARGET_STRENGTH } from '../constants';
 import {
     profileFor, describeBrew, hotWaterGrams, yieldLabel,
     drinkSpec, DRINK_SPECS, BREW_METHODS, formatDuration, targetTimeLabel,
@@ -153,5 +154,17 @@ describe('default dose and yield', () => {
             expect(p.defaultDoseIn).toBeGreaterThan(0);
             expect(p.defaultDoseOut).toBeGreaterThan(p.defaultDoseIn);
         }
+    });
+});
+
+describe('strength scale', () => {
+    it('reads weak, strong, overwhelming', () => {
+        expect(STRENGTHS.map(s => s.label)).toEqual(['Weak', 'Strong', 'Overwhelming']);
+    });
+
+    // Not a ladder: the middle is the goal and both ends need adjusting.
+    it('marks the middle as the target and both ends as off', () => {
+        expect(STRENGTHS.find(s => s.value === TARGET_STRENGTH)?.tone).toBe('target');
+        expect(STRENGTHS.filter(s => s.tone !== 'target').map(s => s.value)).toEqual([1, 3]);
     });
 });

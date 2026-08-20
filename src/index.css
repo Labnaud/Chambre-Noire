@@ -6393,17 +6393,52 @@ textarea:focus-visible {
   }
 }
 
-/* Shot timer: neither the mode labels nor the manual value should clip.
-   --text-xs at flex-basis 0 left "Stopwatch" without room on narrow panels,
-   and the 80px input is tight for a filter drawdown in the hundreds. */
+/* The panel is a column, not a row: the mode toggle sits above the value.
+   It was laid out as a flex row, which squeezed the toggle beside the input
+   and clipped "Stopwatch" -- the toggle's own margin-bottom shows stacking
+   was always the intent. */
+.shot-timer {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.shot-timer__mode-toggle {
+  width: 100%;
+}
+
+/* Never shrink a label below its text; wrap the row instead. */
 .shot-timer__mode-btn {
-  min-width: 0;
+  min-width: fit-content;
   white-space: nowrap;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
 }
 
 .shot-timer__input {
   width: 6.5rem;
-  min-width: 0;
+}
+
+/* Strength reads like the taste rating: a target in the middle, a problem at
+   either end. Colour only shows on the selected pill, so the row stays calm. */
+.pill-btn--tone-target.pill-btn--active {
+  background: var(--color-balanced);
+  border-color: var(--color-balanced);
+  color: var(--color-black-coffee);
+}
+
+.pill-btn--tone-under.pill-btn--active {
+  background: var(--color-sour);
+  border-color: var(--color-sour);
+  color: var(--color-black-coffee);
+}
+
+.pill-btn--tone-over.pill-btn--active {
+  background: var(--color-bitter);
+  border-color: var(--color-bitter);
+  color: var(--color-cream);
+}
+
+.strength-hint {
+  margin: 0.4rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.45;
 }
