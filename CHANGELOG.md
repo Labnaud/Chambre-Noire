@@ -9,6 +9,10 @@ Forked from [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboa
 - Bundled Vercel Web Analytics. The app now makes no outbound network requests.
 - The upstream author's funding and personal links.
 
+### Documentation
+- Added `ARCHITECTURE.md` (layer model, data model, brew profiles, dial-in and caffeine engines, storage and validation, testing) and `CONTRIBUTING.md` (where a change belongs, how to add a brew method or drink, traps worth knowing).
+- Rewrote `README.md` and `SECURITY.md` for the fork, including the threat model and the deferred hardening items.
+
 ### Changed
 - Renamed to Chambre Noire throughout, including the PWA manifest, service-worker cache name, and all localStorage keys (`espresso-*` / `luxe-cafe-*` are now `chambre-noire-*`).
 - Generalised the shot model away from the Ninja Luxe Cafe Pro's presets: the `Luxe` basket is now `Triple`, froth styles use barista vocabulary (`Microfoam`, `Light Foam`, `Thick Foam`) instead of the machine's, and strength reads `Mild` / `Medium` / `Strong`.
