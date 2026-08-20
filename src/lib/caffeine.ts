@@ -1,6 +1,6 @@
 import type { ShotLog, CaffeineEntry, CaffeinePrefs } from '../types';
 
-const CAFFEINE_MG: Record<string, number> = { 'Single': 32, 'Double': 63 };
+const CAFFEINE_MG: Record<string, number> = { 'Single': 55, 'Double': 110 };
 const SHOTS_PER_BASKET: Record<string, number> = { 'Single': 1, 'Double': 2 };
 
 export const DAILY_LIMIT = 400; // mg
@@ -13,6 +13,7 @@ export const DEFAULT_CAFFEINE_PREFS: CaffeinePrefs = {
 
 // Drinks that are not espresso shots. Espresso comes from the shot log itself.
 export const INTAKE_PRESETS: { label: string; mg: number }[] = [
+    { label: 'Double Espresso', mg: 110 },
     { label: 'V60 drip coffee', mg: 170 },
     { label: 'Coffee, drip (240ml)', mg: 95 },
     { label: 'Coffee, instant', mg: 62 },
@@ -24,8 +25,8 @@ export const INTAKE_PRESETS: { label: string; mg: number }[] = [
 ];
 
 export const QUICK_ADD_PRESETS: { label: string; mg: number }[] = [
+    { label: 'Double Espresso', mg: 110 },
     { label: 'V60', mg: 170 },
-    { label: 'Black tea', mg: 47 },
     { label: 'Coke', mg: 34 },
 ];
 

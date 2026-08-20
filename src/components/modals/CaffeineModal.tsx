@@ -20,6 +20,9 @@ interface CaffeineModalProps {
     onClose: () => void;
 }
 
+// Sentinel for the "type your own" option in the drink dropdown.
+const CUSTOM = '__custom__';
+
 const clock = (d: Date) =>
     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -33,7 +36,8 @@ export default function CaffeineModal({
 }: CaffeineModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
     const [addOpen, setAddOpen] = useState(false);
-    const [label, setLabel] = useState(INTAKE_PRESETS[0].label);
+    const [preset, setPreset] = useState<string>(INTAKE_PRESETS[0].label); // CUSTOM = own drink
+    const [customLabel, setCustomLabel] = useState('');
     const [mg, setMg] = useState(String(INTAKE_PRESETS[0].mg));
     const [when, setWhen] = useState(() => toLocalInput(new Date()));
 
@@ -47,17 +51,22 @@ export default function CaffeineModal({
         onAddIntake({ id: generateId(), label: presetLabel, mg: presetMg, timestamp: new Date() });
     };
 
+    const isCustom = preset === CUSTOM;
+    const entryLabel = isCustom ? customLabel.trim() : preset;
+    const mgValue = parseFloat(mg);
+    const canSubmit = entryLabel !== '' && Number.isFinite(mgValue) && mgValue >= 0;
+
     const submitEntry = () => {
-        const value = parseFloat(mg);
-        if (!label.trim() || !Number.isFinite(value) || value < 0) return;
+        if (!canSubmit) return;
         const at = new Date(when);
         onAddIntake({
             id: generateId(),
-            label: label.trim(),
-            mg: value,
+            label: entryLabel,
+            mg: mgValue,
             timestamp: Number.isNaN(at.getTime()) ? new Date() : at,
         });
         setAddOpen(false);
+        setCustomLabel('');
         setWhen(toLocalInput(new Date()));
     };
 
@@ -226,32 +235,37 @@ export default function CaffeineModal({
                                         <select
                                             id="intake-preset"
                                             className="form-select"
-                                            value={INTAKE_PRESETS.some(p => p.label === label) ? label : ''}
+                                            value={preset}
                                             onChange={(e) => {
-                                                const preset = INTAKE_PRESETS.find(p => p.label === e.target.value);
-                                                if (preset) { setLabel(preset.label); setMg(String(preset.mg)); }
+                                                const next = e.target.value;
+                                                setPreset(next);
+                                                const found = INTAKE_PRESETS.find(p => p.label === next);
+                                                if (found) setMg(String(found.mg));
                                             }}
                                         >
-                                            {!INTAKE_PRESETS.some(p => p.label === label) && (
-                                                <option value="">Custom</option>
-                                            )}
                                             {INTAKE_PRESETS.map(p => (
                                                 <option key={p.label} value={p.label}>{p.label}</option>
                                             ))}
+                                            <option value={CUSTOM}>Custom&hellip;</option>
                                         </select>
                                         <Icons.ChevronDown />
                                     </div>
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label" htmlFor="intake-label">Label</label>
-                                    <input
-                                        id="intake-label"
-                                        type="text"
-                                        className="form-input"
-                                        value={label}
-                                        onChange={(e) => setLabel(e.target.value)}
-                                    />
-                                </div>
+
+                                {isCustom && (
+                                    <div className="form-group">
+                                        <label className="form-label" htmlFor="intake-custom">Drink name</label>
+                                        <input
+                                            id="intake-custom"
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="e.g. Matcha latte"
+                                            value={customLabel}
+                                            onChange={(e) => setCustomLabel(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
                                 <div className="caffeine-add__row">
                                     <div className="form-group">
                                         <label className="form-label" htmlFor="intake-mg">Caffeine (mg)</label>
@@ -281,7 +295,7 @@ export default function CaffeineModal({
                                     type="button"
                                     className="btn-submit"
                                     onClick={submitEntry}
-                                    disabled={!label.trim() || !(parseFloat(mg) >= 0)}
+                                    disabled={!canSubmit}
                                 >
                                     Log drink
                                 </button>

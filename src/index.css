@@ -5878,6 +5878,14 @@ textarea:focus-visible {
 
 .caffeine-params .form-group { margin-bottom: 0; }
 
+/* --sm is a fixed 80px, too narrow for a time field; inside the params grid
+   the cell already constrains the width. */
+.caffeine-params .form-input--sm {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
 .caffeine-quick {
   display: flex;
   flex-wrap: wrap;

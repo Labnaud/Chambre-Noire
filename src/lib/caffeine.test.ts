@@ -43,7 +43,7 @@ describe('computeCaffeine', () => {
             shot('Double'),
             shot('Double', 3),
         ]);
-        expect(stats.todayCaffeine).toBe(32 + 63);
+        expect(stats.todayCaffeine).toBe(55 + 110);
         expect(stats.todayShotCount).toBe(1 + 2);
     });
 
@@ -54,7 +54,7 @@ describe('computeCaffeine', () => {
             shot('Double', 2),
             shot('Double', 8),
         ]);
-        expect(stats.avgDaily).toBe(Math.round((63 * 3) / 7));
+        expect(stats.avgDaily).toBe(Math.round((110 * 3) / 7));
     });
 
     it('flags low status under 200mg', () => {
@@ -64,17 +64,14 @@ describe('computeCaffeine', () => {
     });
 
     it('flags moderate status between 200 and 300mg', () => {
-        const stats = computeCaffeine([shot('Double'), shot('Double'), shot('Double'), shot('Double')]);
-        expect(stats.todayCaffeine).toBe(252);
+        const stats = computeCaffeine([shot('Double'), shot('Double')]);
+        expect(stats.todayCaffeine).toBe(220);
         expect(stats.status).toBe('moderate');
     });
 
     it('flags high status above 300mg', () => {
-        const stats = computeCaffeine([
-            shot('Double'), shot('Double'), shot('Double'),
-            shot('Double'), shot('Double'), shot('Double'),
-        ]);
-        expect(stats.todayCaffeine).toBe(378);
+        const stats = computeCaffeine([shot('Double'), shot('Double'), shot('Double')]);
+        expect(stats.todayCaffeine).toBe(330);
         expect(stats.status).toBe('high');
     });
 
@@ -217,12 +214,12 @@ describe('computeForecast', () => {
 describe('doses from shots and entries', () => {
     it('maps baskets to their caffeine content', () => {
         const doses = dosesFromShots([shot('Single'), shot('Double')]);
-        expect(doses.map(d => d.mg)).toEqual([32, 63]);
+        expect(doses.map(d => d.mg)).toEqual([55, 110]);
     });
 
     it('combines shots and manual intake', () => {
         const entries = [{ id: 'e1', label: 'Coke', mg: 34, timestamp: new Date() }];
-        expect(allDoses([shot('Double')], entries).map(d => d.mg)).toEqual([63, 34]);
+        expect(allDoses([shot('Double')], entries).map(d => d.mg)).toEqual([110, 34]);
     });
 });
 
