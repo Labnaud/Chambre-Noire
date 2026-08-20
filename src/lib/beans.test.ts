@@ -5,6 +5,8 @@ import {
     getUniqueBeans,
     getFreshnessAlert,
     isDialedIn,
+    activeShots,
+    inactiveBeanNames,
 } from './beans';
 import type { ShotLog, BeanProfile } from '../types';
 
@@ -146,5 +148,31 @@ describe('isDialedIn', () => {
     it('ignores unrated shots and an empty bean name', () => {
         expect(isDialedIn('Ethiopia', [mk({})], 'Espresso')).toBe(false);
         expect(isDialedIn('   ', [mk({ rating: 'Balanced' })], 'Espresso')).toBe(false);
+    });
+});
+
+describe('activeShots', () => {
+    const bean = (name: string, isActive: boolean): BeanProfile =>
+        ({ id: name, name, isActive, createdAt: new Date() });
+    const shot = (beanName: string): ShotLog =>
+        ({ id: beanName, beanName, method: 'Espresso', basket: 'Double',
+           grindSize: 21, strength: 2, timestamp: new Date() });
+
+    it('drops shots whose bean is switched off', () => {
+        const out = activeShots([shot('Ethiopia'), shot('Colombia')],
+            [bean('Ethiopia', true), bean('Colombia', false)]);
+        expect(out.map(s => s.beanName)).toEqual(['Ethiopia']);
+    });
+
+    it('keeps shots for beans absent from the library', () => {
+        expect(activeShots([shot('Unlisted')], [bean('Colombia', false)])).toHaveLength(1);
+    });
+
+    it('is a no-op when nothing is switched off', () => {
+        expect(activeShots([shot('Ethiopia')], [bean('Ethiopia', true)])).toHaveLength(1);
+    });
+
+    it('matches bean names case-insensitively', () => {
+        expect(inactiveBeanNames([bean('Ethiopia', false)]).has('ethiopia')).toBe(true);
     });
 });

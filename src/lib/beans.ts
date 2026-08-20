@@ -16,6 +16,18 @@ export function getFreshnessStatus(days: number | null): { label: string; color:
     return { label: 'Stale', color: 'var(--color-very-bitter)' };
 }
 
+// Lowercased names of beans switched off in the library. A bean that is not
+// in the library at all is not hidden: typing a name straight into the form is
+// a normal flow and those shots must still show.
+export function inactiveBeanNames(beans: BeanProfile[]): Set<string> {
+    return new Set(beans.filter(b => !b.isActive).map(b => b.name.trim().toLowerCase()));
+}
+
+export function activeShots(shots: ShotLog[], beans: BeanProfile[]): ShotLog[] {
+    const hidden = inactiveBeanNames(beans);
+    return hidden.size === 0 ? shots : shots.filter(s => !hidden.has(s.beanName.trim().toLowerCase()));
+}
+
 export function isDialedIn(beanName: string, shots: ShotLog[], method: BrewMethod): boolean {
     const key = beanName.trim().toLowerCase();
     if (!key) return false;

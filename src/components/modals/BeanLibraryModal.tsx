@@ -51,6 +51,13 @@ export default function BeanLibraryModal({
 
     if (!open) return null;
 
+    // Beans in rotation first, then most recently added, so what you are
+    // drinking sits at the top and old bags fall to the bottom.
+    const sortedBeans = [...beans].sort((a, b) => {
+        if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
     const reset = () => {
         setName('');
         setRoaster('');
@@ -318,7 +325,7 @@ export default function BeanLibraryModal({
                         <h4>Your Beans ({beans.length})</h4>
                         {beans.length > 0 ? (
                             <div className="bean-list__items">
-                                {beans.map((bean) => {
+                                {sortedBeans.map((bean) => {
                                     const days = getDaysSinceRoast(bean.roastDate);
                                     const freshness = getFreshnessStatus(days);
                                     const inventory = getBeanInventory(bean, shots);

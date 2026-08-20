@@ -10,6 +10,7 @@ interface HistoryModalProps {
     open: boolean;
     shots: ShotLog[];
     sortedShots: ShotLog[];
+    hiddenBeans: Set<string>;
     favorites: FavoritesMap;
     beanFilter: string;
     setBeanFilter: (v: string) => void;
@@ -32,6 +33,7 @@ export default function HistoryModal({
     open,
     shots,
     sortedShots,
+    hiddenBeans,
     favorites,
     beanFilter,
     setBeanFilter,
@@ -54,7 +56,7 @@ export default function HistoryModal({
 
     if (!open) return null;
 
-    const filteredShots = filterShots(sortedShots, beanFilter, notesSearch);
+    const filteredShots = filterShots(sortedShots, beanFilter, notesSearch, hiddenBeans);
 
     return (
         <div className="modal-overlay" onClick={onClose}>

@@ -299,3 +299,31 @@ describe('includedShots', () => {
         expect(trimmed.todayCaffeine).toBeLessThan(full.todayCaffeine);
     });
 });
+
+// An imported logbook can carry months of history. Those doses are long gone
+// pharmacologically, and scanning back to them walked the whole period in
+// five-minute steps on every render.
+describe('forecast ignores doses beyond the horizon', () => {
+    const prefs = { halfLifeHours: 5.7, bedtime: '22:30', targetMg: 40 };
+    const now = new Date(2026, 7, 20, 15, 0);
+
+    it('a dose from months ago contributes nothing', () => {
+        const ancient = computeForecast([{ mg: 110, at: new Date(2026, 0, 28, 8, 0) }], prefs, now);
+        expect(ancient.nowMg).toBe(0);
+        expect(ancient.peakMg).toBe(0);
+    });
+
+    it('still counts a dose from earlier today', () => {
+        const today = computeForecast([{ mg: 110, at: new Date(2026, 7, 20, 8, 0) }], prefs, now);
+        expect(today.nowMg).toBeGreaterThan(0);
+    });
+
+    it('stays fast with a long history', () => {
+        const doses = Array.from({ length: 500 }, (_, i) => ({
+            mg: 110, at: new Date(2026, 0, 28 + Math.floor(i / 3), 8, 0),
+        }));
+        const started = Date.now();
+        computeForecast(doses, prefs, now);
+        expect(Date.now() - started).toBeLessThan(1000);
+    });
+});

@@ -141,6 +141,9 @@ export interface CaffeineForecast {
 
 const STEP_MIN = 5;
 const SCAN_AHEAD_HOURS = 48;
+// After three days even a large dose is under 0.02% of itself at a 5.7h
+// half-life, so older doses are dropped rather than scanned over.
+const SCAN_BACK_HOURS = 72;
 
 export function computeForecast(
     doses: CaffeineDose[],
@@ -148,13 +151,15 @@ export function computeForecast(
     now: Date = new Date(),
 ): CaffeineForecast {
     const { halfLifeHours, targetMg } = prefs;
-    const level = (at: Date) => caffeineLevelAt(doses, at, halfLifeHours);
+    const horizon = now.getTime() - SCAN_BACK_HOURS * MS_PER_HOUR;
+    const relevant = doses.filter(d => d.at.getTime() >= horizon);
+    const level = (at: Date) => caffeineLevelAt(relevant, at, halfLifeHours);
 
     const bedtimeAt = resolveBedtime(prefs.bedtime, now);
 
     // Scan from the earliest dose (a morning coffee may already be past its
     // peak by evening) through 48h out, so the peak found is the real one.
-    const earliest = doses.reduce<number>(
+    const earliest = relevant.reduce<number>(
         (min, d) => Math.min(min, d.at.getTime()),
         now.getTime(),
     );

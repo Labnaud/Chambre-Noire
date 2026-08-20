@@ -21,6 +21,7 @@ import ShotComparison from './components/ShotComparison';
 import { RATING_COLOR_CLASS } from './lib/ratings';
 import { saveStorageValue } from './lib/storage';
 import { getRecentShotsForBean } from './lib/shots';
+import { activeShots, inactiveBeanNames } from './lib/beans';
 import { profileFor, describeBrew } from './lib/brew';
 import type { BrewMethod } from './types';
 
@@ -500,6 +501,11 @@ function App() {
     showToast(getLogMessage(shots.length + 1, beanShots, newShot.beanName), 'success');
   };
 
+  // Shots from a bean switched off in the library drop out of the browsing
+  // list and out of the caffeine curve; filtering or searching still finds them.
+  const hiddenBeans = inactiveBeanNames(beans);
+  const countedShots = activeShots(shots, beans);
+
   const sortedShots = [...shots].sort((a, b) => {
     const aIsFav = favorites[a.beanName.toLowerCase()] === a.id;
     const bIsFav = favorites[b.beanName.toLowerCase()] === b.id;
@@ -632,6 +638,7 @@ function App() {
           <ShotHistory
             shots={shots}
             sortedShots={sortedShots}
+            hiddenBeans={hiddenBeans}
             favorites={favorites}
             justLoggedId={justLoggedId}
             use24Hour={use24Hour}
@@ -765,7 +772,7 @@ function App() {
         {showCaffeine && (
           <CaffeineModal
             open={true}
-            shots={shots}
+            shots={countedShots}
             intake={intake}
             prefs={caffeinePrefs}
             setPref={setCaffeinePref}
@@ -783,6 +790,7 @@ function App() {
             open={true}
             shots={shots}
             sortedShots={sortedShots}
+            hiddenBeans={hiddenBeans}
             favorites={favorites}
             beanFilter={beanFilter}
             setBeanFilter={setBeanFilter}

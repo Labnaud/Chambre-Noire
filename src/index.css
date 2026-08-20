@@ -968,9 +968,14 @@ input[type="number"]::-webkit-outer-spin-button {
   color: var(--color-bitter-text);
 }
 
+/* The children are spans, so without an explicit column they run together on
+   one line and the bean name's ellipsis never applies. */
 .history-item__details {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .history-item__bean {
@@ -986,7 +991,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .history-item__meta {
   font-size: var(--text-sm);
   color: var(--color-subtle);
-  margin-top: 0.125rem;
+  line-height: 1.4;
 }
 
 .history-item__settings {
@@ -994,8 +999,8 @@ input[type="number"]::-webkit-outer-spin-button {
   align-items: center;
   flex-wrap: wrap;
   column-gap: 0;
-  row-gap: 0.25rem;
-  margin-top: 0.45rem;
+  row-gap: 0.3rem;
+  margin-top: 0.15rem;
 }
 
 .setting-tag {
@@ -6628,4 +6633,35 @@ textarea:focus-visible {
 .bean-card__repurchase--no {
   background: color-mix(in srgb, var(--color-very-bitter) 28%, transparent);
   color: var(--color-bitter-text);
+}
+
+/* Shot history: give each row room to breathe. The bean name is the anchor,
+   so it gets space beneath it rather than sitting flush against the meta line. */
+.history-item {
+  padding-top: 1.15rem;
+  padding-bottom: 1.15rem;
+  gap: 0.9rem;
+}
+
+.history-item__bean {
+  display: block;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.history-item__notes {
+  margin-top: 0.2rem;
+}
+
+.history-item__settings .setting-tag:not(:last-child)::after {
+  margin: 0 0.45rem;
+}
+
+.history-hidden-note {
+  margin: 0.75rem 0 0;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-mocha) 45%, transparent);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.5;
 }

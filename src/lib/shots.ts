@@ -1,10 +1,19 @@
 import type { ShotLog, BrewMethod } from '../types';
 
-export function filterShots(shots: ShotLog[], beanFilter: string, notesSearch: string): ShotLog[] {
+export function filterShots(
+    shots: ShotLog[],
+    beanFilter: string,
+    notesSearch: string,
+    hiddenBeanNames?: Set<string>,
+): ShotLog[] {
     const search = notesSearch.toLowerCase().trim();
+    // Filtering or searching is an explicit request, so it reaches shots from
+    // inactive beans too. Only the unfiltered list hides them.
+    const browsing = beanFilter === '' && search === '';
     return shots.filter(shot => {
         if (beanFilter && shot.beanName !== beanFilter) return false;
         if (search && !(shot.notes ?? '').toLowerCase().includes(search)) return false;
+        if (browsing && hiddenBeanNames?.has(shot.beanName.trim().toLowerCase())) return false;
         return true;
     });
 }

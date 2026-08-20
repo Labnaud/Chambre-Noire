@@ -6,6 +6,7 @@ import ShotHistoryRow from './ShotHistoryRow';
 interface ShotHistoryProps {
     shots: ShotLog[];
     sortedShots: ShotLog[];
+    hiddenBeans: Set<string>;
     favorites: FavoritesMap;
     justLoggedId?: string | null;
     use24Hour: boolean;
@@ -24,6 +25,7 @@ interface ShotHistoryProps {
 export default function ShotHistory({
     shots,
     sortedShots,
+    hiddenBeans,
     favorites,
     justLoggedId,
     use24Hour,
@@ -38,7 +40,10 @@ export default function ShotHistory({
     onDeleteShot,
     onOpenHistoryModal,
 }: ShotHistoryProps) {
-    const filteredShots = filterShots(sortedShots, beanFilter, notesSearch);
+    const filteredShots = filterShots(sortedShots, beanFilter, notesSearch, hiddenBeans);
+    // How many the inactive-bean rule removed, as opposed to the filters.
+    const hiddenByInactive =
+        filterShots(sortedShots, beanFilter, notesSearch).length - filteredShots.length;
 
     return (
         <div className="card">
@@ -115,8 +120,19 @@ export default function ShotHistory({
             ) : (
                 <div className="empty-state">
                     <Icons.Clipboard />
-                    <p className="empty-state__text">No shots logged yet. Start dialing in!</p>
+                    <p className="empty-state__text">
+                        {hiddenByInactive > 0
+                            ? 'Every bean is switched off in your Bean Library.'
+                            : 'No shots logged yet. Start dialing in!'}
+                    </p>
                 </div>
+            )}
+
+            {hiddenByInactive > 0 && (
+                <p className="history-hidden-note">
+                    {hiddenByInactive} shot{hiddenByInactive === 1 ? '' : 's'} hidden from inactive beans.
+                    Pick the bean above, or activate it in the Bean Library, to see them.
+                </p>
             )}
         </div>
     );

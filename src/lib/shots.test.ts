@@ -83,3 +83,32 @@ describe('getRecentShotsForBean scoped by method', () => {
         expect(getRecentShotsForBean([mk('e1', 'Espresso', 20, 8)], BEAN, 5, 'V60')).toEqual([]);
     });
 });
+
+describe('hiding shots from inactive beans', () => {
+    const mk = (id: string, beanName: string, notes?: string) =>
+        baseShot({ id, beanName, notes });
+    const shots = [mk('a', 'Ethiopia', 'blueberry'), mk('b', 'Colombia', 'nutty')];
+    const hidden = new Set(['colombia']);
+
+    it('drops them from the plain browsing list', () => {
+        expect(filterShots(shots, '', '', hidden).map(s => s.id)).toEqual(['a']);
+    });
+
+    // Filtering or searching is an explicit request for that bean.
+    it('still finds them when the bean is picked', () => {
+        expect(filterShots(shots, 'Colombia', '', hidden).map(s => s.id)).toEqual(['b']);
+    });
+
+    it('still finds them by notes search', () => {
+        expect(filterShots(shots, '', 'nutty', hidden).map(s => s.id)).toEqual(['b']);
+    });
+
+    it('shows everything when no bean is switched off', () => {
+        expect(filterShots(shots, '', '', new Set())).toHaveLength(2);
+    });
+
+    // A bean typed into the form without a library entry is not "inactive".
+    it('keeps shots for beans that are not in the library at all', () => {
+        expect(filterShots([mk('c', 'Unlisted')], '', '', hidden).map(s => s.id)).toEqual(['c']);
+    });
+});
