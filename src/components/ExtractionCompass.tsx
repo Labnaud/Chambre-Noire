@@ -7,11 +7,11 @@ interface ExtractionCompassProps {
 }
 
 const W = 280;
-const H = 176;
-const PAD_L = 30;
-const PAD_R = 10;
-const PAD_T = 10;
-const PAD_B = 26;
+const H = 180;
+const PAD_L = 44;
+const PAD_R = 12;
+const PAD_T = 14;
+const PAD_B = 28;
 
 const COLS = RATINGS.length;        // extraction, sour to bitter
 const ROWS = STRENGTHS.length;      // strength, weak at the bottom
@@ -23,10 +23,9 @@ const colFor = (rating: Rating) => RATINGS.indexOf(rating);
 const SWEET_COL = BALANCED_RATING_INDEX;
 const SWEET_ROW = rowFor(TARGET_STRENGTH);
 
-// After the Espresso Compass: extraction along the bottom, strength up the
-// side, and the sweet spot in the middle. We plot the two subjective scales
-// the app records, not measured TDS and extraction yield, so cells are shaded
-// by distance from the sweet cell rather than pretending to a physical band.
+// After Barista Hustle's Espresso Compass: extraction across, strength up,
+// sweet spot in the middle. The grid is positional only and never drawn --
+// the sweet circle and the end labels carry the orientation.
 export default function ExtractionCompass({ shots }: ExtractionCompassProps) {
     const rated = shots.filter(s => s.rating);
     if (rated.length === 0) return null;
@@ -36,98 +35,118 @@ export default function ExtractionCompass({ shots }: ExtractionCompassProps) {
     const cw = innerW / COLS;
     const ch = innerH / ROWS;
 
-    const cellX = (c: number) => PAD_L + c * cw;
-    const cellY = (r: number) => PAD_T + r * ch;
+    const centreX = (c: number) => PAD_L + c * cw + cw / 2;
+    const centreY = (r: number) => PAD_T + r * ch + ch / 2;
 
-    // Nudge shots sharing a cell so a repeated result reads as several dots.
+    // Shots landing in the same cell spiral out from its centre, so a repeated
+    // result reads as several dots rather than one.
     const seen = new Map<string, number>();
     const points = rated.map((s, i) => {
-        const c = colFor(s.rating!);
-        const r = rowFor(s.strength);
-        const key = `${c}:${r}`;
+        const key = `${colFor(s.rating!)}:${rowFor(s.strength)}`;
         const n = seen.get(key) ?? 0;
         seen.set(key, n + 1);
-        const angle = n * 2.4; // spiral outward from the cell centre
-        const spread = n === 0 ? 0 : Math.min(cw, ch) * 0.22;
+        const spread = n === 0 ? 0 : Math.min(cw, ch) * 0.24;
         return {
             id: s.id,
             n: i + 1,
-            x: cellX(c) + cw / 2 + Math.cos(angle) * spread,
-            y: cellY(r) + ch / 2 + Math.sin(angle) * spread,
+            x: centreX(colFor(s.rating!)) + Math.cos(n * 2.4) * spread,
+            y: centreY(rowFor(s.strength)) + Math.sin(n * 2.4) * spread,
             colour: RATING_COLORS[s.rating!],
             latest: i === rated.length - 1,
             label: `${s.rating} · ${STRENGTHS.find(x => x.value === s.strength)?.label}`,
         };
     });
 
-    const path = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    // One arrow per hop, pulled back off the dots so the head stays visible.
+    const hops = points.slice(1).map((to, i) => {
+        const from = points[i];
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 12) return null; // same cell: an arrow would be a smudge
+        const ux = dx / len;
+        const uy = dy / len;
+        return {
+            key: `${from.id}-${to.id}`,
+            x1: from.x + ux * 7, y1: from.y + uy * 7,
+            x2: to.x - ux * 9, y2: to.y - uy * 9,
+        };
+    }).filter(Boolean) as { key: string; x1: number; y1: number; x2: number; y2: number }[];
+
     const last = points[points.length - 1];
-    const onTarget = last.x === cellX(SWEET_COL) + cw / 2 && last.y === cellY(SWEET_ROW) + ch / 2;
-
-    const cells = [];
-    for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            const dist = Math.max(
-                Math.abs(c - SWEET_COL) / Math.max(SWEET_COL, COLS - 1 - SWEET_COL),
-                Math.abs(r - SWEET_ROW) / Math.max(SWEET_ROW, ROWS - 1 - SWEET_ROW),
-            );
-            cells.push(
-                <rect
-                    key={`${c}-${r}`}
-                    className={dist === 0 ? 'compass__cell compass__cell--sweet' : 'compass__cell'}
-                    x={cellX(c)} y={cellY(r)} width={cw} height={ch}
-                    opacity={dist === 0 ? 1 : 0.16 + (1 - dist) * 0.34}
-                />,
-            );
-        }
-    }
-
-    const summary =
-        `Extraction compass across ${rated.length} rated shots, latest ${last.label}`
-        + `${onTarget ? ', on the sweet spot' : ''}.`;
+    const sweetR = Math.min(cw, ch) * 0.78;
 
     return (
-        <svg className="compass" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary}>
-            {cells}
-
-            {/* the direction raising yield moves a shot: more extraction, less strength */}
-            <line
-                className="compass__yield"
-                x1={cellX(SWEET_COL) + cw / 2} y1={cellY(SWEET_ROW) + ch / 2}
-                x2={cellX(SWEET_COL) + cw * 1.4} y2={cellY(SWEET_ROW) + ch * 1.3}
-                markerEnd="url(#compass-arrow)"
-            />
+        <svg
+            className="compass"
+            viewBox={`0 0 ${W} ${H}`}
+            role="img"
+            aria-label={`Extraction compass across ${rated.length} rated shots, latest ${last.label}.`}
+        >
             <defs>
-                <marker id="compass-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 Z" className="compass__arrowhead" />
+                <marker id="compass-hop" markerWidth="5" markerHeight="5" refX="4.2" refY="2.5" orient="auto">
+                    <path d="M0,0 L5,2.5 L0,5 Z" className="compass__arrowhead" />
                 </marker>
             </defs>
 
-            <polyline className="compass__path" fill="none" points={path} />
+            {/* the target zone, not a cell */}
+            <circle
+                className="compass__sweet"
+                cx={centreX(SWEET_COL)} cy={centreY(SWEET_ROW)} r={sweetR}
+            />
+            <circle
+                className="compass__sweet-core"
+                cx={centreX(SWEET_COL)} cy={centreY(SWEET_ROW)} r={sweetR * 0.45}
+            />
+
+            {hops.map(h => (
+                <line
+                    key={h.key}
+                    className="compass__hop"
+                    x1={h.x1} y1={h.y1} x2={h.x2} y2={h.y2}
+                    markerEnd="url(#compass-hop)"
+                />
+            ))}
 
             {points.map(p => (
                 <g key={p.id}>
                     <circle
                         className={p.latest ? 'compass__dot compass__dot--latest' : 'compass__dot'}
-                        cx={p.x} cy={p.y} r={p.latest ? 6 : 4.5}
+                        cx={p.x} cy={p.y} r={p.latest ? 6.5 : 5}
                         style={{ fill: p.colour }}
                     />
                     <text className="compass__dot-n" x={p.x} y={p.y + 2.6} textAnchor="middle">{p.n}</text>
                 </g>
             ))}
 
+            {/* extraction, along the bottom */}
             <text className="compass__axis" x={PAD_L + innerW / 2} y={H - 4} textAnchor="middle">
                 Extraction &rarr;
             </text>
+            <text className="compass__end" x={PAD_L} y={H - PAD_B + 10}>sour</text>
+            <text className="compass__end" x={PAD_L + innerW} y={H - PAD_B + 10} textAnchor="end">bitter</text>
+
+            {/* strength, up the side */}
             <text
                 className="compass__axis"
-                transform={`translate(9 ${PAD_T + innerH / 2}) rotate(-90)`}
+                transform={`translate(10 ${PAD_T + innerH / 2}) rotate(-90)`}
                 textAnchor="middle"
             >
                 Strength &rarr;
             </text>
-            <text className="compass__corner" x={PAD_L + 2} y={H - PAD_B - 4}>sour</text>
-            <text className="compass__corner" x={PAD_L + innerW - 2} y={H - PAD_B - 4} textAnchor="end">bitter</text>
+            <text
+                className="compass__end"
+                transform={`translate(26 ${PAD_T + 2}) rotate(-90)`}
+                textAnchor="end"
+            >
+                overwhelming
+            </text>
+            <text
+                className="compass__end"
+                transform={`translate(26 ${PAD_T + innerH}) rotate(-90)`}
+            >
+                weak
+            </text>
         </svg>
     );
 }
