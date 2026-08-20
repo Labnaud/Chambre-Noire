@@ -286,12 +286,8 @@ function App() {
     const ratingIdx = shot.rating ? RATINGS.indexOf(shot.rating) : -1;
     form.setRated(ratingIdx >= 0);
     form.setRatingIndex(ratingIdx >= 0 ? ratingIdx : BALANCED_RATING_INDEX);
-    form.setShowDose(shot.doseIn !== undefined || shot.doseOut !== undefined);
     form.setDoseIn(shot.doseIn?.toString() ?? '');
     form.setDoseOut(shot.doseOut?.toString() ?? '');
-    if (shot.extractionTime) {
-      form.setShowTimer(true);
-    }
     setEditingShot(shot);
     setShowHistoryModal(false);
     showToast('Editing shot - make changes and click Update Shot', 'info');

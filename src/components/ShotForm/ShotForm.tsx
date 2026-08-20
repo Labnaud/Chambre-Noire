@@ -11,7 +11,9 @@ import BrewShapeControls from './BrewShapeControls';
 import BrewSettingControls from './BrewSettingControls';
 import SmartBarista from './SmartBarista';
 import DrinkControls from './DrinkControls';
-import TimerInput from './TimerInput';
+import DoseYieldControls from './DoseYieldControls';
+import ShotTimerControls from './ShotTimerControls';
+import StrengthControl from './StrengthControl';
 import RatingScale from './RatingScale';
 import ScoreInput from './ScoreInput';
 
@@ -101,10 +103,33 @@ export default function ShotForm({
                 setGrindSize={form.setGrindSize}
                 waterTempC={form.waterTempC}
                 setWaterTempC={form.setWaterTempC}
-                strength={form.strength}
-                setStrength={form.setStrength}
                 onIncrementGrind={onIncrementGrind}
                 onDecrementGrind={onDecrementGrind}
+            />
+
+            <DoseYieldControls
+                show={form.showDose}
+                setShow={form.setShowDose}
+                doseIn={form.doseIn}
+                setDoseIn={form.setDoseIn}
+                doseOut={form.doseOut}
+                setDoseOut={form.setDoseOut}
+                method={form.method}
+            />
+
+            <ShotTimerControls
+                show={form.showTimer}
+                setShow={form.setShowTimer}
+                manualTimeInput={form.manualTimeInput}
+                setManualTimeInput={form.setManualTimeInput}
+                manualTimerValue={form.manualTimerValue}
+                setManualTimerValue={form.setManualTimerValue}
+                timer={timer}
+            />
+
+            <StrengthControl
+                strength={form.strength}
+                setStrength={form.setStrength}
             />
 
             <RatingScale
@@ -137,22 +162,6 @@ export default function ShotForm({
                 supported={profileFor(form.method).supportsDrink}
             />
 
-            <TimerInput
-                showTimer={form.showTimer}
-                setShowTimer={form.setShowTimer}
-                showDose={form.showDose}
-                setShowDose={form.setShowDose}
-                manualTimeInput={form.manualTimeInput}
-                setManualTimeInput={form.setManualTimeInput}
-                manualTimerValue={form.manualTimerValue}
-                setManualTimerValue={form.setManualTimerValue}
-                doseIn={form.doseIn}
-                setDoseIn={form.setDoseIn}
-                doseOut={form.doseOut}
-                setDoseOut={form.setDoseOut}
-                method={form.method}
-                timer={timer}
-            />
 
             <div className="form-group">
                 <label className="form-label" htmlFor="shot-notes">Tasting Notes</label>

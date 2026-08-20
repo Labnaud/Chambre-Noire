@@ -30,8 +30,10 @@ export function useShotForm() {
     const [milkTempC, setMilkTempC] = useState<string>('');
     const [waterMl, setWaterMl] = useState<string>('');
 
-    const [showTimer, setShowTimer] = useState(false);
-    const [showDose, setShowDose] = useState(false);
+    // Dose/yield and shot time are brew parameters, not optional extras, so
+    // they start expanded.
+    const [showTimer, setShowTimer] = useState(true);
+    const [showDose, setShowDose] = useState(true);
     const [manualTimeInput, setManualTimeInput] = useState(false);
     const [manualTimerValue, setManualTimerValue] = useState<string>('');
     const [doseIn, setDoseIn] = useState<string>('');

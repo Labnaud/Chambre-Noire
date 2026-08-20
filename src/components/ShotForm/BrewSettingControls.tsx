@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Strength, BrewMethod } from '../../types';
-import { STRENGTHS, GRIND_MIN, GRIND_MAX } from '../../constants';
+import type { BrewMethod } from '../../types';
+import { GRIND_MIN, GRIND_MAX } from '../../constants';
 import { profileFor } from '../../lib/brew';
 import Icons from '../Icons';
 
@@ -10,8 +10,6 @@ interface BrewSettingControlsProps {
     setGrindSize: (g: number) => void;
     waterTempC: number;
     setWaterTempC: (t: number) => void;
-    strength: Strength;
-    setStrength: (s: Strength) => void;
     onIncrementGrind: () => void;
     onDecrementGrind: () => void;
 }
@@ -22,7 +20,6 @@ export default function BrewSettingControls({
     method,
     grindSize, setGrindSize,
     waterTempC, setWaterTempC,
-    strength, setStrength,
     onIncrementGrind, onDecrementGrind,
 }: BrewSettingControlsProps) {
     const [editingGrind, setEditingGrind] = useState(false);
@@ -129,22 +126,6 @@ export default function BrewSettingControls({
                 </div>
             )}
 
-            <div className="form-group">
-                <span className="form-label" id="shot-strength-label">Strength</span>
-                <div className="pill-group" role="group" aria-labelledby="shot-strength-label">
-                    {STRENGTHS.map((s) => (
-                        <button
-                            key={s.value}
-                            type="button"
-                            className={`pill-btn ${strength === s.value ? 'pill-btn--active' : ''}`}
-                            onClick={() => setStrength(s.value)}
-                            aria-pressed={strength === s.value}
-                        >
-                            {s.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
         </>
     );
 }
