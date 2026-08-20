@@ -19,6 +19,7 @@ interface CaffeineModalProps {
     setPref: <K extends keyof CaffeinePrefs>(key: K, value: CaffeinePrefs[K]) => void;
     onAddIntake: (entry: CaffeineEntry) => void;
     onDeleteIntake: (id: string) => void;
+    onUpdateIntake: (entry: CaffeineEntry) => void;
     excludedShots: Set<string>;
     onExcludeShot: (id: string) => void;
     onRestoreShot: (id: string) => void;
@@ -52,7 +53,7 @@ const dayLabel = (d: Date, now: Date): string => {
 };
 
 export default function CaffeineModal({
-    open, shots, intake, prefs, setPref, onAddIntake, onDeleteIntake,
+    open, shots, intake, prefs, setPref, onAddIntake, onDeleteIntake, onUpdateIntake,
     excludedShots, onExcludeShot, onRestoreShot, onClose,
 }: CaffeineModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
@@ -62,6 +63,8 @@ export default function CaffeineModal({
     const [mg, setMg] = useState(String(INTAKE_PRESETS[0].mg));
     const [when, setWhen] = useState(() => clock(new Date()));
     const [showExcluded, setShowExcluded] = useState(false);
+    const [editingTime, setEditingTime] = useState<string | null>(null);
+    const [timeDraft, setTimeDraft] = useState('');
 
     if (!open) return null;
 
@@ -90,6 +93,19 @@ export default function CaffeineModal({
         setAddOpen(false);
         setCustomLabel('');
         setWhen(clock(new Date()));
+    };
+
+    // Only a manual drink's time is editable here. A shot's time belongs to the
+    // shot itself, and is changed by editing it from the history.
+    const commitTime = (id: string) => {
+        const entry = intake.find(e => e.id === id);
+        if (entry && /^\d{1,2}:\d{2}$/.test(timeDraft)) {
+            const at = resolveTimeToday(timeDraft, new Date());
+            if (at.getTime() !== entry.timestamp.getTime()) {
+                onUpdateIntake({ ...entry, timestamp: at });
+            }
+        }
+        setEditingTime(null);
     };
 
     // Shots and manual drinks in one list, newest first, so everything feeding
@@ -364,7 +380,31 @@ export default function CaffeineModal({
                                             )}
                                             <span className="caffeine-intake-row__label">{row.label}</span>
                                             <span className="caffeine-intake-row__meta">
-                                                {row.mg} mg &middot; {clock(row.at)}
+                                                {row.mg} mg &middot;{' '}
+                                                {row.kind === 'entry' && editingTime === row.id ? (
+                                                    <input
+                                                        type="time"
+                                                        className="caffeine-intake-row__time-input"
+                                                        value={timeDraft}
+                                                        autoFocus
+                                                        aria-label={`Time for ${row.label}`}
+                                                        onChange={(e) => setTimeDraft(e.target.value)}
+                                                        onBlur={() => commitTime(row.id)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') { e.preventDefault(); commitTime(row.id); }
+                                                            else if (e.key === 'Escape') setEditingTime(null);
+                                                        }}
+                                                    />
+                                                ) : row.kind === 'entry' ? (
+                                                    <button
+                                                        type="button"
+                                                        className="caffeine-intake-row__time"
+                                                        onClick={() => { setTimeDraft(clock(row.at)); setEditingTime(row.id); }}
+                                                        title="Change the time"
+                                                    >
+                                                        {clock(row.at)}
+                                                    </button>
+                                                ) : clock(row.at)}
                                                 {day && <span className="caffeine-intake-row__day"> {day}</span>}
                                             </span>
                                             <button

@@ -6734,3 +6734,34 @@ textarea:focus-visible {
   color: var(--color-subtle);
   font-variant-numeric: lining-nums tabular-nums;
 }
+
+/* A manual drink's time is editable in place. A shot's time is not: it
+   belongs to the shot and is changed by editing it from the history. */
+.caffeine-intake-row__time {
+  background: none;
+  border: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-latte) 55%, transparent);
+  padding: 0;
+  color: var(--color-latte);
+  font-family: inherit;
+  font-size: inherit;
+  font-variant-numeric: lining-nums tabular-nums;
+  cursor: pointer;
+}
+
+.caffeine-intake-row__time:hover {
+  color: var(--color-cream);
+  border-bottom-color: var(--color-caramel);
+}
+
+.caffeine-intake-row__time-input {
+  width: 6.5rem;
+  padding: 0.05rem 0.25rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-caramel);
+  background: var(--color-dark-roast);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-variant-numeric: lining-nums tabular-nums;
+}

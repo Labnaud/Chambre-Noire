@@ -78,7 +78,7 @@ function App() {
   const { favorites, toggleFavorite, replaceAll: setFavorites } = useFavorites();
   const { theme, setTheme, use24Hour, setUse24Hour, cycleTheme } = useTheme();
   const { events: maintenanceEvents, recordCleaning, recordDescaling, lastEventFor: lastMaintenanceFor, replaceAll: setMaintenance } = useMaintenance();
-  const { entries: intake, addEntry: addIntake, deleteEntry: deleteIntake, replaceAll: setIntake } = useIntake();
+  const { entries: intake, addEntry: addIntake, updateEntry: updateIntake, deleteEntry: deleteIntake, replaceAll: setIntake } = useIntake();
   const { prefs: caffeinePrefs, setPref: setCaffeinePref } = useCaffeinePrefs();
   const { excluded: excludedShots, exclude: excludeShot, restore: restoreShot, replaceAll: setExcludedShots } = useCaffeineExclusions();
 
@@ -778,6 +778,7 @@ function App() {
             setPref={setCaffeinePref}
             onAddIntake={addIntake}
             onDeleteIntake={deleteIntake}
+            onUpdateIntake={updateIntake}
             excludedShots={excludedShots}
             onExcludeShot={excludeShot}
             onRestoreShot={restoreShot}
