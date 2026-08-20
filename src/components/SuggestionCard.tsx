@@ -144,7 +144,16 @@ export default function SuggestionCard({
                             </div>
                             <div>
                                 <dt>{doseLabel}</dt>
-                                <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
+                                <dd>
+                                    {hasDose
+                                        ? `${lastShot.doseIn}g → ${suggestion.doseOut ?? lastShot.doseOut}g`
+                                        : '—'}
+                                    {suggestion.yieldDiff !== 0 && (
+                                        <span className={`dial-compare__diff ${suggestion.yieldDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
+                                            {diffLabel(suggestion.yieldDiff)}
+                                        </span>
+                                    )}
+                                </dd>
                             </div>
                             <div>
                                 <dt>Time</dt>
@@ -170,7 +179,7 @@ export default function SuggestionCard({
             )}
             {!suggestion && (
                 <p className="suggested-settings__reason">
-                    That one landed balanced. Repeat these settings.
+                    That one landed balanced at the strength you wanted. Repeat these settings.
                 </p>
             )}
 

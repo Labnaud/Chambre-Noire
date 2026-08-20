@@ -150,6 +150,10 @@ function App() {
     form.applyFromShot(lastShotForBean);
     form.setGrindSize(suggestedSettings.grindSize);
     form.setWaterTempC(suggestedSettings.waterTempC);
+    if (suggestedSettings.doseOut !== undefined) {
+      form.setShowDose(true);
+      form.setDoseOut(String(suggestedSettings.doseOut));
+    }
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
   };

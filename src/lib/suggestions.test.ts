@@ -69,6 +69,7 @@ describe('getSuggestedSettings', () => {
             adjustmentType: 'both',
             grindDiff: -3,
             tempDiff: STEP,
+            yieldDiff: 0,
         });
     });
 
@@ -93,6 +94,7 @@ describe('getSuggestedSettings', () => {
             adjustmentType: 'both',
             grindDiff: 3,
             tempDiff: -STEP,
+            yieldDiff: 0,
         });
     });
 
@@ -180,5 +182,69 @@ describe('getSuggestedSettings with extraction time', () => {
         expect(out?.adjustmentType).toBe('grind');
         expect(out?.waterTempC).toBe(TEMP_MAX);
         expect(out?.reason).toMatch(/finer|grind/i);
+    });
+});
+
+// Strength is a second axis. Yield moves concentration, but it moves
+// extraction too, so it only gets a turn once taste is already balanced.
+describe('strength drives yield, after taste is dialled in', () => {
+    const espresso = (over: Partial<ShotLog>): ShotLog => ({
+        id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+        grindSize: 22, waterTempC: TEMP_MID, strength: 2, rating: 'Balanced',
+        doseIn: 18, doseOut: 36, timestamp: new Date(), ...over,
+    });
+
+    it('says nothing when taste and strength are both on target', () => {
+        expect(getSuggestedSettings(espresso({}))).toBeNull();
+    });
+
+    it('lengthens the shot when balanced but overwhelming', () => {
+        const out = getSuggestedSettings(espresso({ strength: 3 }));
+        expect(out?.adjustmentType).toBe('yield');
+        expect(out?.doseOut).toBe(39);
+        expect(out?.yieldDiff).toBe(3);
+        expect(out?.grindDiff).toBe(0);
+        expect(out?.reason).toMatch(/dilute/i);
+    });
+
+    it('shortens the shot when balanced but weak', () => {
+        const out = getSuggestedSettings(espresso({ strength: 1 }));
+        expect(out?.doseOut).toBe(33);
+        expect(out?.yieldDiff).toBe(-3);
+        expect(out?.reason).toMatch(/concentrated/i);
+    });
+
+    it('leaves grind and temperature alone when yield is the lever', () => {
+        const out = getSuggestedSettings(espresso({ strength: 3 }));
+        expect(out?.grindSize).toBe(22);
+        expect(out?.waterTempC).toBe(TEMP_MID);
+    });
+
+    // One variable at a time: a sour shot gets its grind fixed first, even if
+    // the strength is also off.
+    it('fixes taste before strength', () => {
+        const out = getSuggestedSettings(espresso({ rating: 'Sour', strength: 3 }));
+        expect(out?.adjustmentType).not.toBe('yield');
+        expect(out?.yieldDiff).toBe(0);
+        expect(out?.grindDiff).toBeLessThan(0);
+    });
+
+    it('will not walk the ratio past a lungo', () => {
+        const out = getSuggestedSettings(espresso({ strength: 3, doseOut: 44 })); // 1:2.44
+        expect(out?.doseOut).toBe(45); // clamped at 1:2.5
+    });
+
+    it('will not walk the ratio below a ristretto', () => {
+        const out = getSuggestedSettings(espresso({ strength: 1, doseOut: 28 })); // 1:1.56
+        expect(out?.doseOut).toBe(27); // clamped at 1:1.5
+    });
+
+    it('does nothing without dose data to work from', () => {
+        expect(getSuggestedSettings(espresso({ strength: 3, doseIn: undefined }))).toBeNull();
+    });
+
+    // On filter the yield number is total brew water, a different quantity.
+    it('stays out of it for filter brews', () => {
+        expect(getSuggestedSettings(espresso({ method: 'V60', strength: 3 }))).toBeNull();
     });
 });

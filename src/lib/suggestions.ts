@@ -1,5 +1,5 @@
 import type { Rating, ShotLog } from '../types';
-import { GRIND_MIN, GRIND_MAX } from '../constants';
+import { GRIND_MIN, GRIND_MAX, TARGET_STRENGTH } from '../constants';
 import { profileFor } from './brew';
 // Target espresso window in seconds. Faster than MIN reads as under-extracted
 // flow, slower than MAX as over-extracted.
@@ -23,11 +23,22 @@ export function getBaristaTip(rating: Rating): { message: string; adjustment: 'l
 export interface SuggestedSettings {
     grindSize: number;
     waterTempC: number;
-    adjustmentType: 'grind' | 'temp' | 'both';
+    /** Proposed yield in grams, set only when strength is the lever. */
+    doseOut?: number;
+    adjustmentType: 'grind' | 'temp' | 'both' | 'yield';
     grindDiff: number;
     tempDiff: number;
-    reason?: string; // set when extraction time drove the lever choice
+    yieldDiff: number;
+    reason?: string; // set when extraction time or strength drove the lever choice
 }
+
+// Yield moves strength: the same dose through more water is a more dilute
+// shot. Their own fine-tuning range is 2-4g, so one step sits in the middle.
+const YIELD_STEP_G = 3;
+// Keep a proposal inside a sane espresso band rather than walking off toward
+// a ristretto or a lungo while chasing strength.
+const RATIO_MIN = 1.5;
+const RATIO_MAX = 2.5;
 const GRIND_STEP: Record<Exclude<Rating, 'Balanced'>, number> = {
     'Very Sour': -3,
     'Sour': -1,
@@ -36,7 +47,9 @@ const GRIND_STEP: Record<Exclude<Rating, 'Balanced'>, number> = {
 };
 
 export function getSuggestedSettings(lastShot: ShotLog | null | undefined): SuggestedSettings | null {
-    if (!lastShot || !lastShot.rating || lastShot.rating === 'Balanced') return null;
+    if (!lastShot || !lastShot.rating) return null;
+    // Taste first. Only once it lands balanced does strength get a lever.
+    if (lastShot.rating === 'Balanced') return getStrengthSuggestion(lastShot);
 
     const rating = lastShot.rating;
     const profile = profileFor(lastShot.method);
@@ -53,6 +66,7 @@ export function getSuggestedSettings(lastShot: ShotLog | null | undefined): Sugg
             adjustmentType: 'grind',
             grindDiff: grindSize - currentGrind,
             tempDiff: 0,
+            yieldDiff: 0,
             reason,
         };
     };
@@ -68,6 +82,7 @@ export function getSuggestedSettings(lastShot: ShotLog | null | undefined): Sugg
             adjustmentType: 'temp',
             grindDiff: 0,
             tempDiff: next - currentTemp,
+            yieldDiff: 0,
             reason,
         };
     };
@@ -111,5 +126,41 @@ export function getSuggestedSettings(lastShot: ShotLog | null | undefined): Sugg
         adjustmentType: wantsTempShift && waterTempC !== currentTemp ? 'both' : 'grind',
         grindDiff: grindSize - currentGrind,
         tempDiff: waterTempC - currentTemp,
+        yieldDiff: 0,
+    };
+}
+
+// Strength is the second axis, and it only gets a turn once taste is dialled
+// in. Their golden rule is one variable at a time, flow then taste then body,
+// and yield moves extraction as well as concentration -- so changing it while
+// the shot is still sour or bitter would fight the grind change.
+function getStrengthSuggestion(lastShot: ShotLog): SuggestedSettings | null {
+    const profile = profileFor(lastShot.method);
+    if (profile.ratioStyle !== 'espresso') return null; // yield means total water on filter
+    if (lastShot.strength === TARGET_STRENGTH) return null;
+
+    const doseIn = lastShot.doseIn;
+    const doseOut = lastShot.doseOut;
+    if (!doseIn || doseIn <= 0 || !doseOut || doseOut <= 0) return null;
+
+    const tooStrong = lastShot.strength > TARGET_STRENGTH;
+    const target = doseOut + (tooStrong ? YIELD_STEP_G : -YIELD_STEP_G);
+
+    const clamped = Math.min(doseIn * RATIO_MAX, Math.max(doseIn * RATIO_MIN, target));
+    const next = Math.round(clamped * 10) / 10;
+    if (next === doseOut) return null; // already at the edge of the band
+
+    const ratio = (next / doseIn).toFixed(1);
+    return {
+        grindSize: lastShot.grindSize,
+        waterTempC: lastShot.waterTempC ?? profile.defaultTempC,
+        doseOut: next,
+        adjustmentType: 'yield',
+        grindDiff: 0,
+        tempDiff: 0,
+        yieldDiff: Math.round((next - doseOut) * 10) / 10,
+        reason: tooStrong
+            ? `Balanced but overwhelming, so pull longer to ${next}g (1:${ratio}) and dilute it.`
+            : `Balanced but weak, so stop at ${next}g (1:${ratio}) for a more concentrated shot.`,
     };
 }
