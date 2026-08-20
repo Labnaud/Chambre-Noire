@@ -4015,26 +4015,6 @@ button.grind-control__value:hover {
   flex-wrap: wrap;
 }
 
-.journey-step {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.625rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  border: 1px solid transparent;
-}
-
-.journey-step .icon {
-  width: 14px;
-  height: 14px;
-}
-
-.journey-step__grind {
-  font-family: var(--font-sans);
-}
-
 /* Numeric type: feature and data numbers use lining tabular figures so digits
    align in columns and read cleanly. (The live stopwatch and kbd keys keep
    monospace, where fixed-width digits are genuinely the right choice.) */
@@ -4049,43 +4029,6 @@ button.grind-control__value:hover {
 .journey-step__grind,
 .setting-tag {
   font-variant-numeric: tabular-nums;
-}
-
-.journey-step__arrow {
-  margin: 0 0.125rem;
-  color: var(--color-muted);
-  font-size: var(--text-sm);
-  font-weight: 400;
-}
-
-.journey-step--sour {
-  background: color-mix(in srgb, var(--color-sour) 15%, transparent);
-  color: var(--color-sour);
-  border-color: color-mix(in srgb, var(--color-sour) 25%, transparent);
-}
-
-.journey-step--very-sour {
-  background: color-mix(in srgb, var(--color-very-sour) 15%, transparent);
-  color: var(--color-very-sour);
-  border-color: color-mix(in srgb, var(--color-very-sour) 25%, transparent);
-}
-
-.journey-step--balanced {
-  background: color-mix(in srgb, var(--color-balanced) 15%, transparent);
-  color: var(--color-balanced);
-  border-color: color-mix(in srgb, var(--color-balanced) 25%, transparent);
-}
-
-.journey-step--bitter {
-  background: color-mix(in srgb, var(--color-bitter) 15%, transparent);
-  color: var(--color-bitter);
-  border-color: color-mix(in srgb, var(--color-bitter) 25%, transparent);
-}
-
-.journey-step--very-bitter {
-  background: color-mix(in srgb, var(--color-very-bitter) 15%, transparent);
-  color: var(--color-very-bitter);
-  border-color: color-mix(in srgb, var(--color-very-bitter) 25%, transparent);
 }
 
 /* ============================================
@@ -4409,26 +4352,6 @@ button.grind-control__value:hover {
 }
 
 /* Grind History Mini Chart */
-.grind-history {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 40px;
-  margin-top: 0.5rem;
-  padding: 0.5rem 0;
-}
-
-.grind-history__bar {
-  flex: 1;
-  min-width: 20px;
-  background: var(--color-mocha);
-  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
-  transition: background 0.2s ease;
-}
-
-.grind-history__bar--current {
-  background: var(--color-caramel);
-}
 
 /* ============================================
    SHOT COMPARISON
@@ -5459,6 +5382,8 @@ textarea:focus-visible {
 }
 
 /* Unrated states (shared muted treatment) */
+
+/* Still used by the history row for a shot logged without a rating. */
 .rating-unrated-mark {
   font-family: var(--font-display);
   font-weight: 600;
@@ -5469,12 +5394,6 @@ textarea:focus-visible {
   background: var(--color-dark-roast);
   border: 1px dashed var(--color-mocha);
   color: var(--color-subtle);
-}
-
-.journey-step--unrated {
-  background: color-mix(in srgb, var(--color-muted) 12%, transparent);
-  color: var(--color-subtle);
-  border-color: color-mix(in srgb, var(--color-muted) 25%, transparent);
 }
 
 .barista-tip--unrated {
@@ -6664,4 +6583,79 @@ textarea:focus-visible {
   font-size: var(--text-xs);
   color: var(--color-muted);
   line-height: 1.5;
+}
+
+/* Recent Journey: the two target scales side by side with what was tried.
+   Taste and strength both read good in the middle, so a converging dial-in
+   shows as both columns turning green down the list. */
+.dialin-journey__dir {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-subtle);
+}
+
+.journey-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.journey-row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--color-espresso) 60%, transparent);
+}
+
+.journey-row__taste {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.journey-row__taste--unrated {
+  color: var(--color-subtle);
+  font-weight: 400;
+}
+
+.journey-row__tried {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-row__strength {
+  font-size: var(--text-xs);
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.journey-row__strength--target {
+  color: var(--color-balanced);
+  background: color-mix(in srgb, var(--color-balanced) 16%, transparent);
+}
+
+.journey-row__strength--under {
+  color: var(--color-sour);
+  background: color-mix(in srgb, var(--color-sour) 16%, transparent);
+}
+
+.journey-row__strength--over {
+  color: var(--color-bitter-text);
+  background: color-mix(in srgb, var(--color-bitter) 20%, transparent);
+}
+
+@media (max-width: 420px) {
+  .journey-row { grid-template-columns: 5rem 1fr; }
+  .journey-row__strength { grid-column: 2; justify-self: start; }
 }

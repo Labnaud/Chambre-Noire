@@ -2,6 +2,7 @@ import type { ShotLog, Rating, BrewMethod } from '../types';
 import type { SuggestedSettings } from '../lib/suggestions';
 import { getBaristaTip } from '../lib/suggestions';
 import { yieldLabel, formatDuration, targetTimeLabel } from '../lib/brew';
+import { STRENGTHS } from '../constants';
 import Icons from './Icons';
 
 interface SuggestionCardProps {
@@ -200,51 +201,41 @@ export default function SuggestionCard({
                 </button>
             )}
 
-            {shotsForBean.length > 1 && (() => {
-                const displayShots = shotsForBean.slice(0, 5).reverse();
-                const grindSizes = displayShots.map(s => s.grindSize);
-                const minGrind = Math.min(...grindSizes);
-                const maxGrind = Math.max(...grindSizes);
-                const grindRange = maxGrind - minGrind || 1;
-
-                return (
-                    <div className="dialin-journey">
-                        <div className="dialin-journey__label">
-                            <Icons.TrendingUp /> Recent Journey
-                        </div>
-                        <div className="dialin-journey__timeline">
-                            {displayShots.map((shot, idx) => {
-                                const shotConfig = shot.rating ? ratingConfig[shot.rating] : null;
-                                const ShotIcon = shotConfig?.icon;
-                                return (
-                                    <div
-                                        key={shot.id}
-                                        className={`journey-step ${shotConfig ? `journey-step--${shotConfig.colorClass}` : 'journey-step--unrated'}`}
-                                        title={`Grind ${shot.grindSize} • ${shot.rating ?? 'Not rated'}`}
-                                    >
-                                        {ShotIcon ? <ShotIcon /> : <span className="rating-unrated-mark" aria-hidden="true">?</span>}
-                                        <span className="journey-step__grind">G{shot.grindSize}</span>
-                                        {idx < displayShots.length - 1 && <span className="journey-step__arrow">→</span>}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className="grind-history" title="Grind size trend">
-                            {displayShots.map((shot, idx) => (
-                                <div
-                                    key={shot.id}
-                                    className={`grind-history__bar ${idx === displayShots.length - 1 ? 'grind-history__bar--current' : ''}`}
-                                    style={{
-                                        height: `${20 + ((shot.grindSize - minGrind) / grindRange) * 80}%`,
-                                        background: shot.rating ? ratingColors[shot.rating] : 'var(--color-mocha)'
-                                    }}
-                                    title={`G${shot.grindSize}`}
-                                />
-                            ))}
-                        </div>
+            {shotsForBean.length > 1 && (
+                <div className="dialin-journey">
+                    <div className="dialin-journey__label">
+                        <Icons.TrendingUp /> Recent Journey
+                        <span className="dialin-journey__dir">oldest to newest</span>
                     </div>
-                );
-            })()}
+                    <div className="journey-rows">
+                        {shotsForBean.slice(0, 5).reverse().map((shot) => {
+                            const shotConfig = shot.rating ? ratingConfig[shot.rating] : null;
+                            const strengthTone = STRENGTHS.find(x => x.value === shot.strength);
+                            const parts = [`G${shot.grindSize}`];
+                            if (shot.doseIn !== undefined && shot.doseOut !== undefined) {
+                                parts.push(`${shot.doseIn}\u2192${shot.doseOut}g`);
+                            }
+                            if (shot.extractionTime !== undefined) {
+                                parts.push(formatDuration(shot.extractionTime));
+                            }
+                            return (
+                                <div key={shot.id} className="journey-row">
+                                    <span
+                                        className={`journey-row__taste ${shotConfig ? `journey-row__taste--${shotConfig.colorClass}` : 'journey-row__taste--unrated'}`}
+                                        style={shot.rating ? { color: ratingColors[shot.rating] } : undefined}
+                                    >
+                                        {shot.rating ?? 'Not rated'}
+                                    </span>
+                                    <span className="journey-row__tried">{parts.join(' \u00b7 ')}</span>
+                                    <span className={`journey-row__strength journey-row__strength--${strengthTone?.tone ?? 'target'}`}>
+                                        {strengthTone?.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </>
     );
 }
