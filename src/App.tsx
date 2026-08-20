@@ -657,6 +657,7 @@ function App() {
             open={true}
             beans={beans}
             shots={shots}
+            method={form.method}
             onAdd={addBean}
             onUpdate={updateBean}
             onDelete={confirmDeleteBean}

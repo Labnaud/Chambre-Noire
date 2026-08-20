@@ -27,14 +27,24 @@ function matchesBean(shot: ShotLog, beanName: string): boolean {
     return shot.beanName.trim().toLowerCase() === beanName.trim().toLowerCase();
 }
 
+// Grind means something different per method on one continuous scale, so a
+// bean brewed both ways has one best dial-in per method, never a shared one.
+function matchesMethod(shot: ShotLog, method?: BrewMethod): boolean {
+    return method === undefined || shot.method === method;
+}
+
 // How far a taste rating sits from Balanced. Smaller is better.
 function distanceFromBalanced(rating: Rating): number {
     return Math.abs(RATINGS.indexOf(rating) - BALANCED_RATING_INDEX);
 }
 
 // The shot to repeat for this bean: closest to Balanced, most recent wins ties.
-export function getBestDialIn(beanName: string, shots: ShotLog[]): ShotLog | null {
-    const rated = shots.filter((s) => matchesBean(s, beanName) && s.rating);
+export function getBestDialIn(
+    beanName: string,
+    shots: ShotLog[],
+    method?: BrewMethod,
+): ShotLog | null {
+    const rated = shots.filter((s) => matchesBean(s, beanName) && matchesMethod(s, method) && s.rating);
     if (rated.length === 0) return null;
 
     return rated.reduce((best, s) => {
@@ -57,9 +67,10 @@ export function getDialInProgression(
     beanName: string,
     shots: ShotLog[],
     limit = 12,
+    method?: BrewMethod,
 ): ProgressionPoint[] {
     return shots
-        .filter((s) => matchesBean(s, beanName))
+        .filter((s) => matchesBean(s, beanName) && matchesMethod(s, method))
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
         .slice(-limit)
         .map((s) => ({ grindSize: s.grindSize, rating: s.rating, timestamp: s.timestamp }));

@@ -135,3 +135,44 @@ describe('getDialInProgression', () => {
         expect(getDialInProgression('Ethiopia', shots)).toHaveLength(1);
     });
 });
+
+// One bean brewed both ways used to share a single "best dial-in" and a single
+// sparkline, so a V60 grind could surface as an espresso recommendation and the
+// trend line lurched between two unrelated scales.
+describe('dial-in scoped by method', () => {
+    const at = (d: number) => new Date(2026, 4, d, 8);
+    const mk = (id: string, method: 'Espresso' | 'V60', grindSize: number, rating: Rating, day: number): ShotLog => ({
+        id, beanName: 'Ethiopia', method, basket: 'Double',
+        grindSize, strength: 2, rating, timestamp: at(day),
+    });
+
+    const shots = [
+        mk('e1', 'Espresso', 20, 'Bitter', 1),
+        mk('e2', 'Espresso', 22, 'Balanced', 2),
+        mk('v1', 'V60', 52, 'Balanced', 3),
+    ];
+
+    it('returns each method its own best dial-in', () => {
+        expect(getBestDialIn('Ethiopia', shots, 'Espresso')?.id).toBe('e2');
+        expect(getBestDialIn('Ethiopia', shots, 'V60')?.id).toBe('v1');
+    });
+
+    it('no longer lets the newer method win a tie across methods', () => {
+        // Both e2 and v1 are Balanced; unscoped, the later V60 wins.
+        expect(getBestDialIn('Ethiopia', shots)?.id).toBe('v1');
+        expect(getBestDialIn('Ethiopia', shots, 'Espresso')?.id).toBe('e2');
+    });
+
+    it('is null when the bean has no rated shot on that method', () => {
+        expect(getBestDialIn('Ethiopia', [shots[0], shots[1]], 'V60')).toBeNull();
+    });
+
+    it('plots only the selected method in the progression', () => {
+        expect(getDialInProgression('Ethiopia', shots, 12, 'Espresso').map(p => p.grindSize)).toEqual([20, 22]);
+        expect(getDialInProgression('Ethiopia', shots, 12, 'V60').map(p => p.grindSize)).toEqual([52]);
+    });
+
+    it('still spans every method when none is given', () => {
+        expect(getDialInProgression('Ethiopia', shots).map(p => p.grindSize)).toEqual([20, 22, 52]);
+    });
+});

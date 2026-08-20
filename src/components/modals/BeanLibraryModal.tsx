@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { BeanProfile, ProcessMethod, RoastLevel, ShotLog } from '../../types';
+import type { BeanProfile, BrewMethod, ProcessMethod, RoastLevel, ShotLog } from '../../types';
 import { PROCESS_METHODS, ROAST_LEVELS } from '../../constants';
 import { generateId } from '../../lib/format';
 import { getDaysSinceRoast, getFreshnessStatus } from '../../lib/beans';
@@ -13,6 +13,8 @@ interface BeanLibraryModalProps {
     open: boolean;
     beans: BeanProfile[];
     shots: ShotLog[];
+    /** The method selected in the shot form; dial-in figures are shown for it. */
+    method: BrewMethod;
     onAdd: (bean: BeanProfile) => void;
     onUpdate: (bean: BeanProfile) => void;
     onDelete: (id: string) => void;
@@ -25,6 +27,7 @@ export default function BeanLibraryModal({
     open,
     beans,
     shots,
+    method,
     onAdd,
     onUpdate,
     onDelete,
@@ -279,8 +282,8 @@ export default function BeanLibraryModal({
                                     const days = getDaysSinceRoast(bean.roastDate);
                                     const freshness = getFreshnessStatus(days);
                                     const inventory = getBeanInventory(bean, shots);
-                                    const bestDialIn = getBestDialIn(bean.name, shots);
-                                    const progression = getDialInProgression(bean.name, shots);
+                                    const bestDialIn = getBestDialIn(bean.name, shots, method);
+                                    const progression = getDialInProgression(bean.name, shots, 12, method);
                                     return (
                                         <div
                                             key={bean.id}
@@ -317,10 +320,12 @@ export default function BeanLibraryModal({
                                                         {bestDialIn && (
                                                             <div className="bean-card__best">
                                                                 <div className="bean-card__best-info">
-                                                                    <span className="bean-card__best-label">Best dial-in</span>
+                                                                    <span className="bean-card__best-label">Best {method} dial-in</span>
                                                                     <span className="bean-card__best-settings">
-                                                                        Grind {bestDialIn.grindSize} • {bestDialIn.basket}
-                                                                        {bestDialIn.waterTempC !== undefined ? ` • ${bestDialIn.waterTempC} °C` : ''} • Str {bestDialIn.strength}
+                                                                        Grind {bestDialIn.grindSize}
+                                                                        {bestDialIn.method === 'Espresso' ? ` • ${bestDialIn.basket}` : ''}
+                                                                        {bestDialIn.pourPattern ? ` • ${bestDialIn.pourPattern}` : ''}
+                                                                        {bestDialIn.waterTempC !== undefined ? ` • ${bestDialIn.waterTempC} °C` : ''}
                                                                     </span>
                                                                 </div>
                                                                 <button
