@@ -12,6 +12,7 @@ import Header from './components/Header';
 import ShotForm from './components/ShotForm/ShotForm';
 import ConfirmDialog from './components/modals/ConfirmDialog';
 import ShotDetailModal from './components/modals/ShotDetailModal';
+import TastingNotesModal from './components/modals/TastingNotesModal';
 import { buildJSONBackup, buildCSV, downloadFile, parseImportFile } from './lib/dataIO';
 import type { ImportResult } from './lib/dataIO';
 import Toast from './components/Toast';
@@ -21,6 +22,7 @@ import { RATING_COLOR_CLASS } from './lib/ratings';
 import { saveStorageValue } from './lib/storage';
 import { getRecentShotsForBean } from './lib/shots';
 import { profileFor, describeBrew } from './lib/brew';
+import type { BrewMethod } from './types';
 
 const RecipeEditorModal = lazy(() => import('./components/modals/RecipeEditorModal'));
 const BeanLibraryModal = lazy(() => import('./components/modals/BeanLibraryModal'));
@@ -60,6 +62,7 @@ function App() {
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showCaffeine, setShowCaffeine] = useState(false);
+  const [sweetSpot, setSweetSpot] = useState<{ bean: BeanProfile; method: BrewMethod } | null>(null);
   const [beanFilter, setBeanFilter] = useState<string>('');
   const [notesSearch, setNotesSearch] = useState<string>('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -107,7 +110,7 @@ function App() {
   const anyModalOpen =
     showRecipeModal || showRecipeLibrary || showBeanLibrary || showStats || showCaffeine
     || showSettings || showHistoryModal || selectedShot !== null || editingRecipe !== null
-    || confirmDialog !== null;
+    || confirmDialog !== null || sweetSpot !== null;
   useScrollLock(anyModalOpen);
 
   useKeyboardShortcuts({
@@ -122,7 +125,8 @@ function App() {
     onCycleTheme: cycleTheme,
     onToggleBeanLibrary: () => setShowBeanLibrary(prev => !prev),
     onEscape: () => {
-      if (confirmDialog) closeConfirm();
+      if (sweetSpot) setSweetSpot(null);
+      else if (confirmDialog) closeConfirm();
       else if (selectedShot) setSelectedShot(null);
       else if (editingRecipe) setEditingRecipe(null);
       else if (showHistoryModal) setShowHistoryModal(false);
@@ -478,6 +482,17 @@ function App() {
 
     addShot(newShot);
     setJustLoggedId(newShot.id);
+
+    // First Balanced shot for this bean on this method: the profile is now
+    // established, so this is the moment its flavour note means something.
+    if (newShot.rating === 'Balanced') {
+      const key = newShot.beanName.toLowerCase();
+      const profile = beans.find(b => b.name.toLowerCase() === key);
+      const alreadyNoted = profile?.methodNotes?.[newShot.method]?.trim();
+      if (profile && !alreadyNoted) {
+        setSweetSpot({ bean: profile, method: newShot.method });
+      }
+    }
     const beanShots = shots.filter(s => s.beanName.toLowerCase() === newShot.beanName.toLowerCase()).length + 1;
     form.reset();
     autocomplete.closeSuggestions();
@@ -647,6 +662,21 @@ function App() {
             onCancel={() => { setShowRecipeModal(false); setEditingRecipe(null); setRecipeName(''); }}
           />
         </Suspense>
+      )}
+
+      {sweetSpot && (
+        <TastingNotesModal
+          bean={sweetSpot.bean}
+          method={sweetSpot.method}
+          onSkip={() => setSweetSpot(null)}
+          onSave={(notes) => {
+            const methodNotes = { ...(sweetSpot.bean.methodNotes ?? {}) };
+            if (notes) methodNotes[sweetSpot.method] = notes;
+            updateBean({ ...sweetSpot.bean, methodNotes });
+            setSweetSpot(null);
+            showToast(`Saved how ${sweetSpot.bean.name} tastes as ${sweetSpot.method}`, 'success');
+          }}
+        />
       )}
 
       <ShotDetailModal
