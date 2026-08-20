@@ -1,6 +1,7 @@
 import type { ShotLog, Rating } from '../types';
 import type { SuggestedSettings } from '../lib/suggestions';
 import { getBaristaTip } from '../lib/suggestions';
+import { yieldLabel } from '../lib/brew';
 import Icons from './Icons';
 
 interface SuggestionCardProps {
@@ -13,6 +14,8 @@ interface SuggestionCardProps {
     onApply: () => void;
 }
 
+const diffLabel = (n: number) => `${n > 0 ? '+' : ''}${n}`;
+
 export default function SuggestionCard({
     lastShot,
     suggestion,
@@ -24,7 +27,7 @@ export default function SuggestionCard({
 }: SuggestionCardProps) {
     if (!lastShot) {
         return (
-            <div className="empty-state">
+            <div className="empty-state empty-state--small">
                 <Icons.Lightbulb />
                 <p className="empty-state__title">
                     {beanName.trim() ? `No history for "${beanName}" yet` : 'Dial in with the Smart Barista'}
@@ -56,6 +59,11 @@ export default function SuggestionCard({
     const tip = getBaristaTip(lastShot.rating);
     const TipIcon = config.icon;
 
+    // What was actually tried, so the proposal has something to sit against.
+    const lastGrind = lastShot.grindSize;
+    const lastTemp = lastShot.waterTempC;
+    const hasDose = lastShot.doseIn !== undefined && lastShot.doseOut !== undefined;
+
     return (
         <>
             <div className={`barista-tip barista-tip--${config.colorClass}`}>
@@ -75,42 +83,93 @@ export default function SuggestionCard({
                 </div>
             </div>
 
-            {suggestion && (
-                <div className="suggested-settings">
-                    <div className="suggested-settings__header">
-                        <Icons.Target />
-                        <span>Suggested Next Shot</span>
+            <div className="dial-compare">
+                <div className="dial-compare__col">
+                    <div className="dial-compare__head">
+                        <span className="dial-compare__title">Last tried</span>
+                        <span
+                            className="dial-compare__rating"
+                            style={{ color: ratingColors[lastShot.rating] }}
+                        >
+                            {lastShot.rating}
+                        </span>
                     </div>
-                    <div className="suggested-settings__values">
-                        <div className="suggested-setting">
-                            <span className="suggested-setting__label">Grind</span>
-                            <span className="suggested-setting__value">
-                                {suggestion.grindSize}
-                                {suggestion.grindDiff !== 0 && (
-                                    <span className={`suggested-setting__diff ${suggestion.grindDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
-                                        ({suggestion.grindDiff > 0 ? '+' : ''}{suggestion.grindDiff})
-                                    </span>
-                                )}
-                            </span>
-                        </div>
-                        {suggestion.adjustmentType !== 'grind' && (
-                            <div className="suggested-setting">
-                                <span className="suggested-setting__label">Temp</span>
-                                <span className="suggested-setting__value">{suggestion.waterTempC} &deg;C</span>
+                    <dl className="dial-compare__rows">
+                        <div><dt>Grind</dt><dd>{lastGrind}</dd></div>
+                        {lastTemp !== undefined && (
+                            <div><dt>Temp</dt><dd>{lastTemp} &deg;C</dd></div>
+                        )}
+                        {hasDose && (
+                            <div>
+                                <dt>{yieldLabel(lastShot.method) === 'Out (g)' ? 'Dose / Out' : 'Dose / Water'}</dt>
+                                <dd>{lastShot.doseIn}g &rarr; {lastShot.doseOut}g</dd>
                             </div>
                         )}
-                    </div>
-                    {suggestion.reason && (
-                        <p className="suggested-settings__reason">{suggestion.reason}</p>
-                    )}
-                    <button
-                        className="btn-apply-suggestion"
-                        onClick={onApply}
-                        title="Apply suggested settings to form"
-                    >
-                        <Icons.Zap /> Apply to Form
-                    </button>
+                        {lastShot.extractionTime !== undefined && (
+                            <div><dt>Time</dt><dd>{lastShot.extractionTime}s</dd></div>
+                        )}
+                    </dl>
                 </div>
+
+                <div className="dial-compare__arrow" aria-hidden="true">&rarr;</div>
+
+                <div className="dial-compare__col dial-compare__col--proposed">
+                    <div className="dial-compare__head">
+                        <span className="dial-compare__title">Try next</span>
+                        <Icons.Target />
+                    </div>
+                    {suggestion ? (
+                        <dl className="dial-compare__rows">
+                            <div>
+                                <dt>Grind</dt>
+                                <dd>
+                                    {suggestion.grindSize}
+                                    {suggestion.grindDiff !== 0 && (
+                                        <span className={`dial-compare__diff ${suggestion.grindDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
+                                            {diffLabel(suggestion.grindDiff)}
+                                        </span>
+                                    )}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>Temp</dt>
+                                <dd>
+                                    {suggestion.waterTempC} &deg;C
+                                    {suggestion.tempDiff !== 0 && (
+                                        <span className={`dial-compare__diff ${suggestion.tempDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
+                                            {diffLabel(suggestion.tempDiff)}
+                                        </span>
+                                    )}
+                                </dd>
+                            </div>
+                            {hasDose && (
+                                <div>
+                                    <dt>Dose</dt>
+                                    <dd className="dial-compare__same">unchanged</dd>
+                                </div>
+                            )}
+                        </dl>
+                    ) : (
+                        <p className="dial-compare__balanced">
+                            That one landed balanced. Repeat these settings.
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {suggestion?.reason && (
+                <p className="suggested-settings__reason">{suggestion.reason}</p>
+            )}
+
+            {suggestion && (
+                <button
+                    className="btn-apply-suggestion"
+                    onClick={onApply}
+                    title="Load these settings into the form"
+                    type="button"
+                >
+                    <Icons.Zap /> Apply to form
+                </button>
             )}
 
             {shotsForBean.length > 1 && (() => {

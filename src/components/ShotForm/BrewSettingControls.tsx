@@ -1,20 +1,11 @@
 import { useState } from 'react';
-import type { Basket, Strength, BrewMethod, PourPattern } from '../../types';
-import { BASKETS, STRENGTHS, POUR_PATTERNS, GRIND_MIN, GRIND_MAX } from '../../constants';
-import { BREW_METHODS, profileFor } from '../../lib/brew';
+import type { Strength, BrewMethod } from '../../types';
+import { STRENGTHS, GRIND_MIN, GRIND_MAX } from '../../constants';
+import { profileFor } from '../../lib/brew';
 import Icons from '../Icons';
 
-interface BrewControlsProps {
+interface BrewSettingControlsProps {
     method: BrewMethod;
-    setMethod: (m: BrewMethod) => void;
-    pourPattern: PourPattern;
-    setPourPattern: (p: PourPattern) => void;
-    iced: boolean;
-    setIced: (v: boolean) => void;
-    iceGrams: string;
-    setIceGrams: (v: string) => void;
-    basket: Basket;
-    setBasket: (b: Basket) => void;
     grindSize: number;
     setGrindSize: (g: number) => void;
     waterTempC: number;
@@ -25,18 +16,15 @@ interface BrewControlsProps {
     onDecrementGrind: () => void;
 }
 
-export default function BrewControls({
-    method, setMethod,
-    pourPattern, setPourPattern,
-    iced, setIced,
-    iceGrams, setIceGrams,
-    basket, setBasket,
+// The dials you actually turn. These sit after Smart Barista so its
+// suggestion is visible while you set them.
+export default function BrewSettingControls({
+    method,
     grindSize, setGrindSize,
     waterTempC, setWaterTempC,
     strength, setStrength,
-    onIncrementGrind,
-    onDecrementGrind,
-}: BrewControlsProps) {
+    onIncrementGrind, onDecrementGrind,
+}: BrewSettingControlsProps) {
     const [editingGrind, setEditingGrind] = useState(false);
     const [grindDraft, setGrindDraft] = useState('');
     const profile = profileFor(method);
@@ -51,97 +39,6 @@ export default function BrewControls({
 
     return (
         <>
-            <div className="form-group">
-                <span className="form-label" id="shot-method-label">Method</span>
-                <div className="pill-group" role="group" aria-labelledby="shot-method-label">
-                    {BREW_METHODS.map((m) => (
-                        <button
-                            key={m}
-                            type="button"
-                            className={`pill-btn ${method === m ? 'pill-btn--active' : ''}`}
-                            onClick={() => setMethod(m)}
-                            aria-pressed={method === m}
-                        >
-                            {m}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {profile.hasPourPattern && (
-                <div className="form-group">
-                    <span className="form-label" id="shot-pour-label">Pour Pattern</span>
-                    <div className="pill-group" role="group" aria-labelledby="shot-pour-label">
-                        {POUR_PATTERNS.map((p) => (
-                            <button
-                                key={p}
-                                type="button"
-                                className={`pill-btn ${pourPattern === p ? 'pill-btn--active' : ''}`}
-                                onClick={() => setPourPattern(p)}
-                                aria-pressed={pourPattern === p}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {profile.supportsIce && (
-                <div className="form-group">
-                    <div className="rating-header">
-                        <span className="form-label" id="shot-iced-label">Served over ice</span>
-                        <button
-                            type="button"
-                            className="rating-later-toggle"
-                            onClick={() => setIced(!iced)}
-                            aria-pressed={iced}
-                            aria-labelledby="shot-iced-label"
-                        >
-                            {iced ? 'Iced' : 'Hot'}
-                        </button>
-                    </div>
-                    {iced && (
-                        <div className="ice-field">
-                            <label className="form-label" htmlFor="shot-ice">Ice (g)</label>
-                            <input
-                                id="shot-ice"
-                                type="number"
-                                inputMode="decimal"
-                                min="0"
-                                step="5"
-                                className="form-input form-input--sm"
-                                placeholder="100"
-                                value={iceGrams}
-                                onChange={(e) => setIceGrams(e.target.value)}
-                            />
-                            <span className="ice-field__hint">
-                                Counts inside total water, so hot water = total &minus; ice.
-                            </span>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {method === 'Espresso' && (
-                <div className="form-group">
-                    <span className="form-label" id="shot-basket-label">Basket Size</span>
-                    <div className="pill-group" role="group" aria-labelledby="shot-basket-label">
-                        {BASKETS.map((b) => (
-                            <button
-                                key={b}
-                                type="button"
-                                className={`pill-btn ${basket === b ? 'pill-btn--active' : ''}`}
-                                onClick={() => setBasket(b)}
-                                aria-pressed={basket === b}
-                            >
-                                {b}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             <div className="form-group">
                 <label className="form-label" htmlFor="shot-grind-size">Grind Size</label>
                 <div className="grind-control">

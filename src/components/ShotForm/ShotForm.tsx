@@ -1,12 +1,15 @@
 import type { FormEvent } from 'react';
-import type { ShotLog, BeanProfile } from '../../types';
+import type { ShotLog, BeanProfile, Rating } from '../../types';
+import type { SuggestedSettings } from '../../lib/suggestions';
 import type { useShotForm } from '../../hooks/useShotForm';
 import type { useTimer } from '../../hooks/useTimer';
 import type { useBeanAutocomplete } from '../../hooks/useBeanAutocomplete';
 import { profileFor } from '../../lib/brew';
 import Icons from '../Icons';
 import BeanInput from './BeanInput';
-import BrewControls from './BrewControls';
+import BrewShapeControls from './BrewShapeControls';
+import BrewSettingControls from './BrewSettingControls';
+import SmartBarista from './SmartBarista';
 import DrinkControls from './DrinkControls';
 import TimerInput from './TimerInput';
 import RatingScale from './RatingScale';
@@ -25,6 +28,13 @@ interface ShotFormProps {
     editingShot: ShotLog | null;
     onCancelEdit: () => void;
     onOpenRecipeModal: () => void;
+    shots: ShotLog[];
+    lastShotForBean: ShotLog | null;
+    suggestion: SuggestedSettings | null;
+    shotsForBean: ShotLog[];
+    ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
+    ratingColors: Record<Rating, string>;
+    onApplySuggestion: () => void;
 }
 
 export default function ShotForm({
@@ -40,6 +50,13 @@ export default function ShotForm({
     editingShot,
     onCancelEdit,
     onOpenRecipeModal,
+    shots,
+    lastShotForBean,
+    suggestion,
+    shotsForBean,
+    ratingConfig,
+    ratingColors,
+    onApplySuggestion,
 }: ShotFormProps) {
     return (
         <form className="shot-form" onSubmit={onSubmit}>
@@ -52,7 +69,7 @@ export default function ShotForm({
                 favoriteShot={favoriteShot}
             />
 
-            <BrewControls
+            <BrewShapeControls
                 method={form.method}
                 setMethod={form.setMethod}
                 pourPattern={form.pourPattern}
@@ -63,6 +80,22 @@ export default function ShotForm({
                 setIceGrams={form.setIceGrams}
                 basket={form.basket}
                 setBasket={form.setBasket}
+            />
+
+            <SmartBarista
+                beanName={form.beanName}
+                beans={beans}
+                shots={shots}
+                lastShot={lastShotForBean}
+                suggestion={suggestion}
+                shotsForBean={shotsForBean}
+                ratingConfig={ratingConfig}
+                ratingColors={ratingColors}
+                onApply={onApplySuggestion}
+            />
+
+            <BrewSettingControls
+                method={form.method}
                 grindSize={form.grindSize}
                 setGrindSize={form.setGrindSize}
                 waterTempC={form.waterTempC}

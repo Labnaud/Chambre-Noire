@@ -2,8 +2,6 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { FormEvent } from 'react';
 import type { ShotLog, Rating, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from './types';
 import { generateId } from './lib/format';
-import { getFreshnessAlert } from './lib/beans';
-import { getBeanInventory } from './lib/inventory';
 import { getLogMessage } from './lib/milestones';
 import { getSuggestedSettings } from './lib/suggestions';
 import { getMaintenanceAlerts } from './lib/maintenance';
@@ -17,7 +15,6 @@ import ShotDetailModal from './components/modals/ShotDetailModal';
 import { buildJSONBackup, buildCSV, downloadFile, parseImportFile } from './lib/dataIO';
 import type { ImportResult } from './lib/dataIO';
 import Toast from './components/Toast';
-import SuggestionCard from './components/SuggestionCard';
 import ShotHistory from './components/ShotHistory';
 import ShotComparison from './components/ShotComparison';
 import { RATING_COLOR_CLASS } from './lib/ratings';
@@ -562,79 +559,44 @@ function App() {
               showToast('Edit cancelled', 'info');
             }}
             onOpenRecipeModal={() => setShowRecipeModal(true)}
+            shots={shots}
+            lastShotForBean={lastShotForBean ?? null}
+            suggestion={suggestedSettings}
+            shotsForBean={shotsForBean}
+            ratingConfig={RATING_CONFIG}
+            ratingColors={RATING_COLORS}
+            onApplySuggestion={applySuggestedSettings}
           />
         </div>
 
         <div className="side-panel">
-          <div className="card">
-            <h2 className="card__title">
-              <Icons.ChefHat /> Smart Barista
-            </h2>
-
-            {(() => {
-              const alert = getFreshnessAlert(form.beanName, beans);
-              if (!alert) return null;
-              return (
-                <div className={`freshness-alert freshness-alert--${alert.variant}`}>
-                  <span className="freshness-alert__badge" style={{ background: alert.color }}>
-                    {alert.label}
-                  </span>
-                  <span className="freshness-alert__text">{alert.text}</span>
+          {getMaintenanceAlerts(maintenanceEvents, shots.length).length > 0 && (
+            <div className="card">
+              <h2 className="card__title">
+                <Icons.Settings /> Machine
+              </h2>
+              {getMaintenanceAlerts(maintenanceEvents, shots.length).map(alert => (
+                <div key={alert.task} className={`maintenance-alert maintenance-alert--${alert.variant}`}>
+                  <span className="maintenance-alert__badge">{alert.label}</span>
+                  <span className="maintenance-alert__text">{alert.text}</span>
+                  <button
+                    className="maintenance-alert__action"
+                    onClick={() => {
+                      if (alert.task === 'cleaning') {
+                        recordCleaning(shots.length);
+                        showToast('Cleaning logged', 'success');
+                      } else {
+                        recordDescaling(shots.length);
+                        showToast('Descale logged', 'success');
+                      }
+                    }}
+                  >
+                    Mark done
+                  </button>
                 </div>
-              );
-            })()}
-
-            {(() => {
-              const key = form.beanName.trim().toLowerCase();
-              const profile = key ? beans.find(b => b.name.toLowerCase() === key) : undefined;
-              if (!profile) return null;
-              const inv = getBeanInventory(profile, shots);
-              if (!inv || (!inv.isLow && !inv.isEmpty)) return null;
-              return (
-                <div className={`freshness-alert freshness-alert--${inv.isEmpty ? 'stale' : 'fading'}`}>
-                  <span className="freshness-alert__badge" style={{ background: inv.isEmpty ? 'var(--color-very-bitter)' : 'var(--color-sour)' }}>
-                    {inv.isEmpty ? 'Empty' : 'Low Bag'}
-                  </span>
-                  <span className="freshness-alert__text">
-                    {inv.isEmpty
-                      ? `Your ${profile.name} bag is out. Time to restock.`
-                      : `About ${inv.gramsLeft}g (~${inv.shotsLeft} shots) of ${profile.name} left.`}
-                  </span>
-                </div>
-              );
-            })()}
-
-            {getMaintenanceAlerts(maintenanceEvents, shots.length).map(alert => (
-              <div key={alert.task} className={`maintenance-alert maintenance-alert--${alert.variant}`}>
-                <span className="maintenance-alert__badge">{alert.label}</span>
-                <span className="maintenance-alert__text">{alert.text}</span>
-                <button
-                  className="maintenance-alert__action"
-                  onClick={() => {
-                    if (alert.task === 'cleaning') {
-                      recordCleaning(shots.length);
-                      showToast('Cleaning logged', 'success');
-                    } else {
-                      recordDescaling(shots.length);
-                      showToast('Descale logged', 'success');
-                    }
-                  }}
-                >
-                  Mark done
-                </button>
-              </div>
-            ))}
-
-            <SuggestionCard
-              lastShot={lastShotForBean ?? null}
-              suggestion={suggestedSettings}
-              shotsForBean={shotsForBean}
-              beanName={form.beanName}
-              ratingConfig={RATING_CONFIG}
-              ratingColors={RATING_COLORS}
-              onApply={applySuggestedSettings}
-            />
-          </div>
+              ))}
+            </div>
+          )}
 
           <ShotHistory
             shots={shots}
