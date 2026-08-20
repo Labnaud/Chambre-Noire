@@ -1,4 +1,4 @@
-import type { Rating, Basket, Strength, MilkType, PourPattern, ProcessMethod, RoastLevel } from './types';
+import type { Rating, Basket, Strength, MilkType, PourPattern, ProcessMethod, RoastLevel, Repurchase } from './types';
 
 export const RATINGS: Rating[] = ['Very Sour', 'Sour', 'Balanced', 'Bitter', 'Very Bitter'];
 
@@ -22,7 +22,8 @@ export const STRENGTHS: { value: Strength; label: string; tone: 'under' | 'targe
 // Strong is the goal; the two ends both mean the shot needs adjusting.
 export const TARGET_STRENGTH: Strength = 2;
 export const MILK_TYPES: MilkType[] = ['Dairy', 'Plant'];
-export const PROCESS_METHODS: ProcessMethod[] = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'Other'];
+export const PROCESS_METHODS: ProcessMethod[] = ['Washed', 'Natural', 'Honey', 'Co-ferment', 'Anaerobic', 'Other'];
+export const REPURCHASE_OPTIONS: Repurchase[] = ['Yes', 'No', 'Mixed'];
 export const ROAST_LEVELS: RoastLevel[] = ['Light', 'Medium', 'Medium-Dark', 'Dark'];
 
 export const BALANCED_RATING_INDEX = 2;

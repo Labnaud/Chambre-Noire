@@ -3,6 +3,7 @@ import {
     BASKETS,
     MILK_TYPES,
     PROCESS_METHODS,
+    REPURCHASE_OPTIONS,
     RATINGS,
     ROAST_LEVELS,
     POUR_PATTERNS,
@@ -93,6 +94,8 @@ export function validRecipeRecord(value: unknown): value is SavedRecipe {
 export function validBeanRecord(value: unknown): value is BeanProfile {
     if (!isRecord(value)) return false;
     if (!isNonEmptyString(value.id) || !isNonEmptyString(value.name) || typeof value.isActive !== 'boolean') return false;
+    if (value.repurchase !== undefined && !isOneOf(value.repurchase, REPURCHASE_OPTIONS)) return false;
+    if (!isOptionalString(value.variety)) return false;
     if (!isOptionalString(value.roaster) || !isOptionalString(value.origin) || !isOptionalString(value.roastDate)
         || !isOptionalString(value.flavorNotes) || !isOptionalFiniteNumber(value.bagSizeGrams)
         || !isOptionalFiniteNumber(value.pricePaid)) return false;

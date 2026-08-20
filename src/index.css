@@ -6603,3 +6603,29 @@ textarea:focus-visible {
   color: var(--color-muted);
   line-height: 1.45;
 }
+
+/* Variety and buy-again verdict on the bean card */
+.bean-card__meta--variety {
+  font-style: italic;
+  color: var(--color-subtle);
+}
+
+.bean-card__repurchase {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: var(--text-xs);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs);
+  background: var(--color-mocha);
+  color: var(--color-cream);
+}
+
+.bean-card__repurchase--yes {
+  background: color-mix(in srgb, var(--color-balanced) 30%, transparent);
+  color: var(--color-balanced);
+}
+
+.bean-card__repurchase--no {
+  background: color-mix(in srgb, var(--color-very-bitter) 28%, transparent);
+  color: var(--color-bitter-text);
+}

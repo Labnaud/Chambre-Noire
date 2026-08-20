@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { BeanProfile, BrewMethod, ProcessMethod, RoastLevel, ShotLog } from '../../types';
-import { PROCESS_METHODS, ROAST_LEVELS } from '../../constants';
+import type { BeanProfile, BrewMethod, ProcessMethod, RoastLevel, Repurchase, ShotLog } from '../../types';
+import { PROCESS_METHODS, ROAST_LEVELS, REPURCHASE_OPTIONS } from '../../constants';
 import { generateId } from '../../lib/format';
 import { getDaysSinceRoast, getFreshnessStatus } from '../../lib/beans';
 import { getBeanInventory } from '../../lib/inventory';
@@ -38,6 +38,8 @@ export default function BeanLibraryModal({
     const [name, setName] = useState('');
     const [roaster, setRoaster] = useState('');
     const [origin, setOrigin] = useState('');
+    const [variety, setVariety] = useState('');
+    const [repurchase, setRepurchase] = useState<Repurchase | ''>('');
     const [roastLevel, setRoastLevel] = useState<RoastLevel>('Medium');
     const [process, setProcess] = useState<ProcessMethod>('Washed');
     const [roastDate, setRoastDate] = useState('');
@@ -53,6 +55,8 @@ export default function BeanLibraryModal({
         setName('');
         setRoaster('');
         setOrigin('');
+        setVariety('');
+        setRepurchase('');
         setRoastLevel('Medium');
         setProcess('Washed');
         setRoastDate('');
@@ -67,6 +71,8 @@ export default function BeanLibraryModal({
         setName(bean.name);
         setRoaster(bean.roaster ?? '');
         setOrigin(bean.origin ?? '');
+        setVariety(bean.variety ?? '');
+        setRepurchase(bean.repurchase ?? '');
         setRoastLevel(bean.roastLevel ?? 'Medium');
         setProcess(bean.processMethod ?? 'Washed');
         setRoastDate(bean.roastDate ?? '');
@@ -87,6 +93,8 @@ export default function BeanLibraryModal({
                 name: name.trim(),
                 roaster: roaster.trim() || undefined,
                 origin: origin.trim() || undefined,
+                variety: variety.trim() || undefined,
+                repurchase: repurchase || undefined,
                 roastLevel,
                 processMethod: process,
                 roastDate: roastDate || undefined,
@@ -99,6 +107,8 @@ export default function BeanLibraryModal({
                 name: name.trim(),
                 roaster: roaster.trim() || undefined,
                 origin: origin.trim() || undefined,
+                variety: variety.trim() || undefined,
+                repurchase: repurchase || undefined,
                 roastLevel,
                 processMethod: process,
                 roastDate: roastDate || undefined,
@@ -209,6 +219,36 @@ export default function BeanLibraryModal({
                                 </div>
                             </div>
                         </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label className="form-label" htmlFor="bean-variety">Variety</label>
+                                <input
+                                    id="bean-variety"
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="e.g. Caturra, Bourbon"
+                                    value={variety}
+                                    onChange={(e) => setVariety(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label" htmlFor="bean-repurchase">Buy again?</label>
+                                <div className="select-wrap">
+                                    <select
+                                        id="bean-repurchase"
+                                        className="form-select"
+                                        value={repurchase}
+                                        onChange={(e) => setRepurchase(e.target.value as Repurchase | '')}
+                                    >
+                                        <option value="">Not decided</option>
+                                        {REPURCHASE_OPTIONS.map((r) => (
+                                            <option key={r} value={r}>{r}</option>
+                                        ))}
+                                    </select>
+                                    <Icons.ChevronDown />
+                                </div>
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label className="form-label" htmlFor="bean-roast-date">Roast Date</label>
                             <input
@@ -295,7 +335,18 @@ export default function BeanLibraryModal({
                                                     {bean.roaster && <span>{bean.roaster}</span>}
                                                     {bean.origin && <span>{bean.origin}</span>}
                                                     {bean.roastLevel && <span>{bean.roastLevel}</span>}
+                                                    {bean.processMethod && <span>{bean.processMethod}</span>}
                                                 </div>
+                                                {bean.variety && (
+                                                    <div className="bean-card__meta bean-card__meta--variety">
+                                                        {bean.variety}
+                                                    </div>
+                                                )}
+                                                {bean.repurchase && (
+                                                    <span className={`bean-card__repurchase bean-card__repurchase--${bean.repurchase.toLowerCase()}`}>
+                                                        {bean.repurchase === 'Yes' ? 'Buy again' : bean.repurchase === 'No' ? "Won't rebuy" : 'Mixed'}
+                                                    </span>
+                                                )}
                                                 {bean.flavorNotes && (
                                                     <div className="bean-card__notes">
                                                         <span className="bean-card__notes-label">Roaster</span>

@@ -69,7 +69,11 @@ export interface SavedRecipe {
   createdAt: Date;
 }
 
-export type ProcessMethod = 'Washed' | 'Natural' | 'Honey' | 'Anaerobic' | 'Other';
+export type ProcessMethod = 'Washed' | 'Natural' | 'Honey' | 'Co-ferment' | 'Anaerobic' | 'Other';
+
+// Whether you would buy this bean again. Distinct from isActive, which is
+// whether the bag is in rotation right now.
+export type Repurchase = 'Yes' | 'No' | 'Mixed';
 export type RoastLevel = 'Light' | 'Medium' | 'Medium-Dark' | 'Dark';
 
 export interface BeanProfile {
@@ -77,6 +81,7 @@ export interface BeanProfile {
   name: string;
   roaster?: string;
   origin?: string;
+  variety?: string; // cultivars, comma separated when a bean has several
   roastLevel?: RoastLevel;
   processMethod?: ProcessMethod;
   roastDate?: string; // ISO date
@@ -89,6 +94,7 @@ export interface BeanProfile {
   methodNotes?: Partial<Record<BrewMethod, string>>;
   bagSizeGrams?: number; // for inventory + cost-per-shot
   pricePaid?: number; // in the user's own currency
+  repurchase?: Repurchase;
   isActive: boolean;
   createdAt: Date;
 }
