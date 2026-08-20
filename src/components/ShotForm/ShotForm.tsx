@@ -84,6 +84,7 @@ export default function ShotForm({
 
             <SmartBarista
                 beanName={form.beanName}
+                method={form.method}
                 beans={beans}
                 shots={shots}
                 lastShot={lastShotForBean}

@@ -139,7 +139,8 @@ function App() {
   const favoriteId = favorites[currentBeanKey];
   const favoriteShot = favoriteId ? shots.find(s => s.id === favoriteId) : null;
 
-  const shotsForBean = getRecentShotsForBean(shots, form.beanName, 5);
+  // Scoped to the selected method so V60 advice never comes from espresso history.
+  const shotsForBean = getRecentShotsForBean(shots, form.beanName, 5, form.method);
   const lastShotForBean = shotsForBean[0] ?? null;
 
   const suggestedSettings = getSuggestedSettings(lastShotForBean);

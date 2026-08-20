@@ -1,7 +1,7 @@
-import type { ShotLog, Rating } from '../types';
+import type { ShotLog, Rating, BrewMethod } from '../types';
 import type { SuggestedSettings } from '../lib/suggestions';
 import { getBaristaTip } from '../lib/suggestions';
-import { yieldLabel } from '../lib/brew';
+import { yieldLabel, formatDuration, targetTimeLabel } from '../lib/brew';
 import Icons from './Icons';
 
 interface SuggestionCardProps {
@@ -9,6 +9,7 @@ interface SuggestionCardProps {
     suggestion: SuggestedSettings | null;
     shotsForBean: ShotLog[];
     beanName: string;
+    method: BrewMethod;
     ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
     ratingColors: Record<Rating, string>;
     onApply: () => void;
@@ -21,6 +22,7 @@ export default function SuggestionCard({
     suggestion,
     shotsForBean,
     beanName,
+    method,
     ratingConfig,
     ratingColors,
     onApply,
@@ -30,11 +32,11 @@ export default function SuggestionCard({
             <div className="empty-state empty-state--small">
                 <Icons.Lightbulb />
                 <p className="empty-state__title">
-                    {beanName.trim() ? `No history for "${beanName}" yet` : 'Dial in with the Smart Barista'}
+                    {beanName.trim() ? `No ${method} history for "${beanName}" yet` : 'Dial in with the Smart Barista'}
                 </p>
                 <p className="empty-state__text">
                     {beanName.trim()
-                        ? 'Log a shot with this bean and your next-shot tips will appear here.'
+                        ? `Log a ${method} with this bean and your next-shot tips will appear here.`
                         : 'Enter a bean name and your last shot will guide the next one, from sour toward balanced.'}
                 </p>
             </div>
@@ -63,6 +65,7 @@ export default function SuggestionCard({
     const lastGrind = lastShot.grindSize;
     const lastTemp = lastShot.waterTempC;
     const hasDose = lastShot.doseIn !== undefined && lastShot.doseOut !== undefined;
+    const doseLabel = yieldLabel(lastShot.method) === 'Out (g)' ? 'Dose / Out' : 'Dose / Water';
 
     return (
         <>
@@ -96,18 +99,15 @@ export default function SuggestionCard({
                     </div>
                     <dl className="dial-compare__rows">
                         <div><dt>Grind</dt><dd>{lastGrind}</dd></div>
-                        {lastTemp !== undefined && (
-                            <div><dt>Temp</dt><dd>{lastTemp} &deg;C</dd></div>
-                        )}
-                        {hasDose && (
-                            <div>
-                                <dt>{yieldLabel(lastShot.method) === 'Out (g)' ? 'Dose / Out' : 'Dose / Water'}</dt>
-                                <dd>{lastShot.doseIn}g &rarr; {lastShot.doseOut}g</dd>
-                            </div>
-                        )}
-                        {lastShot.extractionTime !== undefined && (
-                            <div><dt>Time</dt><dd>{lastShot.extractionTime}s</dd></div>
-                        )}
+                        <div><dt>Temp</dt><dd>{lastTemp !== undefined ? `${lastTemp} °C` : '—'}</dd></div>
+                        <div>
+                            <dt>{doseLabel}</dt>
+                            <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
+                        </div>
+                        <div>
+                            <dt>Time</dt>
+                            <dd>{lastShot.extractionTime !== undefined ? formatDuration(lastShot.extractionTime) : '—'}</dd>
+                        </div>
                     </dl>
                 </div>
 
@@ -142,23 +142,36 @@ export default function SuggestionCard({
                                     )}
                                 </dd>
                             </div>
-                            {hasDose && (
-                                <div>
-                                    <dt>Dose</dt>
-                                    <dd className="dial-compare__same">unchanged</dd>
-                                </div>
-                            )}
+                            <div>
+                                <dt>{doseLabel}</dt>
+                                <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
+                            </div>
+                            <div>
+                                <dt>Time</dt>
+                                <dd>{targetTimeLabel(method)}</dd>
+                            </div>
                         </dl>
                     ) : (
-                        <p className="dial-compare__balanced">
-                            That one landed balanced. Repeat these settings.
-                        </p>
+                        <dl className="dial-compare__rows">
+                            <div><dt>Grind</dt><dd>{lastGrind}</dd></div>
+                            <div><dt>Temp</dt><dd>{lastTemp !== undefined ? `${lastTemp} °C` : '—'}</dd></div>
+                            <div>
+                                <dt>{doseLabel}</dt>
+                                <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
+                            </div>
+                            <div><dt>Time</dt><dd>{targetTimeLabel(method)}</dd></div>
+                        </dl>
                     )}
                 </div>
             </div>
 
             {suggestion?.reason && (
                 <p className="suggested-settings__reason">{suggestion.reason}</p>
+            )}
+            {!suggestion && (
+                <p className="suggested-settings__reason">
+                    That one landed balanced. Repeat these settings.
+                </p>
             )}
 
             {suggestion && (

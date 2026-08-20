@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     profileFor, describeBrew, hotWaterGrams, yieldLabel,
-    drinkSpec, DRINK_SPECS, BREW_METHODS,
+    drinkSpec, DRINK_SPECS, BREW_METHODS, formatDuration, targetTimeLabel,
 } from './brew';
 
 describe('brew profiles', () => {
@@ -107,5 +107,28 @@ describe('drink reference targets', () => {
 
     it('gives Macchiato no measured milk volume', () => {
         expect(drinkSpec('Macchiato')?.milkMl).toBeNull();
+    });
+});
+
+describe('brew time targets', () => {
+    it('gives espresso the 25-32s window the dial-in engine uses', () => {
+        expect(profileFor('Espresso').targetTimeSec).toEqual([25, 32]);
+    });
+
+    it('gives V60 the documented 3:00-3:30 drawdown', () => {
+        expect(profileFor('V60').targetTimeSec).toEqual([180, 210]);
+    });
+
+    it('formats short times in seconds and long ones as m:ss', () => {
+        expect(formatDuration(34)).toBe('34s');
+        expect(formatDuration(29.5)).toBe('29.5s');
+        expect(formatDuration(210)).toBe('3:30');
+        expect(formatDuration(240)).toBe('4:00');
+    });
+
+    it('labels a window as a range and a fixed target as one value', () => {
+        expect(targetTimeLabel('Espresso')).toBe('25s-32s');
+        expect(targetTimeLabel('V60')).toBe('3:00-3:30');
+        expect(targetTimeLabel('French Press')).toBe('4:00');
     });
 });

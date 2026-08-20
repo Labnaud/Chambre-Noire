@@ -3,8 +3,7 @@ import { GRIND_MIN, GRIND_MAX } from '../constants';
 import { profileFor } from './brew';
 // Target espresso window in seconds. Faster than MIN reads as under-extracted
 // flow, slower than MAX as over-extracted.
-const TIME_TARGET_MIN = 25;
-const TIME_TARGET_MAX = 32;
+
 
 export function getBaristaTip(rating: Rating): { message: string; adjustment: 'large' | 'small' | 'none' } {
     switch (rating) {
@@ -76,6 +75,7 @@ export function getSuggestedSettings(lastShot: ShotLog | null | undefined): Sugg
     // Time-aware path: on an espresso pull with a recorded time, let the flow
     // rate pick the lever instead of taste alone.
     const time = lastShot.extractionTime;
+    const [TIME_TARGET_MIN, TIME_TARGET_MAX] = profile.targetTimeSec;
     if (profile.ratioStyle === 'espresso' && typeof time === 'number') {
         if (isUnderExtracted) {
             if (time < TIME_TARGET_MIN) {

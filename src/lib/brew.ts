@@ -18,6 +18,8 @@ export interface BrewProfile {
     ratioStyle: 'espresso' | 'filter';
     /** Typical brew ratio, used for guidance copy. */
     typicalRatio: number;
+    /** Target brew time in seconds: espresso shot time, filter drawdown. */
+    targetTimeSec: [number, number];
     hasPourPattern: boolean;
     supportsIce: boolean;
     /** Can a milk or water drink be built on it. */
@@ -35,6 +37,7 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         yieldMeans: 'liquid',
         ratioStyle: 'espresso',
         typicalRatio: 2,
+        targetTimeSec: [25, 32],
         hasPourPattern: false,
         supportsIce: false,
         supportsDrink: true,
@@ -47,6 +50,7 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         yieldMeans: 'water',
         ratioStyle: 'filter',
         typicalRatio: 16.6,
+        targetTimeSec: [180, 210], // 3:00-3:30 drawdown
         hasPourPattern: true,
         supportsIce: true,
         supportsDrink: false,
@@ -59,6 +63,7 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
         yieldMeans: 'water',
         ratioStyle: 'filter',
         typicalRatio: 16,
+        targetTimeSec: [240, 240], // 4 minute steep
         hasPourPattern: false,
         supportsIce: false,
         supportsDrink: false,
@@ -67,6 +72,20 @@ export const BREW_PROFILES: Record<BrewMethod, BrewProfile> = {
 
 export function profileFor(method: BrewMethod): BrewProfile {
     return BREW_PROFILES[method];
+}
+
+/** Seconds as the log reads them: 34s, but 3:30 once it passes a minute. */
+export function formatDuration(seconds: number): string {
+    if (seconds < 100) return `${Math.round(seconds * 10) / 10}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
+/** The target window for a method, formatted for display. */
+export function targetTimeLabel(method: BrewMethod): string {
+    const [min, max] = profileFor(method).targetTimeSec;
+    return min === max ? formatDuration(min) : `${formatDuration(min)}-${formatDuration(max)}`;
 }
 
 /** Label for the yield field, which means different things per method. */

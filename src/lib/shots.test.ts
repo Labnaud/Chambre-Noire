@@ -54,3 +54,32 @@ describe('getRecentShotsForBean', () => {
         expect(getRecentShotsForBean(shots, 'ethiopia', 1).map(shot => shot.id)).toEqual(['new']);
     });
 });
+
+describe('getRecentShotsForBean scoped by method', () => {
+    const BEAN = 'Ethiopia Yirgacheffe';
+    const at = (h: number) => new Date(2026, 4, 1, h);
+    const mk = (id: string, method: 'Espresso' | 'V60', grindSize: number, h: number) =>
+        baseShot({ id, method, grindSize, timestamp: at(h) });
+
+    // An espresso grind and a V60 grind sit at opposite ends of one scale, so
+    // advice built from the wrong method is worse than no advice.
+    it('only returns shots brewed the same way', () => {
+        const shots = [mk('e1', 'Espresso', 20, 8), mk('v1', 'V60', 55, 9)];
+        expect(getRecentShotsForBean(shots, BEAN, 5, 'V60').map(s => s.id)).toEqual(['v1']);
+        expect(getRecentShotsForBean(shots, BEAN, 5, 'Espresso').map(s => s.id)).toEqual(['e1']);
+    });
+
+    it('returns every method when none is given', () => {
+        const shots = [mk('e1', 'Espresso', 20, 8), mk('v1', 'V60', 55, 9)];
+        expect(getRecentShotsForBean(shots, BEAN, 5)).toHaveLength(2);
+    });
+
+    it('still returns newest first within a method', () => {
+        const shots = [mk('v1', 'V60', 55, 8), mk('v2', 'V60', 54, 12)];
+        expect(getRecentShotsForBean(shots, BEAN, 5, 'V60').map(s => s.id)).toEqual(['v2', 'v1']);
+    });
+
+    it('is empty when the bean has no shots on that method', () => {
+        expect(getRecentShotsForBean([mk('e1', 'Espresso', 20, 8)], BEAN, 5, 'V60')).toEqual([]);
+    });
+});
