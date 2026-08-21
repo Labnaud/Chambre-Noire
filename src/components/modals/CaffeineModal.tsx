@@ -39,6 +39,11 @@ interface DoseRow {
 // Sentinel for the "type your own" option in the drink dropdown.
 const CUSTOM = '__custom__';
 
+// The list shows what is still moving the curve. A brew from last week is
+// pharmacologically gone and belongs in Shot History, not here; with a whole
+// logbook imported it would otherwise bury today's drinks entirely.
+const RECENT_HOURS = 24;
+
 const clock = (d: Date) =>
     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -63,6 +68,7 @@ export default function CaffeineModal({
     const [mg, setMg] = useState(String(INTAKE_PRESETS[0].mg));
     const [when, setWhen] = useState(() => clock(new Date()));
     const [showExcluded, setShowExcluded] = useState(false);
+    const [showOlder, setShowOlder] = useState(false);
     const [editingTime, setEditingTime] = useState<string | null>(null);
     const [timeDraft, setTimeDraft] = useState('');
 
@@ -130,9 +136,11 @@ export default function CaffeineModal({
         at: new Date(e.timestamp),
     }));
 
-    const rows = [...shotRows, ...entryRows]
-        .sort((a, b) => b.at.getTime() - a.at.getTime())
-        .slice(0, 20);
+    const ordered = [...shotRows, ...entryRows].sort((a, b) => b.at.getTime() - a.at.getTime());
+    const cutoff = now.getTime() - RECENT_HOURS * 60 * 60 * 1000;
+    const rows = ordered.filter(r => r.at.getTime() >= cutoff);
+    const olderRows = ordered.filter(r => r.at.getTime() < cutoff).slice(0, 20);
+    const olderCount = ordered.length - rows.length;
 
     const excludedRows = shots
         .filter(s => excludedShots.has(s.id))
@@ -266,8 +274,9 @@ export default function CaffeineModal({
                     <div className="caffeine-section">
                         <h3>Intake</h3>
                         <p className="caffeine-section__note">
-                            Logged shots appear here automatically. Removing one stops it counting
-                            toward caffeine; the shot stays in your history.
+                            The last {RECENT_HOURS} hours, which is what still moves the curve.
+                            Logged brews appear automatically; removing one stops it counting
+                            toward caffeine and leaves the shot in your history.
                         </p>
 
                         <div className="caffeine-quick">
@@ -426,7 +435,42 @@ export default function CaffeineModal({
                                 })}
                             </div>
                         ) : (
-                            <p className="caffeine-section__note">Nothing counting toward caffeine yet.</p>
+                            <p className="caffeine-section__note">
+                                {olderCount > 0
+                                    ? `Nothing in the last ${RECENT_HOURS} hours.`
+                                    : 'Nothing counting toward caffeine yet.'}
+                            </p>
+                        )}
+
+                        {olderCount > 0 && (
+                            <div className="caffeine-excluded">
+                                <button
+                                    type="button"
+                                    className="caffeine-excluded__toggle"
+                                    onClick={() => setShowOlder(v => !v)}
+                                    aria-expanded={showOlder}
+                                >
+                                    {olderCount} earlier brew{olderCount === 1 ? '' : 's'}, no longer in your system
+                                    <span className="caffeine-excluded__chev">{showOlder ? 'Hide' : 'Show'}</span>
+                                </button>
+                                {showOlder && (
+                                    <div className="caffeine-intake-list">
+                                        {olderRows.map(row => (
+                                            <div key={row.key} className="caffeine-intake-row caffeine-intake-row--excluded">
+                                                <span className="caffeine-intake-row__label">{row.label}</span>
+                                                <span className="caffeine-intake-row__meta">
+                                                    {row.mg} mg &middot; {dayLabel(row.at, now) || clock(row.at)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {olderCount > olderRows.length && (
+                                            <p className="caffeine-section__note">
+                                                and {olderCount - olderRows.length} more, in Shot History.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {excludedRows.length > 0 && (

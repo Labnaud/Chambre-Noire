@@ -40,11 +40,10 @@
 
   /* Fonts */
   --font-display: 'Newsreader', Georgia, serif;
-  /* Wordmark only. Fraunces carries character without the hairline strokes a
-     didone would lose against five dark themes, and its warmth sits with the
-     coffee palette rather than against it. Headings stay on Newsreader:
-     a display face goes muddy at 15px. */
-  --font-wordmark: 'Fraunces', 'Newsreader', Georgia, serif;
+  /* Wordmark only, on the UI sans. It is what the Caffeine title already
+     resolves to, and setting the name in the same face as the interface reads
+     as one thing rather than a serif badge pinned to a sans app. */
+  --font-wordmark: var(--font-sans);
   --font-heading: var(--font-display);
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
@@ -294,11 +293,9 @@ body {
 .header__title {
   font-family: var(--font-wordmark);
   font-size: var(--text-5xl);
-  font-weight: 600;
-  font-optical-sizing: auto;
-  font-variation-settings: 'SOFT' 40, 'WONK' 1;
+  font-weight: 700;
   color: var(--color-cream);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.05;
 }
 
