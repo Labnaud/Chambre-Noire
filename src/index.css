@@ -2666,10 +2666,6 @@ button.grind-control__value:hover {
   transition: var(--transition-base);
 }
 
-.header__btn--icon {
-  padding: 0.625rem;
-}
-
 .header__btn:hover {
   background: color-mix(in srgb, var(--color-caramel) 25%, transparent);
   border-color: var(--color-caramel);
@@ -2677,48 +2673,6 @@ button.grind-control__value:hover {
 }
 
 /* Theme Dropdown Selector */
-.header__theme-select {
-  display: flex;
-  align-items: center;
-}
-
-.header__theme-dropdown {
-  padding: 0.625rem 0.875rem;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  font-family: var(--font-sans);
-  background: color-mix(in srgb, var(--color-caramel) 15%, transparent);
-  border: 1px solid var(--color-mocha);
-  border-radius: var(--radius-sm);
-  color: var(--color-latte);
-  cursor: pointer;
-  transition: var(--transition-base);
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C4A77D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  padding-right: 2rem;
-}
-
-.header__theme-dropdown:hover {
-  background-color: color-mix(in srgb, var(--color-caramel) 25%, transparent);
-  border-color: var(--color-caramel);
-  color: var(--color-cream);
-}
-
-.header__theme-dropdown:focus {
-  outline: none;
-  border-color: var(--color-caramel);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-caramel) 20%, transparent);
-}
-
-.header__theme-dropdown option {
-  background: var(--color-dark-roast);
-  color: var(--color-cream);
-  padding: 0.5rem;
-}
 
 .header {
   position: relative;
@@ -3111,10 +3065,7 @@ button.grind-control__value:hover {
 
 /* Responsive */
 @media (max-width: 600px) {
-  .header__btn--secondary {
-    right: auto;
-  }
-
+  
   .stats-summary {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3133,10 +3084,6 @@ button.grind-control__value:hover {
    ============================================ */
 
 /* Header button tertiary (settings icon only) */
-.header__btn--tertiary {
-  right: 16.5rem;
-  padding: 0.625rem;
-}
 
 /* Data Summary */
 .data-summary {
@@ -3284,10 +3231,7 @@ button.grind-control__value:hover {
 
 /* Responsive */
 @media (max-width: 480px) {
-  .header__btn--tertiary {
-    right: auto;
-  }
-
+  
   .data-actions {
     grid-template-columns: 1fr;
   }
@@ -3464,10 +3408,7 @@ button.grind-control__value:hover {
     grid-template-columns: 1fr;
   }
 
-  .header__btn--caffeine {
-    right: auto;
   }
-}
 
 /* ============================================
    HISTORY FILTER
@@ -4507,10 +4448,7 @@ button.grind-control__value:hover {
     display: none;
   }
 
-  .header__btn--icon span {
-    display: none;
   }
-}
 
 /* ============================================
    HAMBURGER MENU
@@ -4601,17 +4539,6 @@ button.grind-control__value:hover {
     display: inline;
   }
 
-  .header__btns .header__btn--icon {
-    justify-content: flex-start;
-    gap: 0.75rem;
-  }
-
-  .header__btns .header__btn--icon::after {
-    content: attr(title);
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-  }
-
   .header__overlay {
     position: fixed;
     top: 0;
@@ -4626,10 +4553,7 @@ button.grind-control__value:hover {
     font-size: var(--text-lg);
   }
 
-  .header__theme-select--desktop {
-    display: none;
   }
-}
 
 /* ============================================
    THEME PICKER MODAL
