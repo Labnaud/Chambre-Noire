@@ -104,7 +104,6 @@ export const BREW_PROTOCOLS: BrewProtocol[] = [
             'Pour 2 to 100%, one spoon stir each way, gentle swirl to level the bed.',
             'Target drawdown 3:00-3:30.',
         ],
-        note: 'Same grinder as espresso, coarser. The Journal Rendement column is total water.',
     },
     {
         id: 'v60-5-pours',
@@ -131,7 +130,6 @@ export const BREW_PROTOCOLS: BrewProtocol[] = [
             'Repeat until 100%.',
             'Target drawdown 3:00-3:30.',
         ],
-        note: 'Same grinder as espresso, coarser. The Journal Rendement column is total water.',
     },
     {
         id: 'v60-iced',
