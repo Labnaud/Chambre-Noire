@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { parseBackup, buildJSONBackup, buildCSV } from './dataIO';
-import type { ShotLog, SavedRecipe, BeanProfile, MaintenanceEvent, CaffeineEntry } from '../types';
+import type { ShotLog, BeanProfile, MaintenanceEvent, CaffeineEntry } from '../types';
 
 afterEach(() => { vi.restoreAllMocks(); });
 
@@ -106,13 +106,6 @@ describe('parseBackup', () => {
         expect(result.skipped.shots).toBe(1);
     });
 
-    it('defaults recipes, beans, and maintenance to empty when absent', () => {
-        const result = parseBackup(backup({}));
-        expect(result.recipes).toEqual([]);
-        expect(result.beans).toEqual([]);
-        expect(result.maintenance).toEqual([]);
-    });
-
     it('defaults favorites to an empty object when missing or the wrong type', () => {
         expect(parseBackup(backup({})).favorites).toEqual({});
         expect(parseBackup(backup({ favorites: [1, 2] })).favorites).toEqual({});
@@ -125,28 +118,6 @@ describe('parseBackup', () => {
         expect(result.maintenance).toEqual([]);
     });
 
-    it('skips a recipe with an unparseable createdAt and counts it', () => {
-        const goodRecipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
-        const text = JSON.stringify({ shots: [validShot], recipes: [goodRecipe, { ...goodRecipe, id: 'r2', createdAt: 'nope' }] });
-        const result = parseBackup(text);
-        expect(result.recipes).toHaveLength(1);
-        expect(result.recipes[0].createdAt).toBeInstanceOf(Date);
-        expect(result.skipped.recipes).toBe(1);
-    });
-
-    it('skips recipes and beans with invalid required fields', () => {
-        const recipe = { id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double', grindSize: 12, strength: 2, createdAt: '2026-05-01T10:00:00.000Z' };
-        const bean = { id: 'b1', name: 'Ethiopia', isActive: true, createdAt: '2026-05-01T10:00:00.000Z' };
-        const result = parseBackup(JSON.stringify({
-            shots: [validShot],
-            recipes: [recipe, { ...recipe, id: '', basket: 'Quadruple' }],
-            beans: [bean, { ...bean, id: 'b2', isActive: 'yes' }],
-        }));
-        expect(result.recipes.map((r: SavedRecipe) => r.id)).toEqual(['r1']);
-        expect(result.beans.map((b: BeanProfile) => b.id)).toEqual(['b1']);
-        expect(result.skipped.recipes).toBe(1);
-        expect(result.skipped.beans).toBe(1);
-    });
 });
 
 describe('buildCSV formula-injection safety', () => {
@@ -183,10 +154,6 @@ describe('buildJSONBackup -> parseBackup round-trip', () => {
             id: 's1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
             grindSize: 12, strength: 2, rating: 'Balanced', timestamp: new Date('2026-05-01T10:00:00Z'),
         }];
-        const recipes: SavedRecipe[] = [{
-            id: 'r1', name: 'Latte', beanName: 'Ethiopia', method: 'Espresso',
-            basket: 'Double', grindSize: 12, strength: 2, createdAt: new Date('2026-05-01T10:00:00Z'),
-        }];
         const beans: BeanProfile[] = [{
             id: 'b1', name: 'Ethiopia Yirgacheffe', isActive: true, createdAt: new Date('2026-05-01T10:00:00Z'),
         }];
@@ -194,13 +161,12 @@ describe('buildJSONBackup -> parseBackup round-trip', () => {
         const maintenance: MaintenanceEvent[] = [{ task: 'cleaning', performedAt: '2026-05-01T10:00:00.000Z', shotCountAtTime: 200 }];
         const intake: CaffeineEntry[] = [{ id: 'i1', label: 'Coke', mg: 34, timestamp: new Date('2026-05-01T14:00:00Z') }];
 
-        const result = parseBackup(buildJSONBackup(shots, recipes, beans, favorites, maintenance, intake));
+        const result = parseBackup(buildJSONBackup(shots, beans, favorites, maintenance, intake));
 
-        expect(result.skipped).toEqual({ shots: 0, recipes: 0, beans: 0, maintenance: 0, intake: 0 });
+        expect(result.skipped).toEqual({ shots: 0, beans: 0, maintenance: 0, intake: 0 });
         expect(result.intake[0].timestamp).toBeInstanceOf(Date);
         expect(result.intake[0].mg).toBe(34);
         expect(result.shots[0].timestamp).toBeInstanceOf(Date);
-        expect(result.recipes[0].createdAt).toBeInstanceOf(Date);
         expect(result.beans[0].createdAt).toBeInstanceOf(Date);
         expect(result.favorites).toEqual(favorites);
         expect(result.maintenance).toEqual(maintenance);

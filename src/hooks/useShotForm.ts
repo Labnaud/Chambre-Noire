@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type {
-    Basket, Strength, BrewMethod, PourPattern, EspressoDrink, MilkType, ShotLog, SavedRecipe,
+    Basket, Strength, BrewMethod, PourPattern, EspressoDrink, MilkType, ShotLog,
 } from '../types';
 import { BALANCED_RATING_INDEX } from '../constants';
 import { profileFor } from '../lib/brew';
@@ -89,27 +89,7 @@ export function useShotForm() {
         setScore(shot.score ?? 3.5);
     };
 
-    const applyFromRecipe = (r: SavedRecipe) => {
-        setRated(true);
-        setBeanName(r.beanName);
-        setMethod(r.method);
-        if (r.pourPattern) setPourPattern(r.pourPattern);
-        setIced(Boolean(r.iced));
-        setBasket(r.basket);
-        setGrindSize(r.grindSize);
-        setWaterTempC(r.waterTempC ?? profileFor(r.method).defaultTempC);
-        setStrength(r.strength);
-        setDoseIn(String(profileFor(r.method).defaultDoseIn));
-        setDoseOut(String(profileFor(r.method).defaultDoseOut));
-        if (r.drink) {
-            setShowDrink(true);
-            setDrink(r.drink);
-        } else {
-            setShowDrink(false);
-        }
-        if (r.milkType) setMilkType(r.milkType);
-        setNotes(r.notes ?? '');
-    };
+;
 
     return {
         beanName, setBeanName,
@@ -140,6 +120,5 @@ export function useShotForm() {
         doseOut, setDoseOut,
         reset,
         applyFromShot,
-        applyFromRecipe,
     };
 }

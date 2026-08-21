@@ -5,7 +5,6 @@ import type { useShotForm } from '../../hooks/useShotForm';
 import type { useTimer } from '../../hooks/useTimer';
 import type { useBeanAutocomplete } from '../../hooks/useBeanAutocomplete';
 import { profileFor } from '../../lib/brew';
-import Icons from '../Icons';
 import BeanInput from './BeanInput';
 import BrewShapeControls from './BrewShapeControls';
 import BrewSettingControls from './BrewSettingControls';
@@ -29,7 +28,6 @@ interface ShotFormProps {
     favoriteShot: ShotLog | null;
     editingShot: ShotLog | null;
     onCancelEdit: () => void;
-    onOpenRecipeModal: () => void;
     shots: ShotLog[];
     lastShotForBean: ShotLog | null;
     suggestion: SuggestedSettings | null;
@@ -53,7 +51,6 @@ export default function ShotForm({
     favoriteShot,
     editingShot,
     onCancelEdit,
-    onOpenRecipeModal,
     shots,
     lastShotForBean,
     suggestion,
@@ -194,16 +191,7 @@ export default function ShotForm({
                     >
                         Cancel Edit
                     </button>
-                ) : (
-                    <button
-                        type="button"
-                        className="btn-save-recipe"
-                        onClick={onOpenRecipeModal}
-                        disabled={!form.beanName.trim()}
-                    >
-                        <Icons.Save /> Save as Recipe
-                    </button>
-                )}
+                ) : null}
             </div>
         </form>
     );

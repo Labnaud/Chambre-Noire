@@ -52,22 +52,6 @@ export interface FavoritesMap {
   [beanName: string]: string; // lowercase bean name -> shot id
 }
 
-export interface SavedRecipe {
-  id: string;
-  name: string;
-  beanName: string;
-  method: BrewMethod;
-  pourPattern?: PourPattern;
-  iced?: boolean;
-  basket: Basket;
-  grindSize: number;
-  waterTempC?: number;
-  strength: Strength;
-  drink?: EspressoDrink;
-  milkType?: MilkType;
-  notes?: string;
-  createdAt: Date;
-}
 
 export type ProcessMethod = 'Washed' | 'Natural' | 'Honey' | 'Co-ferment' | 'Anaerobic' | 'Other';
 

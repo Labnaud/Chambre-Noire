@@ -1,4 +1,4 @@
-import type { BrewMethod, ShotLog, SavedRecipe, EspressoDrink } from '../types';
+import type { BrewMethod, ShotLog, EspressoDrink } from '../types';
 
 // One place that answers "what does this brewing method actually support".
 // Previously these questions were spread across a COLD_BREW_TYPES list (which
@@ -112,7 +112,7 @@ export function hotWaterGrams(shot: Pick<ShotLog, 'doseOut' | 'iced' | 'iceGrams
 type BrewShape = Pick<ShotLog, 'method' | 'pourPattern' | 'iced' | 'drink'>;
 
 /** How a brew reads in history and stats: "Iced V60 2 Pours", "Latte", "Espresso". */
-export function describeBrew(shot: BrewShape | SavedRecipe): string {
+export function describeBrew(shot: BrewShape): string {
     if (shot.drink) return shot.drink;
     const parts: string[] = [];
     if (shot.iced) parts.push('Iced');

@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { FormEvent } from 'react';
-import type { ShotLog, Rating, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from './types';
+import type { ShotLog, Rating, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from './types';
 import { generateId } from './lib/format';
 import { getLogMessage } from './lib/milestones';
 import { getSuggestedSettings } from './lib/suggestions';
 import { getMaintenanceAlerts } from './lib/maintenance';
 import { RATINGS, RATING_COLORS, BALANCED_RATING_INDEX, GRIND_MIN, GRIND_MAX } from './constants';
-import { useToast, useConfirm, useTimer, useShots, useBeans, useRecipes, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock, useIntake, useCaffeinePrefs, useCaffeineExclusions } from './hooks';
+import { useToast, useConfirm, useTimer, useShots, useBeans, useFavorites, useTheme, useShotForm, useKeyboardShortcuts, useBeanAutocomplete, useMaintenance, useScrollLock, useIntake, useCaffeinePrefs, useCaffeineExclusions } from './hooks';
 import Icons from './components/Icons';
 import Header from './components/Header';
 import ShotForm from './components/ShotForm/ShotForm';
@@ -22,12 +22,11 @@ import { RATING_COLOR_CLASS } from './lib/ratings';
 import { saveStorageValue } from './lib/storage';
 import { getRecentShotsForBean } from './lib/shots';
 import { activeShots, inactiveBeanNames } from './lib/beans';
-import { profileFor, describeBrew } from './lib/brew';
+import { profileFor } from './lib/brew';
 import type { BrewMethod } from './types';
 
-const RecipeEditorModal = lazy(() => import('./components/modals/RecipeEditorModal'));
 const BeanLibraryModal = lazy(() => import('./components/modals/BeanLibraryModal'));
-const RecipeLibraryModal = lazy(() => import('./components/modals/RecipeLibraryModal'));
+const BrewGuideModal = lazy(() => import('./components/modals/BrewGuideModal'));
 const StatsModal = lazy(() => import('./components/modals/StatsModal'));
 const CaffeineModal = lazy(() => import('./components/modals/CaffeineModal'));
 const HistoryModal = lazy(() => import('./components/modals/HistoryModal'));
@@ -44,18 +43,14 @@ const RATING_CONFIG: Record<Rating, { icon: () => React.JSX.Element; colorClass:
 function App() {
   const form = useShotForm();
 
-  const [showRecipeModal, setShowRecipeModal] = useState(false);
-  const [recipeName, setRecipeName] = useState('');
-  const [editingRecipe, setEditingRecipe] = useState<SavedRecipe | null>(null);
   const [selectedShot, setSelectedShot] = useState<ShotLog | null>(null);
   const [editingShot, setEditingShot] = useState<ShotLog | null>(null);
   const [showBeanLibrary, setShowBeanLibrary] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [showRecipeLibrary, setShowRecipeLibrary] = useState(false);
+  const [showBrewGuide, setShowBrewGuide] = useState(false);
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [importBackup, setImportBackup] = useState<{
     shots: ShotLog[];
-    recipes: SavedRecipe[];
     beans: BeanProfile[];
     favorites: FavoritesMap;
     maintenance: MaintenanceEvent[];
@@ -74,7 +69,6 @@ function App() {
   const { timerRunning, timerSeconds, startTimer, stopTimer, resetTimer } = useTimer();
   const { shots, addShot, updateShot, deleteShot, replaceAll: setShots } = useShots();
   const { beans, addBean, updateBean, deleteBean, toggleActive, replaceAll: setBeans } = useBeans();
-  const { recipes, pinned: pinnedRecipes, addRecipe, updateRecipe, deleteRecipe, togglePin: togglePinRecipe, replaceAll: setRecipes } = useRecipes();
   const { favorites, toggleFavorite, replaceAll: setFavorites } = useFavorites();
   const { theme, setTheme, use24Hour, setUse24Hour, cycleTheme } = useTheme();
   const { events: maintenanceEvents, recordCleaning, recordDescaling, lastEventFor: lastMaintenanceFor, replaceAll: setMaintenance } = useMaintenance();
@@ -109,15 +103,15 @@ function App() {
   const rating = RATINGS[form.ratingIndex];
 
   const anyModalOpen =
-    showRecipeModal || showRecipeLibrary || showBeanLibrary || showStats || showCaffeine
-    || showSettings || showHistoryModal || selectedShot !== null || editingRecipe !== null
+    showBrewGuide || showBeanLibrary || showStats || showCaffeine
+    || showSettings || showHistoryModal || selectedShot !== null
     || confirmDialog !== null || sweetSpot !== null;
   useScrollLock(anyModalOpen);
 
   useKeyboardShortcuts({
     canSubmit: () =>
-      !showRecipeModal && !showRecipeLibrary && !showBeanLibrary && !showStats && !showCaffeine
-      && !showSettings && !selectedShot && !editingRecipe
+      !showBrewGuide && !showBeanLibrary && !showStats && !showCaffeine
+      && !showSettings && !selectedShot
       && form.beanName.trim() !== '',
     onSubmit: () => {
       const f = document.querySelector('.shot-form') as HTMLFormElement | null;
@@ -129,13 +123,11 @@ function App() {
       if (sweetSpot) setSweetSpot(null);
       else if (confirmDialog) closeConfirm();
       else if (selectedShot) setSelectedShot(null);
-      else if (editingRecipe) setEditingRecipe(null);
       else if (showHistoryModal) setShowHistoryModal(false);
       else if (showBeanLibrary) setShowBeanLibrary(false);
-      else if (showRecipeLibrary) setShowRecipeLibrary(false);
+      else if (showBrewGuide) setShowBrewGuide(false);
       else if (showStats) setShowStats(false);
       else if (showCaffeine) setShowCaffeine(false);
-      else if (showRecipeModal) setShowRecipeModal(false);
       else if (showSettings) setShowSettings(false);
     },
   });
@@ -170,78 +162,6 @@ function App() {
     }
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
-  };
-
-  const saveAsRecipe = () => {
-    if (!recipeName.trim() || !form.beanName.trim()) return;
-
-    const newRecipe: SavedRecipe = {
-      id: generateId(),
-      name: recipeName.trim(),
-      beanName: form.beanName.trim(),
-      method: form.method,
-      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
-      iced: form.iced || undefined,
-      basket: form.basket,
-      grindSize: form.grindSize,
-      waterTempC: form.waterTempC,
-      strength: form.strength,
-      drink: form.showDrink ? form.drink : undefined,
-      milkType: form.showDrink ? form.milkType : undefined,
-      notes: form.notes.trim() || undefined,
-      createdAt: new Date(),
-    };
-
-    addRecipe(newRecipe);
-    setShowRecipeModal(false);
-    setRecipeName('');
-  };
-
-  const confirmDeleteRecipe = (id: string) => {
-    const recipe = recipes.find(r => r.id === id);
-    if (!recipe) return;
-
-    showConfirm(
-      'Delete Recipe',
-      `Are you sure you want to delete "${recipe.name}"?`,
-      () => {
-        deleteRecipe(id);
-        showToast('Recipe deleted', 'info');
-      }
-    );
-  };
-
-  const openEditRecipe = (recipe: SavedRecipe) => {
-    setEditingRecipe(recipe);
-    setRecipeName(recipe.name);
-    form.applyFromRecipe(recipe);
-    setShowRecipeLibrary(false);
-    setShowRecipeModal(true);
-  };
-
-  const submitRecipeEdits = () => {
-    if (!editingRecipe || !recipeName.trim()) return;
-
-    const updated: SavedRecipe = {
-      ...editingRecipe,
-      name: recipeName.trim(),
-      beanName: form.beanName,
-      method: form.method,
-      pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
-      iced: form.iced || undefined,
-      basket: form.basket,
-      grindSize: form.grindSize,
-      waterTempC: form.waterTempC,
-      strength: form.strength,
-      drink: form.showDrink ? form.drink : undefined,
-      milkType: form.showDrink ? form.milkType : undefined,
-      notes: form.notes.trim() || undefined,
-    };
-
-    updateRecipe(updated);
-    setEditingRecipe(null);
-    setRecipeName('');
-    showToast('Recipe updated', 'success');
   };
 
   const toggleCompareShot = (id: string) => {
@@ -380,7 +300,7 @@ function App() {
   };
 
   const exportData = () => {
-    const json = buildJSONBackup(shots, recipes, beans, favorites, maintenanceEvents, intake);
+    const json = buildJSONBackup(shots, beans, favorites, maintenanceEvents, intake);
     const date = new Date().toISOString().slice(0, 10);
     downloadFile(`chambre-noire-backup-${date}.json`, json, 'application/json');
     showToast('Backup exported', 'success');
@@ -399,7 +319,6 @@ function App() {
 
   const applyResult = (data: ImportResult) => {
     setShots(data.shots);
-    setRecipes(data.recipes);
     setBeans(data.beans);
     setFavorites(data.favorites);
     setMaintenance(data.maintenance);
@@ -410,12 +329,12 @@ function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      const previous = { shots, recipes, beans, favorites, maintenance: maintenanceEvents, intake };
+      const previous = { shots, beans, favorites, maintenance: maintenanceEvents, intake };
       const data = await parseImportFile(file);
       applyResult(data);
       setImportBackup(previous); // enables one-click Undo import
-      const skipped = data.skipped.shots + data.skipped.recipes + data.skipped.beans + data.skipped.maintenance + data.skipped.intake;
-      let message = `Imported ${data.shots.length} shots, ${data.recipes.length} recipes, ${data.beans.length} beans`;
+      const skipped = data.skipped.shots + data.skipped.beans + data.skipped.maintenance + data.skipped.intake;
+      let message = `Imported ${data.shots.length} shots and ${data.beans.length} beans`;
       if (skipped > 0) message += `; skipped ${skipped} unreadable ${skipped === 1 ? 'entry' : 'entries'}`;
       setImportStatus({ type: 'success', message });
     } catch (err) {
@@ -429,7 +348,6 @@ function App() {
   const undoImport = () => {
     if (!importBackup) return;
     setShots(importBackup.shots);
-    setRecipes(importBackup.recipes);
     setBeans(importBackup.beans);
     setFavorites(importBackup.favorites);
     setMaintenance(importBackup.maintenance);
@@ -526,47 +444,11 @@ function App() {
         onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         onCloseMobileMenu={() => setMobileMenuOpen(false)}
         onOpenBeanLibrary={openModal(setShowBeanLibrary)}
-        onOpenRecipes={openModal(setShowRecipeLibrary)}
+        onOpenRecipes={openModal(setShowBrewGuide)}
         onOpenStats={openModal(setShowStats)}
         onOpenCaffeine={openModal(setShowCaffeine)}
         onOpenSettings={openModal(setShowSettings)}
       />
-
-      {recipes.filter(r => pinnedRecipes.has(r.id)).length > 0 && (
-        <div className="recipe-menu">
-          <div className="recipe-menu__label">
-            <Icons.Star filled /> Quick Recipes
-          </div>
-          <div className="recipe-menu__chips">
-            {recipes
-              .filter(recipe => pinnedRecipes.has(recipe.id))
-              .map((recipe) => (
-                <div key={recipe.id} className="recipe-chip recipe-chip--pinned">
-                  <button
-                    className="recipe-chip__btn"
-                    onClick={() => {
-                      form.applyFromRecipe(recipe);
-                      showToast(`Applied "${recipe.name}"`, 'success');
-                    }}
-                    title={`${recipe.beanName} • ${describeBrew(recipe)}${recipe.notes ? ` • ${recipe.notes}` : ''}`}
-                  >
-                    {recipe.name}
-                  </button>
-                  <button
-                    className="recipe-chip__dismiss"
-                    onClick={() => {
-                      togglePinRecipe(recipe.id);
-                      showToast(`Removed "${recipe.name}" from quick recipes`, 'info');
-                    }}
-                    title="Remove from quick recipes"
-                  >
-                    <Icons.X />
-                  </button>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
 
       <div className="dashboard__grid">
         <div className="card">
@@ -593,7 +475,6 @@ function App() {
               form.setDoseOut('');
               showToast('Edit cancelled', 'info');
             }}
-            onOpenRecipeModal={() => setShowRecipeModal(true)}
             shots={shots}
             lastShotForBean={lastShotForBean ?? null}
             suggestion={suggestedSettings}
@@ -655,20 +536,6 @@ function App() {
           />
         </div>
       </div>
-
-      {(showRecipeModal || editingRecipe !== null) && (
-        <Suspense fallback={null}>
-          <RecipeEditorModal
-            open={true}
-            form={form}
-            recipeName={recipeName}
-            setRecipeName={setRecipeName}
-            editingRecipe={editingRecipe}
-            onSave={() => editingRecipe ? submitRecipeEdits() : saveAsRecipe()}
-            onCancel={() => { setShowRecipeModal(false); setEditingRecipe(null); setRecipeName(''); }}
-          />
-        </Suspense>
-      )}
 
       {sweetSpot && (
         <TastingNotesModal
@@ -736,28 +603,18 @@ function App() {
           />
         )}
 
-        {showRecipeLibrary && (
-          <RecipeLibraryModal
+        {showBrewGuide && (
+          <BrewGuideModal
             open={true}
-            recipes={recipes}
-            pinnedRecipes={pinnedRecipes}
-            onApply={(recipe) => {
-              form.applyFromRecipe(recipe);
-              setShowRecipeLibrary(false);
-              showToast(`Applied "${recipe.name}"`, 'success');
+            bean={beans.find(b => b.name.toLowerCase() === form.beanName.trim().toLowerCase())}
+            doseIn={parseFloat(form.doseIn) || 15}
+            onApply={(dose, grind) => {
+              form.setShowDose(true);
+              form.setDoseIn(String(dose));
+              form.setGrindSize(grind);
+              showToast(`Loaded ${dose}g at grind ${grind}`, 'success');
             }}
-            onEdit={openEditRecipe}
-            onDelete={confirmDeleteRecipe}
-            onTogglePin={(recipe, wasStarred) => {
-              togglePinRecipe(recipe.id);
-              showToast(
-                wasStarred
-                  ? `Removed "${recipe.name}" from quick recipes`
-                  : `Added "${recipe.name}" to quick recipes`,
-                wasStarred ? 'info' : 'success'
-              );
-            }}
-            onClose={() => setShowRecipeLibrary(false)}
+            onClose={() => setShowBrewGuide(false)}
           />
         )}
 
@@ -823,7 +680,6 @@ function App() {
             use24Hour={use24Hour}
             setUse24Hour={setUse24Hour}
             shotsCount={shots.length}
-            recipesCount={recipes.length}
             beansCount={beans.length}
             importStatus={importStatus}
             canUndoImport={importBackup !== null}
@@ -835,10 +691,9 @@ function App() {
             onClearAll={() => {
               showConfirm(
                 'Clear All Data',
-                `Are you sure you want to delete ALL data? This will permanently remove ${shots.length} shots, ${recipes.length} recipes, and ${beans.length} beans. This action cannot be undone.`,
+                `Are you sure you want to delete ALL data? This will permanently remove ${shots.length} shots, and ${beans.length} beans. This action cannot be undone.`,
                 () => {
                   setShots([]);
-                  setRecipes([]);
                   setBeans([]);
                   setFavorites({});
                   setMaintenance([]);

@@ -1,4 +1,4 @@
-import type { ShotLog, FavoritesMap, SavedRecipe, BeanProfile, MaintenanceEvent, CaffeineEntry, CaffeinePrefs } from '../types';
+import type { ShotLog, FavoritesMap, BeanProfile, MaintenanceEvent, CaffeineEntry, CaffeinePrefs } from '../types';
 import {
     BASKETS,
     MILK_TYPES,
@@ -15,7 +15,6 @@ import { BREW_METHODS, ESPRESSO_DRINKS } from './brew';
 
 const STORAGE_KEY = 'chambre-noire-shots';
 const FAVORITES_KEY = 'chambre-noire-favorites';
-const RECIPES_KEY = 'chambre-noire-recipes';
 const BEANS_KEY = 'chambre-noire-beans';
 const MAINTENANCE_KEY = 'chambre-noire-maintenance';
 const INTAKE_KEY = 'chambre-noire-intake';
@@ -24,7 +23,6 @@ const CAFFEINE_EXCLUDED_KEY = 'chambre-noire-caffeine-excluded';
 
 // Date revival, shared with the import path in dataIO.ts
 export const reviveShot = (s: ShotLog): ShotLog => ({ ...s, timestamp: new Date(s.timestamp) });
-export const reviveRecipe = (r: SavedRecipe): SavedRecipe => ({ ...r, createdAt: new Date(r.createdAt) });
 export const reviveBean = (b: BeanProfile): BeanProfile => ({ ...b, createdAt: new Date(b.createdAt) });
 export const reviveIntake = (e: CaffeineEntry): CaffeineEntry => ({ ...e, timestamp: new Date(e.timestamp) });
 
@@ -79,16 +77,6 @@ export function validShotRecord(value: unknown): value is ShotLog {
         || !isOptionalFiniteNumber(value.iceGrams) || !isOptionalFiniteNumber(value.milkMl)
         || !isOptionalFiniteNumber(value.milkTempC) || !isOptionalFiniteNumber(value.waterMl)) return false;
     return parsesToValidDate(value.timestamp);
-}
-
-export function validRecipeRecord(value: unknown): value is SavedRecipe {
-    if (!isRecord(value)) return false;
-    if (!isNonEmptyString(value.id) || !isNonEmptyString(value.name) || !isNonEmptyString(value.beanName)) return false;
-    if (!validBrewShape(value) || !isOneOf(value.basket, BASKETS)) return false;
-    if (typeof value.grindSize !== 'number' || !Number.isFinite(value.grindSize)) return false;
-    if (!STRENGTHS.some(({ value: strength }) => strength === value.strength)) return false;
-    if (!isOptionalString(value.notes)) return false;
-    return parsesToValidDate(value.createdAt);
 }
 
 export function validBeanRecord(value: unknown): value is BeanProfile {
@@ -219,9 +207,6 @@ export function saveShots(shots: ShotLog[]): void { saveJSON(STORAGE_KEY, shots)
 
 export function loadFavorites(): FavoritesMap { return loadRecord<FavoritesMap>(FAVORITES_KEY, {}); }
 export function saveFavorites(favorites: FavoritesMap): void { saveJSON(FAVORITES_KEY, favorites); }
-
-export function loadRecipes(): SavedRecipe[] { return loadArray(RECIPES_KEY, validRecipeRecord, reviveRecipe, (recipe) => recipe.id); }
-export function saveRecipes(recipes: SavedRecipe[]): void { saveJSON(RECIPES_KEY, recipes); }
 
 export function loadBeans(): BeanProfile[] { return loadArray(BEANS_KEY, validBeanRecord, reviveBean, (bean) => bean.id); }
 export function saveBeans(beans: BeanProfile[]): void { saveJSON(BEANS_KEY, beans); }

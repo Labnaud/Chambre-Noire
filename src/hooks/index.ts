@@ -10,8 +10,6 @@ export { useShots } from './useShots';
 
 export { useBeans } from './useBeans';
 
-export { useRecipes } from './useRecipes';
-
 export { useFavorites } from './useFavorites';
 
 export { useTheme } from './useTheme';

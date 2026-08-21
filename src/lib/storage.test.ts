@@ -4,8 +4,6 @@ import {
     saveShots,
     loadFavorites,
     saveFavorites,
-    loadRecipes,
-    saveRecipes,
     loadBeans,
     saveBeans,
     loadMaintenance,
@@ -15,7 +13,7 @@ import {
     loadIntake,
     loadCaffeinePrefs
 } from './storage';
-import type { ShotLog, SavedRecipe, BeanProfile, MaintenanceEvent } from '../types';
+import type { ShotLog, BeanProfile, MaintenanceEvent } from '../types';
 
 function createStorageMock(): Storage {
     const data = new Map<string, string>();
@@ -113,35 +111,6 @@ describe('favorites storage', () => {
     });
 });
 
-describe('recipes storage', () => {
-    const recipe: SavedRecipe = {
-        id: 'r1',
-        name: 'Morning Latte',
-        beanName: 'Ethiopia',
-        method: 'Espresso',
-        basket: 'Double',
-        grindSize: 12,
-        strength: 2,
-        createdAt: new Date('2026-05-01T10:00:00Z'),
-    };
-
-    it('returns an empty array when no recipes are saved', () => {
-        expect(loadRecipes()).toEqual([]);
-    });
-
-    it('rehydrates createdAt as a Date', () => {
-        saveRecipes([recipe]);
-        const loaded = loadRecipes();
-        expect(loaded[0].createdAt).toBeInstanceOf(Date);
-        expect(loaded[0].name).toBe('Morning Latte');
-    });
-
-    it('returns an empty array on corrupt JSON', () => {
-        localStorage.setItem('chambre-noire-recipes', 'nope');
-        expect(loadRecipes()).toEqual([]);
-    });
-});
-
 describe('beans storage', () => {
     const bean: BeanProfile = {
         id: 'b1',
@@ -208,7 +177,6 @@ describe('storage robustness', () => {
 
     it('returns the array default when stored JSON is the wrong type (number)', () => {
         localStorage.setItem('chambre-noire-recipes', '5');
-        expect(loadRecipes()).toEqual([]);
     });
 
     it('returns the object default when favorites JSON is an array', () => {

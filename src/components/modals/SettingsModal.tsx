@@ -10,7 +10,6 @@ interface SettingsModalProps {
     use24Hour: boolean;
     setUse24Hour: (v: boolean) => void;
     shotsCount: number;
-    recipesCount: number;
     beansCount: number;
     importStatus: { type: 'success' | 'error'; message: string } | null;
     canUndoImport: boolean;
@@ -52,7 +51,6 @@ export default function SettingsModal({
     use24Hour,
     setUse24Hour,
     shotsCount,
-    recipesCount,
     beansCount,
     importStatus,
     canUndoImport,
@@ -167,10 +165,7 @@ export default function SettingsModal({
                                 <span className="data-summary__count">{shotsCount}</span>
                                 <span className="data-summary__label">Shots</span>
                             </div>
-                            <div className="data-summary__item">
-                                <span className="data-summary__count">{recipesCount}</span>
-                                <span className="data-summary__label">Recipes</span>
-                            </div>
+
                             <div className="data-summary__item">
                                 <span className="data-summary__count">{beansCount}</span>
                                 <span className="data-summary__label">Beans</span>

@@ -47,9 +47,9 @@ export default function Header({
                 <button
                     className="header__btn"
                     onClick={onOpenRecipes}
-                    title="Manage Recipes"
+                    title="V60 brew protocols"
                 >
-                    <Icons.Book /> Recipes
+                    <Icons.Book /> Brew Guide
                 </button>
                 <button
                     className="header__btn"

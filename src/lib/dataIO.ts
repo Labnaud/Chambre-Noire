@@ -1,11 +1,9 @@
-import type { ShotLog, SavedRecipe, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from '../types';
+import type { ShotLog, BeanProfile, FavoritesMap, MaintenanceEvent, CaffeineEntry } from '../types';
 import {
     reviveShot,
-    reviveRecipe,
     reviveBean,
     reviveIntake,
     validShotRecord,
-    validRecipeRecord,
     validBeanRecord,
     validMaintenanceRecord,
     validIntakeRecord,
@@ -17,7 +15,6 @@ export interface BackupPayload {
     exportedAt: string;
     shots: ShotLog[];
     favorites: FavoritesMap;
-    recipes: SavedRecipe[];
     beans: BeanProfile[];
     maintenance: MaintenanceEvent[];
     intake: CaffeineEntry[];
@@ -25,17 +22,15 @@ export interface BackupPayload {
 
 export interface ImportResult {
     shots: ShotLog[];
-    recipes: SavedRecipe[];
     beans: BeanProfile[];
     favorites: FavoritesMap;
     maintenance: MaintenanceEvent[];
     intake: CaffeineEntry[];
-    skipped: { shots: number; recipes: number; beans: number; maintenance: number; intake: number };
+    skipped: { shots: number; beans: number; maintenance: number; intake: number };
 }
 
 export function buildBackupObject(
     shots: ShotLog[],
-    recipes: SavedRecipe[],
     beans: BeanProfile[],
     favorites: FavoritesMap,
     maintenance: MaintenanceEvent[],
@@ -46,7 +41,6 @@ export function buildBackupObject(
         exportedAt: new Date().toISOString(),
         shots,
         favorites,
-        recipes,
         beans,
         maintenance,
         intake,
@@ -55,13 +49,12 @@ export function buildBackupObject(
 
 export function buildJSONBackup(
     shots: ShotLog[],
-    recipes: SavedRecipe[],
     beans: BeanProfile[],
     favorites: FavoritesMap,
     maintenance: MaintenanceEvent[],
     intake: CaffeineEntry[],
 ): string {
-    return JSON.stringify(buildBackupObject(shots, recipes, beans, favorites, maintenance, intake), null, 2);
+    return JSON.stringify(buildBackupObject(shots, beans, favorites, maintenance, intake), null, 2);
 }
 
 // quote a free-text cell, doubling quotes and neutralizing spreadsheet formula injection (CWE-1236)
@@ -159,7 +152,6 @@ export function parseBackup(text: string): ImportResult {
     }
 
     const shots = collect<ShotLog>(data.shots, validShotRecord, reviveShot, (shot) => shot.id);
-    const recipes = collect<SavedRecipe>(data.recipes, validRecipeRecord, reviveRecipe, (recipe) => recipe.id);
     const beans = collect<BeanProfile>(data.beans, validBeanRecord, reviveBean, (bean) => bean.id);
     // older backups predate maintenance, default to empty
     const maintenance = collect<MaintenanceEvent>(data.maintenance, validMaintenanceRecord);
@@ -172,12 +164,11 @@ export function parseBackup(text: string): ImportResult {
 
     return {
         shots: shots.items,
-        recipes: recipes.items,
         beans: beans.items,
         favorites,
         maintenance: maintenance.items,
         intake: intake.items,
-        skipped: { shots: shots.skipped, recipes: recipes.skipped, beans: beans.skipped, maintenance: maintenance.skipped, intake: intake.skipped },
+        skipped: { shots: shots.skipped, beans: beans.skipped, maintenance: maintenance.skipped, intake: intake.skipped },
     };
 }
 
