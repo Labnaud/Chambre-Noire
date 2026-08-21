@@ -40,6 +40,11 @@
 
   /* Fonts */
   --font-display: 'Newsreader', Georgia, serif;
+  /* Wordmark only. Fraunces carries character without the hairline strokes a
+     didone would lose against five dark themes, and its warmth sits with the
+     coffee palette rather than against it. Headings stay on Newsreader:
+     a display face goes muddy at 15px. */
+  --font-wordmark: 'Fraunces', 'Newsreader', Georgia, serif;
   --font-heading: var(--font-display);
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
@@ -287,23 +292,16 @@ body {
 }
 
 .header__title {
-  font-family: var(--font-display);
+  font-family: var(--font-wordmark);
   font-size: var(--text-5xl);
-  font-weight: 400;
+  font-weight: 600;
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 40, 'WONK' 1;
   color: var(--color-cream);
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
-.header__subtitle {
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  color: var(--color-latte);
-  font-weight: 400;
-  font-style: italic;
-  margin-top: 0.75rem;
-  letter-spacing: 0.01em;
-}
 
 /* Icon styles */
 .icon {
@@ -6667,3 +6665,22 @@ textarea:focus-visible {
 }
 
 .stats-inline strong { color: var(--color-cream); font-weight: 600; }
+
+/* The live brew beside the card title: what this snapshot will record. */
+.card__title-brew {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-latte);
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .card__title-brew {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+}

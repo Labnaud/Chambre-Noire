@@ -22,7 +22,7 @@ import { RATING_COLOR_CLASS } from './lib/ratings';
 import { saveStorageValue } from './lib/storage';
 import { getRecentShotsForBean } from './lib/shots';
 import { activeShots, inactiveBeanNames } from './lib/beans';
-import { profileFor } from './lib/brew';
+import { profileFor, describeBrew } from './lib/brew';
 import type { BrewMethod } from './types';
 
 const BeanLibraryModal = lazy(() => import('./components/modals/BeanLibraryModal'));
@@ -453,7 +453,15 @@ function App() {
       <div className="dashboard__grid">
         <div className="card">
           <h2 className="card__title">
-            <Icons.Edit /> {editingShot ? 'Edit Shot' : 'Log New Shot'}
+            <Icons.Edit /> {editingShot ? 'Edit' : 'New'} Snapshot
+            <span className="card__title-brew">
+              {describeBrew({
+                method: form.method,
+                pourPattern: profileFor(form.method).hasPourPattern ? form.pourPattern : undefined,
+                iced: form.iced,
+                drink: form.showDrink ? form.drink : undefined,
+              })}
+            </span>
           </h2>
 
           <ShotForm
