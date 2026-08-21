@@ -20,17 +20,19 @@ const captured = [];
 
 async function newPage(width, height, theme) {
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1.5 });
-  const page = await ctx.newPage();
-  page.on('pageerror', e => console.log('  ! pageerror:', e.message));
-  await page.goto(APP_URL, { waitUntil: 'networkidle' });
-  await page.evaluate(({ data, theme }) => {
+  // Seed before any page script runs. Writing localStorage from an already
+  // loaded page races the app's own save effect, which will happily write its
+  // empty in-memory state back over the seed.
+  await ctx.addInitScript(({ data, theme }) => {
     localStorage.clear();
     for (const [k, v] of Object.entries(data)) {
       localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
     }
     if (theme) localStorage.setItem('chambre-noire-theme', theme);
   }, { data: seed, theme });
-  await page.reload({ waitUntil: 'networkidle' });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => console.log('  ! pageerror:', e.message));
+  await page.goto(APP_URL, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   return { ctx, page };
 }

@@ -31,10 +31,17 @@ const base = process.env.GITHUB_ACTIONS ? '/Chambre-Noire/' : '/'
 function cspPlugin(): Plugin {
     return {
         name: 'inline-csp',
-        apply: 'build',
         transformIndexHtml: {
             order: 'post',
-            handler(html) {
+            handler(html, ctx) {
+                // In dev, Vite injects its own inline HMR scripts whose hashes
+                // cannot be known ahead of time, and the policy belongs to the
+                // deployed host anyway. Drop the tag rather than leave the
+                // placeholder in place, which browsers report as an invalid
+                // directive on every page load.
+                if (ctx.server) {
+                    return html.replace(/\s*<meta http-equiv="Content-Security-Policy"[^>]*>/, '');
+                }
                 const hashes: string[] = []
                 for (const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
                     const digest = createHash('sha256').update(m[1], 'utf8').digest('base64')

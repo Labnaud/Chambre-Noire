@@ -62,7 +62,12 @@ export function useShotForm() {
         setScored(true);
     };
 
-    const applyFromShot = (shot: ShotLog) => {
+    /**
+     * `carryTaste: false` loads the recipe without the verdict. Loading a shot
+     * to brew from should not inherit the note and score of the cup that
+     * produced it -- those describe a drink nobody has made yet.
+     */
+    const applyFromShot = (shot: ShotLog, { carryTaste = true }: { carryTaste?: boolean } = {}) => {
         setBeanName(shot.beanName);
         setMethod(shot.method);
         if (shot.pourPattern) setPourPattern(shot.pourPattern);
@@ -86,9 +91,14 @@ export function useShotForm() {
         setMilkMl(shot.milkMl?.toString() ?? '');
         setMilkTempC(shot.milkTempC?.toString() ?? '');
         setWaterMl(shot.waterMl?.toString() ?? '');
-        setNotes(shot.notes ?? '');
-        setScored(shot.score !== undefined);
-        setScore(shot.score ?? 3.5);
+        if (carryTaste) {
+            setNotes(shot.notes ?? '');
+            setScored(shot.score !== undefined);
+            setScore(shot.score ?? 3.5);
+        } else {
+            setNotes('');
+            setScored(false);
+        }
     };
 
 ;

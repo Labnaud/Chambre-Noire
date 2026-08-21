@@ -6,6 +6,18 @@ provenance; none of that numbering carries over.
 
 ## [1.2.0] - 2026-08-21
 
+### Added
+- **The form fills itself.** Choosing a bean and method loads the settings to
+  brew with: the suggestion if there is one, or the sweet-spot recipe if the
+  bean is dialled in. It runs once per choice, so editing the dials afterwards
+  cannot be undone by it. *Apply to form* remains as the way back after fiddling.
+- **Log again.** A bean's target recipe now logs a repeat in one tap, for a brew
+  that is already dialled in and is being drunk rather than worked on. It copies
+  the recipe's inputs -- method, pour pattern, basket, grind, temperature, dose
+  and yield -- and none of its outcomes: time, taste, strength, score and notes
+  describe a cup that has not been made. Dose carries over so the bag maths
+  stays exact, which is usually the reason for logging such a brew at all.
+
 ### Changed
 - **Smart Barista reads in the order you work.** The comparison is now Dose,
   Grind, Output, Time: weigh the coffee, grind it, pour to a yield, and time it.
@@ -30,6 +42,12 @@ provenance; none of that numbering carries over.
   "weak" and proposes a change on that basis.
 
 ### Fixed
+- **The sweet spot can load its own settings.** Guidance is withheld once a brew
+  lands Balanced, and the apply button was rendered only when there was
+  guidance -- so the one case where you most want to reuse the settings was the
+  one case offering no way to. The button now shows there too.
+- **Loading a recipe no longer inherits the previous verdict.** Applying a shot
+  to the form copied its tasting note and score along with its settings.
 - **Durations read as minutes and seconds.** Shot history, the shot detail view
   and the stopwatch all printed a raw seconds count, so a V60 showed `205s`
   instead of `3:25`. They now use the shared formatter, which switches to `m:ss`

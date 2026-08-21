@@ -151,18 +151,43 @@ function App() {
     showToast('Starting point loaded', 'success');
   };
 
+  /**
+   * Loads the recipe to brew next. With a suggestion that is the last shot plus
+   * the proposed change; without one the last shot already landed in the sweet
+   * spot, so the recipe to load is that shot unchanged. Previously this bailed
+   * out when there was no suggestion, which made the sweet spot the one case
+   * where its own settings could not be loaded.
+   */
   const applySuggestedSettings = () => {
-    if (!suggestedSettings || !lastShotForBean) return;
-    form.applyFromShot(lastShotForBean);
-    form.setGrindSize(suggestedSettings.grindSize);
-    form.setWaterTempC(suggestedSettings.waterTempC);
-    if (suggestedSettings.doseOut !== undefined) {
-      form.setShowDose(true);
-      form.setDoseOut(String(suggestedSettings.doseOut));
+    if (!lastShotForBean) return;
+    form.applyFromShot(lastShotForBean, { carryTaste: false });
+    if (suggestedSettings) {
+      form.setGrindSize(suggestedSettings.grindSize);
+      form.setWaterTempC(suggestedSettings.waterTempC);
+      if (suggestedSettings.doseOut !== undefined) {
+        form.setShowDose(true);
+        form.setDoseOut(String(suggestedSettings.doseOut));
+      }
     }
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
   };
+
+  /**
+   * Auto-load on a deliberate selection. Keyed on bean and method so it runs
+   * once per choice: editing the dials afterwards cannot retrigger it, so it
+   * can never overwrite a value just typed.
+   */
+  const autoAppliedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (editingShot) return;
+    const key = `${form.beanName.trim().toLowerCase()}::${form.method}`;
+    if (autoAppliedFor.current === key) return;
+    autoAppliedFor.current = key;
+    if (!lastShotForBean) return;
+    applySuggestedSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.beanName, form.method, lastShotForBean, editingShot]);
 
   const toggleCompareShot = (id: string) => {
     setCompareShots(prev => {
@@ -204,11 +229,46 @@ function App() {
   };
 
   const applyBestDialIn = (shot: ShotLog) => {
-    form.applyFromShot(shot);
+    form.applyFromShot(shot, { carryTaste: false });
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
     setShowBeanLibrary(false);
     showToast(`Loaded best dial-in for ${shot.beanName}`, 'success');
+  };
+
+  /**
+   * Logs a repeat of the bean's target recipe in one tap, for a brew that is
+   * already dialled in and is being drunk rather than worked on.
+   *
+   * It copies the recipe's *inputs* -- method, pour pattern, basket, grind,
+   * temperature, dose and yield -- because those are settings that were
+   * deliberately reproduced. It copies none of its *outcomes*: extraction time,
+   * taste, strength, score and notes are measurements and judgements about a
+   * cup that was never made, and recording them would be inventing data. Dose
+   * carries over specifically so the bag maths stays exact, which is the usual
+   * reason for logging a brew like this at all.
+   */
+  const logAgainFromRecipe = (recipe: ShotLog) => {
+    addShot({
+      id: generateId(),
+      beanName: recipe.beanName,
+      method: recipe.method,
+      pourPattern: recipe.pourPattern,
+      iced: recipe.iced,
+      iceGrams: recipe.iceGrams,
+      basket: recipe.basket,
+      grindSize: recipe.grindSize,
+      waterTempC: recipe.waterTempC,
+      doseIn: recipe.doseIn,
+      doseOut: recipe.doseOut,
+      drink: recipe.drink,
+      milkType: recipe.milkType,
+      milkMl: recipe.milkMl,
+      milkTempC: recipe.milkTempC,
+      waterMl: recipe.waterMl,
+      timestamp: new Date(),
+    });
+    showToast(`Logged ${recipe.beanName} from your target recipe`, 'success');
   };
 
   const rateShot = (shotId: string, rating: Rating) => {
@@ -492,7 +552,8 @@ function App() {
             onApplySuggestion={applySuggestedSettings}
             onApplyStartingPoint={applyStartingPoint}
             onUpdateBean={updateBean}
-          />
+          onLogAgain={logAgainFromRecipe}
+            />
         </div>
 
         <div className="side-panel">

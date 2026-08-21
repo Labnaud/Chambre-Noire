@@ -1650,6 +1650,26 @@ button.grind-control__value:hover {
   color: var(--color-star);
 }
 
+.target-recipe__log-again {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--color-caramel);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-caramel);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.target-recipe__log-again:hover {
+  background: color-mix(in srgb, var(--color-caramel) 12%, transparent);
+}
+
 .target-recipe__settings {
   display: flex;
   gap: 0.375rem;
