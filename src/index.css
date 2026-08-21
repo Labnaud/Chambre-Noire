@@ -39,13 +39,13 @@
   --color-cream-muted: var(--color-muted);
 
   /* Fonts */
-  --font-display: 'Newsreader', Georgia, serif;
-  /* Wordmark only, on the UI sans. It is what the Caffeine title already
-     resolves to, and setting the name in the same face as the interface reads
-     as one thing rather than a serif badge pinned to a sans app. */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  /* One family across the interface. The roles are kept as separate names so
+     they can diverge again, but all three resolve to the UI sans: mixing a
+     serif into a sans app was the thing that read as inconsistent. */
+  --font-display: var(--font-sans);
   --font-wordmark: var(--font-sans);
   --font-heading: var(--font-display);
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
 
   /* Type scale */
@@ -381,7 +381,7 @@ body {
 .card__title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 400;
+  font-weight: 600;
   color: var(--color-foam);
   margin-bottom: 1.6rem;
   display: flex;
@@ -974,7 +974,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .history-item__bean {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-foam);
   font-size: var(--text-lg);
   white-space: nowrap;
@@ -2173,7 +2173,7 @@ button.grind-control__value:hover {
 .modal__header h3 {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 400;
+  font-weight: 600;
   color: var(--color-foam);
 }
 
@@ -5441,6 +5441,7 @@ textarea:focus-visible {
   font-size: var(--text-lg);
   color: var(--color-cream);
   margin: 0 0 0.5rem;
+  font-weight: 600;
 }
 
 .caffeine-section__note {
@@ -6441,6 +6442,7 @@ textarea:focus-visible {
   font-size: var(--text-base);
   color: var(--color-cream);
   margin: 0 0 0.5rem;
+  font-weight: 600;
 }
 
 .pour-schedule {
