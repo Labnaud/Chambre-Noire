@@ -71,6 +71,14 @@ provenance; none of that numbering carries over.
   "weak" and proposes a change on that basis.
 
 ### Fixed
+- **Caffeine no longer reads a filter brew as an espresso.** Every shot's
+  caffeine came from its basket, which is an espresso field that a V60 carries
+  only because the form has to store something -- so every filter brew counted
+  as a double espresso and came out about a quarter light. It is now derived
+  from the dose actually ground and the brewing style, which reproduces the
+  three figures the app already used (18g espresso 110mg, 9g single 55mg, 15g
+  V60 170mg) while giving the other doses a sensible value. This affected the
+  bedtime forecast, not only the lifetime total.
 - **The sweet spot can load its own settings.** Guidance is withheld once a brew
   lands Balanced, and the apply button was rendered only when there was
   guidance -- so the one case where you most want to reuse the settings was the

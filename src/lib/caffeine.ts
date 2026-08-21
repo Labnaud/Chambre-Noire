@@ -1,21 +1,23 @@
 import type { ShotLog, CaffeineEntry, CaffeinePrefs } from '../types';
+import { profileFor } from './brew';
 
-const CAFFEINE_MG: Record<string, number> = { 'Single': 55, 'Double': 110 };
+/**
+ * Caffeine per gram of dry coffee, by brewing style.
+ *
+ * An espresso extracts less caffeine per gram than a filter brew despite tasting
+ * far stronger: the contact time is short and there is little water. These two
+ * rates are not new estimates -- they are the figures this app already used,
+ * restated per gram, and they reproduce all three exactly:
+ *
+ *   double espresso  18g x 6.11  = 110 mg
+ *   single espresso   9g x 6.11  =  55 mg
+ *   V60              15g x 11.33 = 170 mg
+ */
+export const ESPRESSO_MG_PER_G = 110 / 18;
+export const FILTER_MG_PER_G = 170 / 15;
 const SHOTS_PER_BASKET: Record<string, number> = { 'Single': 1, 'Double': 2 };
 
 export const DAILY_LIMIT = 400; // mg
-
-/**
- * Caffeine per gram of dry coffee, derived from the double espresso this app
- * already counts as 110 mg from an 18 g dose. Used only to value grams that
- * were drunk without an individual brew record.
- *
- * A filter brew extracts more per gram -- the V60 preset is 170 mg from 15 g --
- * so for a bean drunk mostly as filter this reads low. It is a floor, not a
- * precise figure, which is the right posture for a number derived from weight
- * rather than from a recorded brew.
- */
-export const CAFFEINE_MG_PER_G = 110 / 18;
 
 export const DEFAULT_CAFFEINE_PREFS: CaffeinePrefs = {
     halfLifeHours: 5.7, // commonly cited average; varies with genetics, liver enzymes, medication
@@ -42,8 +44,25 @@ export const QUICK_ADD_PRESETS: { label: string; mg: number }[] = [
     { label: 'Coke', mg: 34 },
 ];
 
-export function caffeineForBasket(basket: string): number {
-    return CAFFEINE_MG[basket] ?? CAFFEINE_MG.Double;
+/**
+ * Caffeine in one brew, from what was actually ground and how it was brewed.
+ *
+ * This used to read the basket alone, which is an espresso field: every filter
+ * brew carries a basket because the form has to store something, so a V60 was
+ * counted as a double espresso and came out about a third light. The basket now
+ * only decides the fallback dose for an espresso that was logged without one.
+ */
+export function caffeineForShot(shot: Pick<ShotLog, 'method' | 'basket' | 'doseIn'>): number {
+    const profile = profileFor(shot.method);
+    const isEspresso = profile.ratioStyle === 'espresso';
+    const perGram = isEspresso ? ESPRESSO_MG_PER_G : FILTER_MG_PER_G;
+
+    const fallbackDose = isEspresso && shot.basket === 'Single'
+        ? profile.defaultDoseIn / 2
+        : profile.defaultDoseIn;
+
+    const dose = shot.doseIn && shot.doseIn > 0 ? shot.doseIn : fallbackDose;
+    return Math.round(dose * perGram);
 }
 
 /* ------------------------------------------------------------------ *
@@ -92,7 +111,7 @@ export function caffeineLevelAt(doses: CaffeineDose[], at: Date, halfLifeHours: 
 }
 
 export function dosesFromShots(shots: ShotLog[]): CaffeineDose[] {
-    return shots.map(s => ({ mg: caffeineForBasket(s.basket), at: new Date(s.timestamp) }));
+    return shots.map(s => ({ mg: caffeineForShot(s), at: new Date(s.timestamp) }));
 }
 
 export function dosesFromEntries(entries: CaffeineEntry[]): CaffeineDose[] {
@@ -258,7 +277,7 @@ export function computeCaffeine(shots: ShotLog[], entries: CaffeineEntry[] = [])
     const todayEntries = entries.filter(e => isToday(e.timestamp));
 
     const todayCaffeine =
-        todayShots.reduce((sum, s) => sum + caffeineForBasket(s.basket), 0) +
+        todayShots.reduce((sum, s) => sum + caffeineForShot(s), 0) +
         todayEntries.reduce((sum, e) => sum + e.mg, 0);
     const todayShotCount = todayShots.reduce((sum, s) =>
         sum + (SHOTS_PER_BASKET[s.basket] || 2), 0);
@@ -270,7 +289,7 @@ export function computeCaffeine(shots: ShotLog[], entries: CaffeineEntry[] = [])
     const weekEntries = entries.filter(e => new Date(e.timestamp) >= weekAgo);
 
     const weekCaffeine =
-        weekShots.reduce((sum, s) => sum + caffeineForBasket(s.basket), 0) +
+        weekShots.reduce((sum, s) => sum + caffeineForShot(s), 0) +
         weekEntries.reduce((sum, e) => sum + e.mg, 0);
     const avgDaily = Math.round(weekCaffeine / 7);
     const weekShotCount = weekShots.reduce((sum, s) =>

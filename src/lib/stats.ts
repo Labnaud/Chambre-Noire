@@ -1,7 +1,7 @@
 import type { ShotLog, Rating, BeanProfile, CaffeineEntry, BrewMethod } from '../types';
 import { RATINGS, TARGET_STRENGTH } from '../constants';
-import { describeBrew } from './brew';
-import { caffeineForBasket, CAFFEINE_MG_PER_G } from './caffeine';
+import { describeBrew, profileFor } from './brew';
+import { caffeineForShot, ESPRESSO_MG_PER_G, FILTER_MG_PER_G } from './caffeine';
 
 export interface DayStat {
     date: string;
@@ -161,10 +161,26 @@ export function computeStats(
     // dialled in and there is nothing left to learn from logging each one.
     const unloggedG = beans.reduce((sum, b) => sum + Math.max(0, b.unloggedGrams ?? 0), 0);
 
+    // Those grams have no method of their own, so each bean's rate is taken from
+    // the brews it *was* logged with: a bean worked on half as V60 is valued
+    // between the two rates rather than assumed to be espresso, which would
+    // undercount it by a third.
+    const unloggedMg = beans.reduce((sum, b) => {
+        const grams = Math.max(0, b.unloggedGrams ?? 0);
+        if (grams === 0) return sum;
+        const key = b.name.trim().toLowerCase();
+        const mine = shots.filter(s => s.beanName.trim().toLowerCase() === key);
+        const filterShare = mine.length
+            ? mine.filter(s => profileFor(s.method).ratioStyle === 'filter').length / mine.length
+            : 0;
+        const rate = filterShare * FILTER_MG_PER_G + (1 - filterShare) * ESPRESSO_MG_PER_G;
+        return sum + grams * rate;
+    }, 0);
+
     // Caffeine and coffee actually consumed.
     const totalCaffeineMg = Math.round(
-        shots.reduce((sum, s) => sum + caffeineForBasket(s.basket), 0)
-        + unloggedG * CAFFEINE_MG_PER_G
+        shots.reduce((sum, s) => sum + caffeineForShot(s), 0)
+        + unloggedMg
         + intake.reduce((sum, e) => sum + e.mg, 0),
     );
     const withDose = shots.filter(s => s.doseIn !== undefined && s.doseIn > 0);

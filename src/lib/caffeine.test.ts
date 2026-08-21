@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
     computeCaffeine, DAILY_LIMIT, caffeineLevelAt, solveKa, resolveBedtime,
-    computeForecast, dosesFromShots, allDoses, resolveTimeToday, includedShots,
+    computeForecast, dosesFromShots, allDoses, resolveTimeToday, includedShots, caffeineForShot,
 } from './caffeine';
 import type { ShotLog, Basket } from '../types';
 
@@ -325,5 +325,33 @@ describe('forecast ignores doses beyond the horizon', () => {
         const started = Date.now();
         computeForecast(doses, prefs, now);
         expect(Date.now() - started).toBeLessThan(1000);
+    });
+});
+
+describe('caffeineForShot', () => {
+    const s = (over: Partial<ShotLog>): ShotLog => ({
+        id: '1', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+        grindSize: 12, timestamp: new Date(), ...over,
+    });
+
+    it('reproduces the figures the app already used', () => {
+        expect(caffeineForShot(s({ doseIn: 18 }))).toBe(110);                        // double espresso
+        expect(caffeineForShot(s({ basket: 'Single', doseIn: undefined }))).toBe(55); // single, no dose logged
+        expect(caffeineForShot(s({ method: 'V60', doseIn: 15 }))).toBe(170);          // V60
+    });
+
+    it('does not read a filter brew as an espresso because of its basket', () => {
+        // Every V60 carries basket 'Double' -- the form has to store something.
+        const v60 = s({ method: 'V60', basket: 'Double', doseIn: 15 });
+        const espresso = s({ method: 'Espresso', basket: 'Double', doseIn: 15 });
+        expect(caffeineForShot(v60)).toBeGreaterThan(caffeineForShot(espresso));
+    });
+
+    it('scales with the dose actually ground', () => {
+        expect(caffeineForShot(s({ doseIn: 20 }))).toBeGreaterThan(caffeineForShot(s({ doseIn: 18 })));
+    });
+
+    it('falls back to the method default when no dose was logged', () => {
+        expect(caffeineForShot(s({ method: 'V60', doseIn: undefined }))).toBe(170);
     });
 });

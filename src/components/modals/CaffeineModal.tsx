@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ShotLog, CaffeineEntry, CaffeinePrefs } from '../../types';
 import {
     computeCaffeine, computeForecast, allDoses, includedShots,
-    caffeineForBasket, resolveTimeToday,
+    caffeineForShot, resolveTimeToday,
     INTAKE_PRESETS, QUICK_ADD_PRESETS,
 } from '../../lib/caffeine';
 import { describeBrew } from '../../lib/brew';
@@ -123,7 +123,7 @@ export default function CaffeineModal({
             kind: 'shot' as const,
             id: s.id,
             label: `${s.beanName} (${describeBrew(s)})`,
-            mg: caffeineForBasket(s.basket),
+            mg: caffeineForShot(s),
             at: new Date(s.timestamp),
         }));
 
@@ -492,7 +492,7 @@ export default function CaffeineModal({
                                                     {s.beanName} ({describeBrew(s)})
                                                 </span>
                                                 <span className="caffeine-intake-row__meta">
-                                                    {caffeineForBasket(s.basket)} mg &middot; {clock(s.timestamp)}
+                                                    {caffeineForShot(s)} mg &middot; {clock(s.timestamp)}
                                                 </span>
                                                 <button
                                                     className="caffeine-intake-row__restore"
