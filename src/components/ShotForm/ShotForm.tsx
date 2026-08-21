@@ -129,7 +129,8 @@ export default function ShotForm({
                 manualTimerValue={form.manualTimerValue}
                 setManualTimerValue={form.setManualTimerValue}
                 timer={timer}
-            />
+            method={form.method}
+                />
 
             <DrinkControls
                 show={form.showDrink}

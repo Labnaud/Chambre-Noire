@@ -34,8 +34,10 @@ provenance; none of that numbering carries over.
   and the stopwatch all printed a raw seconds count, so a V60 showed `205s`
   instead of `3:25`. They now use the shared formatter, which switches to `m:ss`
   at one minute rather than at 100 seconds, so a 90-second brew reads `1:30`.
-  The manual time field is still entered in seconds, and echoes the minutes
-  alongside it once the value passes a minute.
+  A brew whose target time runs past a minute is also *entered* in minutes and
+  seconds rather than as a three-figure seconds count, so a V60 takes `3` and
+  `25` instead of `205`. Espresso keeps a single seconds field, where a decimal
+  matters and minutes do not. Seconds roll over, so `90` becomes `1 min 30`.
 
 ## [1.1.0] - 2026-08-21
 

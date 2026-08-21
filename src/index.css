@@ -4920,6 +4920,18 @@ button.grind-control__value:hover {
   font-size: var(--text-sm);
   color: var(--color-muted);
 }
+.shot-timer__manual--split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.shot-timer__input--part {
+  width: 4.5rem;
+  text-align: center;
+}
+
 .shot-timer__as-minutes {
   margin-left: 0.4rem;
   color: var(--color-caramel);
