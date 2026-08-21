@@ -103,8 +103,7 @@ export default function SmartBarista({
         <section className="smart-barista" aria-label="Smart Barista">
             <div className="smart-barista__header">
                 <h3 className="smart-barista__title">
-                    <Icons.ChefHat />
-                    <span className="smart-barista__title-text">Smart Barista</span>
+                    <Icons.ChefHat /> Smart Barista
                 </h3>
 
                 {badges.length > 0 && (

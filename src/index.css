@@ -5943,15 +5943,6 @@ textarea:focus-visible {
 .status-badge--bitter     { color: var(--color-bitter); }
 .status-badge--very-bitter{ color: var(--color-very-bitter); }
 
-/* A phone cannot fit the section name and more than one status on one line.
-   The statuses are the information; the name is a label the section's
-   aria-label still carries, so it is the one that gives up its width. */
-@media (max-width: 700px) {
-  .smart-barista__title-text {
-    display: none;
-  }
-}
-
 .smart-barista__detail {
   margin: 0 0 0.75rem;
   padding: 0.55rem 0.7rem;
