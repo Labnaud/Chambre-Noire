@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import type { BeanProfile, ShotLog, Rating, BrewMethod } from '../../types';
 import type { SuggestedSettings } from '../../lib/suggestions';
 import { getFreshnessAlert, getDaysSinceRoast, isDialedIn } from '../../lib/beans';
 import { getBeanInventory } from '../../lib/inventory';
-import { getEspressoStartingPoint, getFreshnessGrindNote } from '../../lib/suggestions';
+import { getEspressoStartingPoint, getFreshnessGrindNote, getBaristaTip } from '../../lib/suggestions';
+import { extractionLabel } from '../../lib/ratings';
 import { profileFor } from '../../lib/brew';
 import StartingPointCard from './StartingPointCard';
 import MethodNotes from './MethodNotes';
@@ -32,6 +34,8 @@ export default function SmartBarista({
     beanName, method, beans, shots, lastShot, suggestion,
     ratingConfig, ratingColors, onApply, repeatRecipe, onLogAgain, onApplyStartingPoint, onUpdateBean,
 }: SmartBaristaProps) {
+    const [openBadge, setOpenBadge] = useState<string | null>(null);
+
     const freshness = getFreshnessAlert(beanName, beans);
 
     const key = beanName.trim().toLowerCase();
@@ -45,36 +49,85 @@ export default function SmartBarista({
     const startingPoint = isEspresso ? getEspressoStartingPoint(profile?.roastLevel) : null;
     const showStartingPoint = isEspresso && lastShot === null && beanName.trim() !== '';
 
+    /**
+     * The three things worth knowing at a glance -- how the bean is keeping, how
+     * much is left, and where the last shot landed -- read as one line of
+     * status. Each carries a sentence of reasoning, which is worth having but
+     * not worth three permanent paragraphs above the controls, so the badge is
+     * the summary and the reasoning opens on demand. One at a time, so the
+     * panel below never pushes the form around by more than a line or two.
+     */
+    const badges: {
+        id: string;
+        label: string;
+        detail: string;
+        color?: string;
+        tone?: string;
+        Icon?: () => React.JSX.Element;
+    }[] = [];
+
+    if (freshness) {
+        badges.push({
+            id: 'freshness',
+            label: freshness.label,
+            detail: freshness.text,
+            color: freshness.color,
+        });
+    }
+
+    if (showInventory && profile && inventory) {
+        badges.push({
+            id: 'inventory',
+            label: inventory.isEmpty ? 'Empty' : 'Low bag',
+            detail: inventory.isEmpty
+                ? `Your ${profile.name} bag is out. Time to restock.`
+                : `About ${inventory.gramsLeft}g (~${inventory.shotsLeft} shots) of ${profile.name} left.`,
+            color: inventory.isEmpty ? 'var(--color-very-bitter)' : 'var(--color-sour)',
+        });
+    }
+
+    if (lastShot?.rating) {
+        const tip = getBaristaTip(lastShot.rating);
+        badges.push({
+            id: 'extraction',
+            label: extractionLabel(lastShot.rating),
+            detail: tip.message,
+            tone: ratingConfig[lastShot.rating].colorClass,
+            Icon: ratingConfig[lastShot.rating].icon,
+        });
+    }
+
+    const openDetail = badges.find(b => b.id === openBadge)?.detail ?? null;
+
     return (
         <section className="smart-barista" aria-label="Smart Barista">
-            <h3 className="smart-barista__title">
-                <Icons.ChefHat /> Smart Barista
-            </h3>
+            <div className="smart-barista__header">
+                <h3 className="smart-barista__title">
+                    <Icons.ChefHat />
+                    <span className="smart-barista__title-text">Smart Barista</span>
+                </h3>
 
-            {freshness && (
-                <div className={`freshness-alert freshness-alert--${freshness.variant}`}>
-                    <span className="freshness-alert__badge" style={{ background: freshness.color }}>
-                        {freshness.label}
-                    </span>
-                    <span className="freshness-alert__text">{freshness.text}</span>
-                </div>
-            )}
+                {badges.length > 0 && (
+                    <div className="smart-barista__badges">
+                        {badges.map(({ id, label, color, tone, Icon }) => (
+                            <button
+                                key={id}
+                                type="button"
+                                className={`status-badge${tone ? ` status-badge--${tone}` : ''}${openBadge === id ? ' status-badge--open' : ''}`}
+                                style={color ? { borderColor: color, color } : undefined}
+                                aria-expanded={openBadge === id}
+                                onClick={() => setOpenBadge(openBadge === id ? null : id)}
+                                title="Why?"
+                            >
+                                {Icon && <Icon />}
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
-            {showInventory && profile && inventory && (
-                <div className={`freshness-alert freshness-alert--${inventory.isEmpty ? 'stale' : 'fading'}`}>
-                    <span
-                        className="freshness-alert__badge"
-                        style={{ background: inventory.isEmpty ? 'var(--color-very-bitter)' : 'var(--color-sour)' }}
-                    >
-                        {inventory.isEmpty ? 'Empty' : 'Low Bag'}
-                    </span>
-                    <span className="freshness-alert__text">
-                        {inventory.isEmpty
-                            ? `Your ${profile.name} bag is out. Time to restock.`
-                            : `About ${inventory.gramsLeft}g (~${inventory.shotsLeft} shots) of ${profile.name} left.`}
-                    </span>
-                </div>
-            )}
+            {openDetail && <p className="smart-barista__detail">{openDetail}</p>}
 
             {showStartingPoint && (
                 <StartingPointCard
@@ -91,7 +144,6 @@ export default function SmartBarista({
                 suggestion={suggestion}
                 beanName={beanName}
                 method={method}
-                ratingConfig={ratingConfig}
                 ratingColors={ratingColors}
                 onApply={onApply}
             />

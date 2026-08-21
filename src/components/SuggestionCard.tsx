@@ -1,6 +1,5 @@
 import type { ShotLog, Rating, BrewMethod } from '../types';
 import type { SuggestedSettings } from '../lib/suggestions';
-import { getBaristaTip } from '../lib/suggestions';
 import { describeBrew, profileFor, formatDuration, targetTimeLabel } from '../lib/brew';
 import Icons from './Icons';
 
@@ -9,7 +8,6 @@ interface SuggestionCardProps {
     suggestion: SuggestedSettings | null;
     beanName: string;
     method: BrewMethod;
-    ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
     ratingColors: Record<Rating, string>;
     onApply: () => void;
 }
@@ -45,7 +43,6 @@ export default function SuggestionCard({
     suggestion,
     beanName,
     method,
-    ratingConfig,
     ratingColors,
     onApply,
 }: SuggestionCardProps) {
@@ -79,9 +76,6 @@ export default function SuggestionCard({
         );
     }
 
-    const config = ratingConfig[lastShot.rating];
-    const tip = getBaristaTip(lastShot.rating);
-    const TipIcon = config.icon;
 
     // What was actually tried, so the proposal has something to sit against.
     const lastGrind = lastShot.grindSize;
@@ -129,23 +123,6 @@ export default function SuggestionCard({
 
     return (
         <>
-            <div className={`barista-tip barista-tip--${config.colorClass}`}>
-                <span className="barista-tip__icon">
-                    <TipIcon />
-                </span>
-                <div className="barista-tip__content">
-                    <h4>
-                        Tip for "{lastShot.beanName}"
-                        {tip.adjustment !== 'none' && (
-                            <span className={`adjustment-badge adjustment-badge--${tip.adjustment}`}>
-                                {tip.adjustment === 'large' ? 'Major Adj.' : 'Minor Adj.'}
-                            </span>
-                        )}
-                    </h4>
-                    <p>{tip.message}</p>
-                </div>
-            </div>
-
             {recipeLabel && (
                 <p className="dial-compare__recipe">
                     <span className="dial-compare__recipe-label">Recipe</span>

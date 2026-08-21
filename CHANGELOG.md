@@ -29,6 +29,13 @@ provenance; none of that numbering carries over.
   time field along with the rest of the settings.
 
 ### Changed
+- **Bean and shot status read as one line.** Freshness, bag level and where the
+  last extraction landed are now badges on the Smart Barista title row rather
+  than stacked paragraphs above the controls. Each one opens its explanation on
+  tap and closes again, one at a time. On a screen too narrow to hold the
+  section name and the statuses together, the name collapses to its icon: the
+  statuses are the information, and the name is a label the section's
+  aria-label still carries.
 - **Smart Barista reads in the order you work.** The comparison is now Dose,
   Grind, Output, Time: weigh the coffee, grind it, pour to a yield, and time it.
   Dose and output were previously a single combined row, and grind led.
