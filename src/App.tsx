@@ -622,6 +622,8 @@ function App() {
           <StatsModal
             open={true}
             shots={shots}
+            beans={beans}
+            intake={intake}
             onClose={() => setShowStats(false)}
           />
         )}

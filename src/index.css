@@ -6632,3 +6632,38 @@ textarea:focus-visible {
   color: var(--color-cream);
   line-height: 1.5;
 }
+
+/* Stats: ranges and caveats alongside the headline figures */
+.stats-range {
+  color: var(--color-subtle);
+  font-weight: 400;
+  font-size: var(--text-xs);
+}
+
+.stats-section__note {
+  margin: 0 0 0.6rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.stats-caveat {
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-mocha) 40%, transparent);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.stats-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.stats-inline strong { color: var(--color-cream); font-weight: 600; }
