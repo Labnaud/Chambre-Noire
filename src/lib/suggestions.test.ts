@@ -13,6 +13,21 @@ const shot = (over: Partial<ShotLog> = {}): ShotLog => ({
     timestamp: new Date(), ...over,
 });
 
+describe('an untasted shot', () => {
+    it('proposes no body change, because absent strength is not weakness', () => {
+        // Logged straight off the machine: balanced on taste but never drunk,
+        // so there is no strength judgement to act on. Reading undefined as
+        // "weak" would have suggested shortening the shot unprompted.
+        const untasted = shot({ rating: 'Balanced', strength: undefined });
+        expect(getSuggestedSettings(untasted)).toBeNull();
+    });
+
+    it('still guides on taste once only the strength is missing', () => {
+        const sour = shot({ rating: 'Sour', strength: undefined });
+        expect(getSuggestedSettings(sour)).not.toBeNull();
+    });
+});
+
 describe('getBaristaTip', () => {
     it('scales the adjustment with how far off the taste is', () => {
         expect(getBaristaTip('Very Sour').adjustment).toBe('large');

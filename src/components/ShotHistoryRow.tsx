@@ -62,7 +62,7 @@ export default function ShotHistoryRow({
                         {shot.iced && shot.iceGrams !== undefined && (
                             <span className="setting-tag">{shot.iceGrams}g ice &rarr; {hotWaterGrams(shot)}g hot</span>
                         )}
-                        <span className="setting-tag">Str {shot.strength}</span>
+                        {shot.strength !== undefined && <span className="setting-tag">Str {shot.strength}</span>}
                         {shot.score !== undefined && (
                             <span className="setting-tag setting-tag--score">
                                 <Icons.Star filled /> {shot.score.toFixed(1)}

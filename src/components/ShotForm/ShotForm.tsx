@@ -16,6 +16,7 @@ import StrengthControl from './StrengthControl';
 import RatingScale from './RatingScale';
 import ScoreInput from './ScoreInput';
 import DialInJourney from '../DialInJourney';
+import TasteBlock from './TasteBlock';
 
 interface ShotFormProps {
     form: ReturnType<typeof useShotForm>;
@@ -146,24 +147,24 @@ export default function ShotForm({
                 supported={profileFor(form.method).supportsDrink}
             />
 
-            <StrengthControl
-                strength={form.strength}
-                setStrength={form.setStrength}
-            />
+            <TasteBlock rated={form.rated} setRated={form.setRated}>
+                <StrengthControl
+                    strength={form.strength}
+                    setStrength={form.setStrength}
+                />
 
-            <RatingScale
-                ratingIndex={form.ratingIndex}
-                onChange={form.setRatingIndex}
-                rated={form.rated}
-                setRated={form.setRated}
-            />
+                <RatingScale
+                    ratingIndex={form.ratingIndex}
+                    onChange={form.setRatingIndex}
+                />
 
-            <ScoreInput
-                score={form.score}
-                setScore={form.setScore}
-                scored={form.scored}
-                setScored={form.setScored}
-            />
+                <ScoreInput
+                    score={form.score}
+                    setScore={form.setScore}
+                    scored={form.scored}
+                    setScored={form.setScored}
+                />
+            </TasteBlock>
 
 
 

@@ -32,7 +32,7 @@ export interface ShotLog {
   basket: Basket;
   grindSize: number; // one continuous scale, espresso fine through filter coarse
   waterTempC?: number; // brew water in degrees C
-  strength: Strength;
+  strength?: Strength; // a taste judgement, so absent until the cup is tasted
   rating?: Rating; // where the extraction landed on sour <-> bitter
   score?: number; // how good the cup was, 0-5 in half steps; independent of rating
   drink?: EspressoDrink; // what was built on the shot

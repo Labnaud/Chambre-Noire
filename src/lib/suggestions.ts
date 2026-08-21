@@ -135,7 +135,9 @@ function tasteYieldStep(rating: Exclude<Rating, 'Balanced'>): number {
 }
 
 function bodySuggestion(shot: ShotLog): SuggestedSettings | null {
-    if (shot.strength === TARGET_STRENGTH) return null;
+    // Untasted shots carry no strength, and an absent judgement must not be
+    // read as "weak" -- that would propose a change nobody asked for.
+    if (shot.strength === undefined || shot.strength === TARGET_STRENGTH) return null;
     const tooStrong = shot.strength > TARGET_STRENGTH;
     return yieldMove(
         shot,

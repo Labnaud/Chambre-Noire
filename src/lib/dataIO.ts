@@ -79,7 +79,7 @@ export function buildCSV(shots: ShotLog[]): string {
             shot.basket,
             shot.grindSize,
             shot.waterTempC ?? '',
-            shot.strength,
+            shot.strength ?? '',
             shot.rating || '',
             shot.score ?? '',
             shot.extractionTime || '',

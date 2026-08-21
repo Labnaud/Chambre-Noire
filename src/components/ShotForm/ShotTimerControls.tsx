@@ -1,4 +1,5 @@
 import type { useTimer } from '../../hooks/useTimer';
+import { formatDuration } from '../../lib/brew';
 import Icons from '../Icons';
 
 interface ShotTimerControlsProps {
@@ -68,12 +69,19 @@ export default function ShotTimerControls({
                                         className="shot-timer__input"
                                         aria-label="Extraction time in seconds"
                                     />
-                                    <span className="shot-timer__unit">seconds</span>
+                                    <span className="shot-timer__unit">
+                                        seconds
+                                        {Number(manualTimerValue) >= 60 && (
+                                            <span className="shot-timer__as-minutes">
+                                                {formatDuration(Number(manualTimerValue))}
+                                            </span>
+                                        )}
+                                    </span>
                                 </div>
                             ) : (
                                 <>
                                     <div className="shot-timer__display">
-                                        <span className="shot-timer__time">{timerSeconds.toFixed(1)}s</span>
+                                        <span className="shot-timer__time">{formatDuration(timerSeconds)}</span>
                                     </div>
                                     <div className="shot-timer__controls">
                                         {timerRunning ? (

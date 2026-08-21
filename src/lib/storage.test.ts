@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+    validShotRecord,
     loadShots,
     saveShots,
     loadFavorites,
@@ -35,6 +36,22 @@ beforeEach(() => {
 afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+});
+
+describe('validShotRecord with no taste yet', () => {
+    it('accepts a shot logged before it was tasted', () => {
+        expect(validShotRecord({
+            id: 'a', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+            grindSize: 21, timestamp: new Date().toISOString(),
+        })).toBe(true);
+    });
+
+    it('still rejects a strength outside the scale', () => {
+        expect(validShotRecord({
+            id: 'a', beanName: 'Ethiopia', method: 'Espresso', basket: 'Double',
+            grindSize: 21, strength: 9, timestamp: new Date().toISOString(),
+        })).toBe(false);
+    });
 });
 
 describe('shots storage', () => {

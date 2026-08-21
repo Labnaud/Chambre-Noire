@@ -67,7 +67,8 @@ export function validShotRecord(value: unknown): value is ShotLog {
     if (!isNonEmptyString(value.id) || !isNonEmptyString(value.beanName)) return false;
     if (!validBrewShape(value) || !isOneOf(value.basket, BASKETS)) return false;
     if (typeof value.grindSize !== 'number' || !Number.isFinite(value.grindSize)) return false;
-    if (!STRENGTHS.some(({ value: strength }) => strength === value.strength)) return false;
+    if (value.strength !== undefined
+        && !STRENGTHS.some(({ value: strength }) => strength === value.strength)) return false;
     if (value.rating !== undefined && !isOneOf(value.rating, RATINGS)) return false;
     if (value.score !== undefined
         && (typeof value.score !== 'number' || !Number.isFinite(value.score)

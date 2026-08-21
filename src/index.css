@@ -4920,6 +4920,12 @@ button.grind-control__value:hover {
   font-size: var(--text-sm);
   color: var(--color-muted);
 }
+.shot-timer__as-minutes {
+  margin-left: 0.4rem;
+  color: var(--color-caramel);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ============================================
    ACCESSIBILITY
    ============================================ */
@@ -4999,6 +5005,35 @@ textarea:focus-visible {
 /* ============================================
    CAPTURE ERGONOMICS + RATE-LATER (Phase 2)
    ============================================ */
+
+/* Strength, rating and score are one judgement about a cup that was drunk, so
+   they are grouped and skipped together rather than each defaulting to a value
+   nobody chose. */
+.taste-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-caramel) 3%, transparent);
+}
+
+.taste-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.taste-block__header .form-label {
+  margin: 0;
+}
+
+.taste-block > .form-group:last-child {
+  margin-bottom: 0;
+}
 
 .rating-header {
   display: flex;

@@ -88,7 +88,7 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
                 )}
                 <div className="shot-detail__item">
                     <span className="shot-detail__label">Strength</span>
-                    <span className="shot-detail__value">{shot.strength}</span>
+                    <span className="shot-detail__value">{shot.strength ?? '\u2014'}</span>
                 </div>
                 {shot.drink && (
                     <div className="shot-detail__item">

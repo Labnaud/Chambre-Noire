@@ -50,7 +50,7 @@ export default function DialInJourney({ shotsForBean, ratingConfig, ratingColors
                             </span>
                             <span className="journey-row__tried">{parts.join(' · ')}</span>
                             <span className={`journey-row__strength journey-row__strength--${strengthTone?.tone ?? 'target'}`}>
-                                {strengthTone?.label}
+                                {strengthTone?.label ?? '\u2014'}
                             </span>
                         </div>
                     );

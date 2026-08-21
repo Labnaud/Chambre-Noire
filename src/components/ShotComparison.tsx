@@ -45,7 +45,7 @@ export default function ShotComparison({ shot1, shot2, onClear, onRemoveAt }: Sh
                                     </div>
                                     <div className="compare-panel__detail">
                                         <span className="compare-panel__label">Strength</span>
-                                        <span className="compare-panel__value">{shot.strength}</span>
+                                        <span className="compare-panel__value">{shot.strength ?? '\u2014'}</span>
                                     </div>
                                 </div>
                                 <button

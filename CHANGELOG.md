@@ -22,11 +22,20 @@ provenance; none of that numbering carries over.
   reviews shots already logged, and sitting mid-form it pushed the form's own
   controls down the page.
 
+- **Taste is recorded as one judgement.** Strength, taste rating and score are
+  grouped into a single block with one *Taste later* toggle. Logging a brew the
+  moment it is pulled means none of the three is known yet, so all three are
+  skipped together instead of each saving a default nobody chose. `strength` is
+  now optional on a shot, and the dial-in engine no longer reads its absence as
+  "weak" and proposes a change on that basis.
+
 ### Fixed
-- **Durations read as minutes and seconds.** Shot history and the shot detail
-  view printed a raw seconds count, so a V60 showed `205s` instead of `3:25`.
-  Both now use the shared formatter, and that formatter switches to `m:ss` at
-  one minute rather than at 100 seconds, so a 90-second brew reads `1:30`.
+- **Durations read as minutes and seconds.** Shot history, the shot detail view
+  and the stopwatch all printed a raw seconds count, so a V60 showed `205s`
+  instead of `3:25`. They now use the shared formatter, which switches to `m:ss`
+  at one minute rather than at 100 seconds, so a 90-second brew reads `1:30`.
+  The manual time field is still entered in seconds, and echoes the minutes
+  alongside it once the value passes a minute.
 
 ## [1.1.0] - 2026-08-21
 

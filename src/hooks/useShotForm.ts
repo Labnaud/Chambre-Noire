@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type {
     Basket, Strength, BrewMethod, PourPattern, EspressoDrink, MilkType, ShotLog,
 } from '../types';
-import { BALANCED_RATING_INDEX } from '../constants';
+import { BALANCED_RATING_INDEX, TARGET_STRENGTH } from '../constants';
 import { profileFor } from '../lib/brew';
 
 export function useShotForm() {
@@ -71,7 +71,9 @@ export function useShotForm() {
         setBasket(shot.basket);
         setGrindSize(shot.grindSize);
         setWaterTempC(shot.waterTempC ?? profileFor(shot.method).defaultTempC);
-        setStrength(shot.strength);
+        // An untasted shot carries no strength; the control still needs a
+        // position, and the Taste block is collapsed anyway (see openEditShot).
+        setStrength(shot.strength ?? TARGET_STRENGTH);
         setDoseIn(String(shot.doseIn ?? profileFor(shot.method).defaultDoseIn));
         setDoseOut(String(shot.doseOut ?? profileFor(shot.method).defaultDoseOut));
         if (shot.drink) {

@@ -3,26 +3,16 @@ import { RATINGS, RATING_COLORS } from '../../constants';
 interface RatingScaleProps {
     ratingIndex: number;
     onChange: (index: number) => void;
-    rated: boolean;
-    setRated: (v: boolean) => void;
 }
 
-export default function RatingScale({ ratingIndex, onChange, rated, setRated }: RatingScaleProps) {
+export default function RatingScale({ ratingIndex, onChange }: RatingScaleProps) {
     const rating = RATINGS[ratingIndex];
     return (
         <div className="form-group">
             <div className="rating-header">
                 <label className="form-label" htmlFor="shot-rating">Taste Rating</label>
-                <button
-                    type="button"
-                    className="rating-later-toggle"
-                    onClick={() => setRated(!rated)}
-                    aria-pressed={!rated}
-                >
-                    {rated ? 'Taste later' : 'Rate now'}
-                </button>
             </div>
-            {rated ? (
+            {(
                 <div className="rating-slider">
                     <div
                         className="rating-slider__label"
@@ -51,10 +41,6 @@ export default function RatingScale({ ratingIndex, onChange, rated, setRated }: 
                         <span>Bitter</span>
                     </div>
                 </div>
-            ) : (
-                <p className="rating-later-hint">
-                    Logging without a rating. Tap the shot in your history to rate it once you've tasted it.
-                </p>
             )}
         </div>
     );

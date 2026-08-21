@@ -27,7 +27,7 @@ const SWEET_ROW = rowFor(TARGET_STRENGTH);
 // sweet spot in the middle. The grid is positional only and never drawn --
 // the sweet circle and the end labels carry the orientation.
 export default function ExtractionCompass({ shots }: ExtractionCompassProps) {
-    const rated = shots.filter(s => s.rating);
+    const rated = shots.filter(s => s.rating && s.strength !== undefined);
     if (rated.length === 0) return null;
 
     const innerW = W - PAD_L - PAD_R;
@@ -42,7 +42,7 @@ export default function ExtractionCompass({ shots }: ExtractionCompassProps) {
     // result reads as several dots rather than one.
     const seen = new Map<string, number>();
     const points = rated.map((s, i) => {
-        const key = `${colFor(s.rating!)}:${rowFor(s.strength)}`;
+        const key = `${colFor(s.rating!)}:${rowFor(s.strength!)}`;
         const n = seen.get(key) ?? 0;
         seen.set(key, n + 1);
         const spread = n === 0 ? 0 : Math.min(cw, ch) * 0.24;
@@ -50,7 +50,7 @@ export default function ExtractionCompass({ shots }: ExtractionCompassProps) {
             id: s.id,
             n: i + 1,
             x: centreX(colFor(s.rating!)) + Math.cos(n * 2.4) * spread,
-            y: centreY(rowFor(s.strength)) + Math.sin(n * 2.4) * spread,
+            y: centreY(rowFor(s.strength!)) + Math.sin(n * 2.4) * spread,
             colour: RATING_COLORS[s.rating!],
             latest: i === rated.length - 1,
             label: `${s.rating} · ${STRENGTHS.find(x => x.value === s.strength)?.label}`,
