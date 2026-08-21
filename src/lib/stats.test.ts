@@ -228,3 +228,44 @@ describe('shots to dial in', () => {
         expect(stats.dialInSamples).toBe(0);
     });
 });
+
+describe('variety and origin rankings', () => {
+    const mk = (beanName: string, score: number): ShotLog => ({
+        id: `${beanName}-${score}-${Math.random()}`, beanName, method: 'Espresso',
+        basket: 'Double', grindSize: 21, strength: 2, score, timestamp: new Date(),
+    });
+    const bean = (name: string, variety: string, origin: string): BeanProfile =>
+        ({ id: name, name, variety, origin, isActive: true, createdAt: new Date() });
+
+    // A blend is evidence about each of its varieties, so it counts toward all
+    // of them and the totals deliberately exceed the brew count.
+    it('counts a blend toward every variety it carries', () => {
+        const beans = [bean('Blend', 'Caturra, Catuai', 'Brésil')];
+        const stats = computeStats([mk('Blend', 5), mk('Blend', 3)], beans);
+        expect(stats.bestVarieties.map(v => v.bean).sort()).toEqual(['Catuai', 'Caturra']);
+        expect(stats.bestVarieties.every(v => v.shots === 2 && v.avgScore === 4)).toBe(true);
+    });
+
+    it('counts a bean from two origins toward both', () => {
+        const beans = [bean('Two', 'Caturra', 'Brésil, Colombie')];
+        const stats = computeStats([mk('Two', 4), mk('Two', 4)], beans);
+        expect(stats.bestOrigins.map(o => o.bean).sort()).toEqual(['Brésil', 'Colombie']);
+    });
+
+    it('pools a variety across different beans', () => {
+        const beans = [bean('A', 'Caturra', 'Brésil'), bean('B', 'Caturra', 'Colombie')];
+        const stats = computeStats([mk('A', 5), mk('B', 3)], beans);
+        const caturra = stats.bestVarieties.find(v => v.bean === 'Caturra')!;
+        expect(caturra.shots).toBe(2);
+        expect(caturra.avgScore).toBe(4);
+    });
+
+    it('needs two brews before ranking a variety', () => {
+        const beans = [bean('A', 'Rare', 'Brésil')];
+        expect(computeStats([mk('A', 5)], beans).bestVarieties).toEqual([]);
+    });
+
+    it('ignores beans that are not in the library', () => {
+        expect(computeStats([mk('Unlisted', 5), mk('Unlisted', 4)], []).bestVarieties).toEqual([]);
+    });
+});

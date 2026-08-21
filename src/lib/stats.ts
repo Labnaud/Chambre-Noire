@@ -49,6 +49,9 @@ export interface ShotStats {
     /** Best rated, needing more than one shot to count. */
     bestBeans: BeanScore[];
     bestRoasters: BeanScore[];
+    /** A bean can carry several of each, so a brew counts toward all of them. */
+    bestVarieties: BeanScore[];
+    bestOrigins: BeanScore[];
 
     windows: MethodWindow[];
     avgTimeByMethod: [BrewMethod, number][];
@@ -90,6 +93,35 @@ function averageBy(
         const g = group(s);
         if (!g) continue;
         (buckets.get(g) ?? buckets.set(g, []).get(g)!).push(s.score);
+    }
+    return [...buckets.entries()]
+        .filter(([, scores]) => scores.length >= minShots)
+        .map(([bean, scores]) => ({
+            bean,
+            shots: scores.length,
+            avgScore: round(scores.reduce((a, b) => a + b, 0) / scores.length, 2),
+        }))
+        .sort((a, b) => b.avgScore - a.avgScore || b.shots - a.shots);
+}
+
+/** "Caturra, Catuai" is two varieties, not one label. */
+const splitList = (value: string | undefined): string[] =>
+    (value ?? '').split(',').map(v => v.trim()).filter(Boolean);
+
+// Same as averageBy, but a brew can belong to more than one group. Totals
+// across groups therefore exceed the number of brews, by design: a Caturra
+// and Catuai blend really is evidence about both.
+function averageByEach(
+    shots: ShotLog[],
+    groups: (s: ShotLog) => string[],
+    minShots: number,
+): BeanScore[] {
+    const buckets = new Map<string, number[]>();
+    for (const s of shots) {
+        if (s.score === undefined) continue;
+        for (const g of groups(s)) {
+            (buckets.get(g) ?? buckets.set(g, []).get(g)!).push(s.score);
+        }
     }
     return [...buckets.entries()]
         .filter(([, scores]) => scores.length >= minShots)
@@ -148,6 +180,11 @@ export function computeStats(
         beans.filter(b => b.roaster).map(b => [b.name.trim().toLowerCase(), b.roaster!]),
     );
     const bestRoasters = averageBy(shots, s => roasterOf.get(s.beanName.trim().toLowerCase()), 2).slice(0, 5);
+
+    const beanByName = new Map(beans.map(b => [b.name.trim().toLowerCase(), b]));
+    const lookup = (s: ShotLog) => beanByName.get(s.beanName.trim().toLowerCase());
+    const bestVarieties = averageByEach(shots, s => splitList(lookup(s)?.variety), 2).slice(0, 8);
+    const bestOrigins = averageByEach(shots, s => splitList(lookup(s)?.origin), 2).slice(0, 8);
 
     // Sweet-spot windows, per method. Grind on one continuous scale means
     // averaging espresso and filter together produces a setting for neither.
@@ -236,6 +273,8 @@ export function computeStats(
         maxBeanCount,
         bestBeans,
         bestRoasters,
+        bestVarieties,
+        bestOrigins,
         windows,
         avgTimeByMethod,
         medianShotsToDialIn: median(dialIns),

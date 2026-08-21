@@ -17,6 +17,40 @@ const kg = (g: number) => (g >= 1000 ? `${(g / 1000).toFixed(2)} kg` : `${Math.r
 // Caffeine is stored in milligrams; a lifetime total runs to grams.
 const caffeine = (mg: number) => (mg >= 1000 ? `${(mg / 1000).toFixed(1)} g` : `${Math.round(mg)} mg`);
 
+
+interface RankedProps {
+    title: string;
+    note?: string;
+    rows: { bean: string; shots: number; avgScore: number }[];
+    variant: 'caramel' | 'muted';
+}
+
+function Ranked({ title, note, rows, variant }: RankedProps) {
+    if (rows.length === 0) return null;
+    return (
+        <div className="stats-section">
+            <h4>{title}</h4>
+            {note && <p className="stats-section__note">{note}</p>}
+            <div className="bar-chart">
+                {rows.map(r => (
+                    <div key={r.bean} className="bar-chart__row">
+                        <div className="bar-chart__label bar-chart__label--bean">
+                            {r.bean} <span className="stats-range">{r.shots}</span>
+                        </div>
+                        <div className="bar-chart__bar-wrap">
+                            <div
+                                className={`bar-chart__bar bar-chart__bar--${variant}`}
+                                style={{ width: `${(r.avgScore / 5) * 100}%` }}
+                            />
+                        </div>
+                        <div className="bar-chart__value">{r.avgScore}</div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function StatsModal({ open, shots, beans, intake, onClose }: StatsModalProps) {
     const modalRef = useFocusTrap<HTMLDivElement>();
     if (!open) return null;
@@ -132,48 +166,32 @@ export default function StatsModal({ open, shots, beans, intake, onClose }: Stat
                                 </div>
                             )}
 
-                            {stats.bestBeans.length > 0 && (
-                                <div className="stats-section">
-                                    <h4>Best rated beans</h4>
-                                    <p className="stats-section__note">Average score, two brews minimum.</p>
-                                    <div className="bar-chart">
-                                        {stats.bestBeans.map(b => (
-                                            <div key={b.bean} className="bar-chart__row">
-                                                <div className="bar-chart__label bar-chart__label--bean">{b.bean}</div>
-                                                <div className="bar-chart__bar-wrap">
-                                                    <div
-                                                        className="bar-chart__bar bar-chart__bar--caramel"
-                                                        style={{ width: `${(b.avgScore / 5) * 100}%` }}
-                                                    />
-                                                </div>
-                                                <div className="bar-chart__value">{b.avgScore}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <Ranked
+                                title="Best rated beans"
+                                note="Average score, two brews minimum."
+                                rows={stats.bestBeans}
+                                variant="caramel"
+                            />
 
-                            {stats.bestRoasters.length > 0 && (
-                                <div className="stats-section">
-                                    <h4>Roasters by average score</h4>
-                                    <div className="bar-chart">
-                                        {stats.bestRoasters.map(r => (
-                                            <div key={r.bean} className="bar-chart__row">
-                                                <div className="bar-chart__label bar-chart__label--bean">
-                                                    {r.bean} <span className="stats-range">{r.shots}</span>
-                                                </div>
-                                                <div className="bar-chart__bar-wrap">
-                                                    <div
-                                                        className="bar-chart__bar bar-chart__bar--muted"
-                                                        style={{ width: `${(r.avgScore / 5) * 100}%` }}
-                                                    />
-                                                </div>
-                                                <div className="bar-chart__value">{r.avgScore}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <Ranked
+                                title="By variety"
+                                note="A blend counts toward each of its varieties, so these totals exceed your brew count."
+                                rows={stats.bestVarieties}
+                                variant="caramel"
+                            />
+
+                            <Ranked
+                                title="By origin"
+                                note="A bean from two origins counts toward both."
+                                rows={stats.bestOrigins}
+                                variant="muted"
+                            />
+
+                            <Ranked
+                                title="Roasters by average score"
+                                rows={stats.bestRoasters}
+                                variant="muted"
+                            />
 
                             {stats.topBeans.length > 0 && (
                                 <div className="stats-section">
