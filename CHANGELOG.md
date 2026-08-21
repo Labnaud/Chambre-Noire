@@ -4,6 +4,30 @@ Chambre Noire starts its own version numbering at 1.0.0. The `1.x` entries below
 it belong to the upstream project this was forked from and are kept for
 provenance; none of that numbering carries over.
 
+## [1.2.0] - 2026-08-21
+
+### Changed
+- **Smart Barista reads in the order you work.** The comparison is now Dose,
+  Grind, Output, Time: weigh the coffee, grind it, pour to a yield, and time it.
+  Dose and output were previously a single combined row, and grind led.
+- **A filter brew names its recipe.** V60 guidance shows which protocol produced
+  the shot (`Iced V60 2 Pours`), so a sweet spot records the recipe and not just
+  the numbers. Espresso has no pour pattern, so nothing is shown there.
+- **Temperature appears only where it is a lever.** Filter brews keep it, because
+  the engine can propose changing it. Espresso no longer shows it in the
+  comparison, since temperature is never proposed there and a row that cannot
+  change is noise. It is still recorded, and still shown on the shot itself.
+- **Recent Journey moved below the log button.** Smart Barista answers "what
+  should I do next", which belongs above the controls it refers to. The journey
+  reviews shots already logged, and sitting mid-form it pushed the form's own
+  controls down the page.
+
+### Fixed
+- **Durations read as minutes and seconds.** Shot history and the shot detail
+  view printed a raw seconds count, so a V60 showed `205s` instead of `3:25`.
+  Both now use the shared formatter, and that formatter switches to `m:ss` at
+  one minute rather than at 100 seconds, so a 90-second brew reads `1:30`.
+
 ## [1.1.0] - 2026-08-21
 
 ### Added

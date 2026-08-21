@@ -1,7 +1,7 @@
 import type { ShotLog, Rating } from '../types';
 import { formatDate } from '../lib/format';
 import { getRatioLabel } from '../lib/dialIn';
-import { describeBrew, hotWaterGrams } from '../lib/brew';
+import { describeBrew, hotWaterGrams, formatDuration } from '../lib/brew';
 import Icons from './Icons';
 
 interface ShotHistoryRowProps {
@@ -69,7 +69,7 @@ export default function ShotHistoryRow({
                             </span>
                         )}
                         {shot.extractionTime && (
-                            <span className="setting-tag setting-tag--timer"><Icons.Timer /> {shot.extractionTime}s</span>
+                            <span className="setting-tag setting-tag--timer"><Icons.Timer /> {formatDuration(shot.extractionTime)}</span>
                         )}
                         {shot.doseIn && shot.doseOut && (
                             <span className="setting-tag setting-tag--dose">

@@ -16,7 +16,6 @@ interface SmartBaristaProps {
     shots: ShotLog[];
     lastShot: ShotLog | null;
     suggestion: SuggestedSettings | null;
-    shotsForBean: ShotLog[];
     ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
     ratingColors: Record<Rating, string>;
     onApply: () => void;
@@ -28,7 +27,7 @@ interface SmartBaristaProps {
 // bean and method are known, so the guidance is specific, and the grind and
 // temperature controls it talks about are directly below it.
 export default function SmartBarista({
-    beanName, method, beans, shots, lastShot, suggestion, shotsForBean,
+    beanName, method, beans, shots, lastShot, suggestion,
     ratingConfig, ratingColors, onApply, onApplyStartingPoint, onUpdateBean,
 }: SmartBaristaProps) {
     const freshness = getFreshnessAlert(beanName, beans);
@@ -88,7 +87,6 @@ export default function SmartBarista({
             <SuggestionCard
                 lastShot={lastShot}
                 suggestion={suggestion}
-                shotsForBean={shotsForBean}
                 beanName={beanName}
                 method={method}
                 ratingConfig={ratingConfig}

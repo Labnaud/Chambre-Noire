@@ -123,6 +123,8 @@ describe('brew time targets', () => {
     it('formats short times in seconds and long ones as m:ss', () => {
         expect(formatDuration(34)).toBe('34s');
         expect(formatDuration(29.5)).toBe('29.5s');
+        expect(formatDuration(90)).toBe('1:30'); // a minute or over reads as m:ss
+        expect(formatDuration(59)).toBe('59s');  // under a minute stays in seconds
         expect(formatDuration(210)).toBe('3:30');
         expect(formatDuration(240)).toBe('4:00');
     });

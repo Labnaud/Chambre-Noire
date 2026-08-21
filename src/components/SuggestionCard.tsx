@@ -1,15 +1,12 @@
 import type { ShotLog, Rating, BrewMethod } from '../types';
 import type { SuggestedSettings } from '../lib/suggestions';
 import { getBaristaTip } from '../lib/suggestions';
-import { yieldLabel, formatDuration, targetTimeLabel } from '../lib/brew';
-import { STRENGTHS } from '../constants';
-import ExtractionCompass from './ExtractionCompass';
+import { describeBrew, profileFor, formatDuration, targetTimeLabel } from '../lib/brew';
 import Icons from './Icons';
 
 interface SuggestionCardProps {
     lastShot: ShotLog | null;
     suggestion: SuggestedSettings | null;
-    shotsForBean: ShotLog[];
     beanName: string;
     method: BrewMethod;
     ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
@@ -19,10 +16,33 @@ interface SuggestionCardProps {
 
 const diffLabel = (n: number) => `${n > 0 ? '+' : ''}${n}`;
 
+interface RowSpec {
+    label: string;
+    value: React.ReactNode;
+}
+
+function CompareRows({ rows }: { rows: RowSpec[] }) {
+    return (
+        <dl className="dial-compare__rows">
+            {rows.map(({ label, value }) => (
+                <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+            ))}
+        </dl>
+    );
+}
+
+function diffTag(delta: number) {
+    if (delta === 0) return null;
+    return (
+        <span className={`dial-compare__diff ${delta > 0 ? 'diff--coarser' : 'diff--finer'}`}>
+            {diffLabel(delta)}
+        </span>
+    );
+}
+
 export default function SuggestionCard({
     lastShot,
     suggestion,
-    shotsForBean,
     beanName,
     method,
     ratingConfig,
@@ -67,7 +87,45 @@ export default function SuggestionCard({
     const lastGrind = lastShot.grindSize;
     const lastTemp = lastShot.waterTempC;
     const hasDose = lastShot.doseIn !== undefined && lastShot.doseOut !== undefined;
-    const doseLabel = yieldLabel(lastShot.method) === 'Out (g)' ? 'Dose / Out' : 'Dose / Water';
+    const profile = profileFor(method);
+
+    // Espresso yields liquid; a filter brew's figure is the water going in.
+    const outLabel = profile.yieldMeans === 'liquid' ? 'Output' : 'Water';
+
+    // Which protocol produced this, so a sweet spot records the recipe and not
+    // just the numbers. Espresso has no pour pattern, so there is nothing to name.
+    const recipeLabel = method === 'Espresso' ? null : describeBrew(lastShot);
+
+    // Temperature is only shown where the engine can actually move it. On
+    // espresso it is never an adjustment, so a row that never changes is noise.
+    const tempIsLever = profile.ratioStyle === 'filter';
+
+    const grams = (n: number | undefined) => (n === undefined ? '\u2014' : `${n}g`);
+
+    const lastRows: RowSpec[] = [
+        { label: 'Dose', value: grams(lastShot.doseIn) },
+        { label: 'Grind', value: lastGrind },
+        { label: outLabel, value: grams(lastShot.doseOut) },
+        { label: 'Time', value: lastShot.extractionTime !== undefined ? formatDuration(lastShot.extractionTime) : '\u2014' },
+    ];
+    if (tempIsLever) {
+        lastRows.push({ label: 'Temp', value: lastTemp !== undefined ? `${lastTemp} \u00b0C` : '\u2014' });
+    }
+
+    const nextRows: RowSpec[] = suggestion ? [
+        { label: 'Dose', value: grams(lastShot.doseIn) },
+        { label: 'Grind', value: <>{suggestion.grindSize}{diffTag(suggestion.grindDiff)}</> },
+        { label: outLabel, value: <>{hasDose ? grams(suggestion.doseOut ?? lastShot.doseOut) : '\u2014'}{diffTag(suggestion.yieldDiff)}</> },
+        { label: 'Time', value: targetTimeLabel(method) },
+    ] : [];
+    if (suggestion && tempIsLever) {
+        nextRows.push({ label: 'Temp', value: <>{suggestion.waterTempC} &deg;C{diffTag(suggestion.tempDiff)}</> });
+    }
+
+    // No suggestion means the last shot landed in the sweet spot, so "try next"
+    // is the recipe to repeat rather than a change.
+    const repeatRows: RowSpec[] = [...lastRows.slice(0, 3), { label: 'Time', value: targetTimeLabel(method) },
+        ...(tempIsLever ? [lastRows[4]] : [])];
 
     return (
         <>
@@ -88,6 +146,13 @@ export default function SuggestionCard({
                 </div>
             </div>
 
+            {recipeLabel && (
+                <p className="dial-compare__recipe">
+                    <span className="dial-compare__recipe-label">Recipe</span>
+                    {recipeLabel}
+                </p>
+            )}
+
             <div className="dial-compare">
                 <div className="dial-compare__col">
                     <div className="dial-compare__head">
@@ -99,18 +164,7 @@ export default function SuggestionCard({
                             {lastShot.rating}
                         </span>
                     </div>
-                    <dl className="dial-compare__rows">
-                        <div><dt>Grind</dt><dd>{lastGrind}</dd></div>
-                        <div><dt>Temp</dt><dd>{lastTemp !== undefined ? `${lastTemp} °C` : '—'}</dd></div>
-                        <div>
-                            <dt>{doseLabel}</dt>
-                            <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
-                        </div>
-                        <div>
-                            <dt>Time</dt>
-                            <dd>{lastShot.extractionTime !== undefined ? formatDuration(lastShot.extractionTime) : '—'}</dd>
-                        </div>
-                    </dl>
+                    <CompareRows rows={lastRows} />
                 </div>
 
                 <div className="dial-compare__arrow" aria-hidden="true">&rarr;</div>
@@ -120,59 +174,7 @@ export default function SuggestionCard({
                         <span className="dial-compare__title">Try next</span>
                         <Icons.Target />
                     </div>
-                    {suggestion ? (
-                        <dl className="dial-compare__rows">
-                            <div>
-                                <dt>Grind</dt>
-                                <dd>
-                                    {suggestion.grindSize}
-                                    {suggestion.grindDiff !== 0 && (
-                                        <span className={`dial-compare__diff ${suggestion.grindDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
-                                            {diffLabel(suggestion.grindDiff)}
-                                        </span>
-                                    )}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt>Temp</dt>
-                                <dd>
-                                    {suggestion.waterTempC} &deg;C
-                                    {suggestion.tempDiff !== 0 && (
-                                        <span className={`dial-compare__diff ${suggestion.tempDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
-                                            {diffLabel(suggestion.tempDiff)}
-                                        </span>
-                                    )}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt>{doseLabel}</dt>
-                                <dd>
-                                    {hasDose
-                                        ? `${lastShot.doseIn}g → ${suggestion.doseOut ?? lastShot.doseOut}g`
-                                        : '—'}
-                                    {suggestion.yieldDiff !== 0 && (
-                                        <span className={`dial-compare__diff ${suggestion.yieldDiff > 0 ? 'diff--coarser' : 'diff--finer'}`}>
-                                            {diffLabel(suggestion.yieldDiff)}
-                                        </span>
-                                    )}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt>Time</dt>
-                                <dd>{targetTimeLabel(method)}</dd>
-                            </div>
-                        </dl>
-                    ) : (
-                        <dl className="dial-compare__rows">
-                            <div><dt>Grind</dt><dd>{lastGrind}</dd></div>
-                            <div><dt>Temp</dt><dd>{lastTemp !== undefined ? `${lastTemp} °C` : '—'}</dd></div>
-                            <div>
-                                <dt>{doseLabel}</dt>
-                                <dd>{hasDose ? `${lastShot.doseIn}g → ${lastShot.doseOut}g` : '—'}</dd>
-                            </div>
-                            <div><dt>Time</dt><dd>{targetTimeLabel(method)}</dd></div>
-                        </dl>
-                    )}
+                    <CompareRows rows={suggestion ? nextRows : repeatRows} />
                 </div>
             </div>
 
@@ -202,43 +204,6 @@ export default function SuggestionCard({
                 </button>
             )}
 
-            {shotsForBean.length > 1 && (
-                <div className="dialin-journey">
-                    <div className="dialin-journey__label">
-                        <Icons.TrendingUp /> Recent Journey
-                        <span className="dialin-journey__dir">oldest to newest</span>
-                    </div>
-                    <ExtractionCompass shots={[...shotsForBean].slice(0, 5).reverse()} />
-                    <div className="journey-rows">
-                        {shotsForBean.slice(0, 5).reverse().map((shot, idx) => {
-                            const shotConfig = shot.rating ? ratingConfig[shot.rating] : null;
-                            const strengthTone = STRENGTHS.find(x => x.value === shot.strength);
-                            const parts = [`G${shot.grindSize}`];
-                            if (shot.doseIn !== undefined && shot.doseOut !== undefined) {
-                                parts.push(`${shot.doseIn}\u2192${shot.doseOut}g`);
-                            }
-                            if (shot.extractionTime !== undefined) {
-                                parts.push(formatDuration(shot.extractionTime));
-                            }
-                            return (
-                                <div key={shot.id} className="journey-row">
-                                    <span className="journey-row__n">{idx + 1}</span>
-                                    <span
-                                        className={`journey-row__taste ${shotConfig ? `journey-row__taste--${shotConfig.colorClass}` : 'journey-row__taste--unrated'}`}
-                                        style={shot.rating ? { color: ratingColors[shot.rating] } : undefined}
-                                    >
-                                        {shot.rating ?? 'Not rated'}
-                                    </span>
-                                    <span className="journey-row__tried">{parts.join(' \u00b7 ')}</span>
-                                    <span className={`journey-row__strength journey-row__strength--${strengthTone?.tone ?? 'target'}`}>
-                                        {strengthTone?.label}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
         </>
     );
 }

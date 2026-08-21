@@ -2,7 +2,7 @@ import type { Rating, ShotLog } from '../types';
 import { RATINGS, RATING_COLORS, SCORE_MAX } from '../constants';
 import { formatDateLong } from '../lib/format';
 import { getRatioLabel } from '../lib/dialIn';
-import { describeBrew, hotWaterGrams, yieldLabel } from '../lib/brew';
+import { describeBrew, hotWaterGrams, yieldLabel, formatDuration } from '../lib/brew';
 import Icons from './Icons';
 
 interface ShotDetailViewProps {
@@ -105,7 +105,7 @@ export default function ShotDetailView({ shot, use24Hour, isFavorite, ratingConf
                 {shot.extractionTime && (
                     <div className="shot-detail__item">
                         <span className="shot-detail__label">Extraction Time</span>
-                        <span className="shot-detail__value">{shot.extractionTime}s</span>
+                        <span className="shot-detail__value">{formatDuration(shot.extractionTime)}</span>
                     </div>
                 )}
                 {shot.doseIn && shot.doseOut && (

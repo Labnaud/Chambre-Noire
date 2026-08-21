@@ -15,6 +15,7 @@ import ShotTimerControls from './ShotTimerControls';
 import StrengthControl from './StrengthControl';
 import RatingScale from './RatingScale';
 import ScoreInput from './ScoreInput';
+import DialInJourney from '../DialInJourney';
 
 interface ShotFormProps {
     form: ReturnType<typeof useShotForm>;
@@ -92,7 +93,6 @@ export default function ShotForm({
                 shots={shots}
                 lastShot={lastShotForBean}
                 suggestion={suggestion}
-                shotsForBean={shotsForBean}
                 ratingConfig={ratingConfig}
                 ratingColors={ratingColors}
                 onApply={onApplySuggestion}
@@ -193,6 +193,12 @@ export default function ShotForm({
                     </button>
                 ) : null}
             </div>
+
+            <DialInJourney
+                shotsForBean={shotsForBean}
+                ratingConfig={ratingConfig}
+                ratingColors={ratingColors}
+            />
         </form>
     );
 }

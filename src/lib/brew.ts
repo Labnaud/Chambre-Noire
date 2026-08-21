@@ -85,7 +85,9 @@ export function profileFor(method: BrewMethod): BrewProfile {
 
 /** Seconds as the log reads them: 34s, but 3:30 once it passes a minute. */
 export function formatDuration(seconds: number): string {
-    if (seconds < 100) return `${Math.round(seconds * 10) / 10}s`;
+    // Under a minute reads naturally in seconds ("31s"); at or above one, a
+    // filter brew wants minutes and seconds ("3:25") rather than "205s".
+    if (seconds < 60) return `${Math.round(seconds * 10) / 10}s`;
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
     return `${mins}:${String(secs).padStart(2, '0')}`;
