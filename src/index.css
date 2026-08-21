@@ -302,7 +302,6 @@ body {
   line-height: 1.05;
 }
 
-
 /* Icon styles */
 .icon {
   width: 20px;
@@ -4623,11 +4622,7 @@ button.grind-control__value:hover {
     z-index: 1000;
   }
 
-  .header__subtitle {
-    display: none;
-  }
-
-  .header__title {
+    .header__title {
     font-size: var(--text-lg);
   }
 
@@ -5221,9 +5216,6 @@ textarea:focus-visible {
     font-size: var(--text-4xl);
   }
 
-  .header__subtitle {
-    font-size: var(--text-xs);
-  }
 }
 
 /* ============================================
