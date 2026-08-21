@@ -102,7 +102,7 @@ export default function StatsModal({ open, shots, beans, intake, onClose }: Stat
                                 </div>
                                 <div className="stat-card">
                                     <div className="stat-card__value">{caffeine(stats.totalCaffeineMg)}</div>
-                                    <div className="stat-card__label">Caffeine</div>
+                                    <div className="stat-card__label">Total caffeine consumed</div>
                                 </div>
                                 {stats.avgScore !== null && (
                                     <div className="stat-card stat-card--accent">
