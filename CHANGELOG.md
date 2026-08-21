@@ -7,6 +7,15 @@ provenance; none of that numbering carries over.
 ## [1.2.0] - 2026-08-21
 
 ### Added
+- **Coffee drunk without a brew record.** A bean can record how many grams of
+  its bag were consumed without individual shots -- most of a bag, typically,
+  once it is dialled in and there is nothing left to learn from logging each
+  brew. It counts toward the bag, toward total coffee ground and toward lifetime
+  caffeine, so those totals describe what was drunk rather than only what was
+  worth writing down. The shot history stays a record of brews actually
+  observed. Caffeine from grams uses the double espresso's 110 mg from 18 g;
+  filter extracts more per gram, so for a bean drunk mostly as filter that
+  figure reads low.
 - **The form fills itself.** Choosing a bean and method loads the settings to
   brew with: the suggestion if there is one, or the sweet-spot recipe if the
   bean is dialled in. It runs once per choice, so editing the dials afterwards

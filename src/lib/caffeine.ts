@@ -5,6 +5,18 @@ const SHOTS_PER_BASKET: Record<string, number> = { 'Single': 1, 'Double': 2 };
 
 export const DAILY_LIMIT = 400; // mg
 
+/**
+ * Caffeine per gram of dry coffee, derived from the double espresso this app
+ * already counts as 110 mg from an 18 g dose. Used only to value grams that
+ * were drunk without an individual brew record.
+ *
+ * A filter brew extracts more per gram -- the V60 preset is 170 mg from 15 g --
+ * so for a bean drunk mostly as filter this reads low. It is a floor, not a
+ * precise figure, which is the right posture for a number derived from weight
+ * rather than from a recorded brew.
+ */
+export const CAFFEINE_MG_PER_G = 110 / 18;
+
 export const DEFAULT_CAFFEINE_PREFS: CaffeinePrefs = {
     halfLifeHours: 5.7, // commonly cited average; varies with genetics, liver enzymes, medication
     bedtime: '22:30',

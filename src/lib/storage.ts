@@ -87,6 +87,7 @@ export function validBeanRecord(value: unknown): value is BeanProfile {
     if (!isOptionalString(value.variety)) return false;
     if (!isOptionalString(value.roaster) || !isOptionalString(value.origin) || !isOptionalString(value.roastDate)
         || !isOptionalString(value.flavorNotes) || !isOptionalFiniteNumber(value.bagSizeGrams)
+        || !isOptionalFiniteNumber(value.unloggedGrams)
         || !isOptionalFiniteNumber(value.pricePaid)) return false;
     if (value.methodNotes !== undefined) {
         if (!isRecord(value.methodNotes)) return false;

@@ -67,3 +67,26 @@ describe('getBeanInventory', () => {
         expect(unpriced?.costPerShot).toBeNull();
     });
 });
+
+describe('coffee drunk without a brew record', () => {
+    it('comes out of the bag like any other grams', () => {
+        const inv = getBeanInventory(
+            bean({ bagSizeGrams: 300, unloggedGrams: 210 }),
+            [shot({ doseIn: 18 }), shot({ doseIn: 18 })],
+        );
+        expect(inv?.gramsUsed).toBe(246);
+        expect(inv?.gramsLeft).toBe(54);
+    });
+
+    it('can finish a bag on its own', () => {
+        const inv = getBeanInventory(bean({ bagSizeGrams: 300, unloggedGrams: 300 }), []);
+        expect(inv?.gramsLeft).toBe(0);
+        expect(inv?.isEmpty).toBe(true);
+    });
+
+    it('never credits grams back to the bag', () => {
+        const withNegative = getBeanInventory(bean({ bagSizeGrams: 300, unloggedGrams: -50 }), []);
+        const withNone = getBeanInventory(bean({ bagSizeGrams: 300 }), []);
+        expect(withNegative?.gramsLeft).toBe(withNone?.gramsLeft);
+    });
+});

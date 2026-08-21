@@ -45,6 +45,7 @@ export default function BeanLibraryModal({
     const [roastDate, setRoastDate] = useState('');
     const [flavorNotes, setFlavorNotes] = useState('');
     const [bagSize, setBagSize] = useState('');
+    const [unloggedGrams, setUnloggedGrams] = useState('');
     const [pricePaid, setPricePaid] = useState('');
     const [editing, setEditing] = useState<BeanProfile | null>(null);
     const modalRef = useFocusTrap<HTMLDivElement>();
@@ -69,6 +70,7 @@ export default function BeanLibraryModal({
         setRoastDate('');
         setFlavorNotes('');
         setBagSize('');
+        setUnloggedGrams('');
         setPricePaid('');
         setEditing(null);
     };
@@ -85,6 +87,7 @@ export default function BeanLibraryModal({
         setRoastDate(bean.roastDate ?? '');
         setFlavorNotes(bean.flavorNotes ?? '');
         setBagSize(bean.bagSizeGrams?.toString() ?? '');
+        setUnloggedGrams(bean.unloggedGrams?.toString() ?? '');
         setPricePaid(bean.pricePaid?.toString() ?? '');
     };
 
@@ -92,6 +95,7 @@ export default function BeanLibraryModal({
         if (!name.trim()) return;
         const inventory = {
             bagSizeGrams: bagSize ? parseFloat(bagSize) : undefined,
+            unloggedGrams: unloggedGrams ? parseFloat(unloggedGrams) : undefined,
             pricePaid: pricePaid ? parseFloat(pricePaid) : undefined,
         };
         if (editing) {
@@ -306,6 +310,25 @@ export default function BeanLibraryModal({
                                     onChange={(e) => setPricePaid(e.target.value)}
                                 />
                             </div>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="bean-unlogged">Drunk without logging (g)</label>
+                            <input
+                                id="bean-unlogged"
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="1"
+                                className="form-input"
+                                placeholder="e.g. 210"
+                                value={unloggedGrams}
+                                onChange={(e) => setUnloggedGrams(e.target.value)}
+                            />
+                            <p className="form-hint">
+                                The rest of the bag, once it was dialled in and there was
+                                nothing left to learn from logging each brew. Counts toward
+                                the bag and your totals without inventing brews.
+                            </p>
                         </div>
                         <div className="bean-form__actions">
                             {editing && (

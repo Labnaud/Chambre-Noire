@@ -77,6 +77,14 @@ export interface BeanProfile {
    */
   methodNotes?: Partial<Record<BrewMethod, string>>;
   bagSizeGrams?: number; // for inventory + cost-per-shot
+  /**
+   * Grams of this bag drunk without an individual shot record. Most of a bag is
+   * usually consumed after it is dialled in, when there is nothing left to learn
+   * and no reason to log each brew. Recording that as one number keeps the bag
+   * maths and the consumption totals honest without inventing brews that were
+   * never observed.
+   */
+  unloggedGrams?: number;
   pricePaid?: number; // in the user's own currency
   repurchase?: Repurchase;
   isActive: boolean;

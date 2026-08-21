@@ -269,3 +269,23 @@ describe('variety and origin rankings', () => {
         expect(computeStats([mk('Unlisted', 5), mk('Unlisted', 4)], []).bestVarieties).toEqual([]);
     });
 });
+
+describe('unlogged coffee in the lifetime totals', () => {
+    it('counts toward coffee ground and caffeine without inventing brews', () => {
+        const beans = [{
+            id: 'b1', name: 'Ethiopia', isActive: false, createdAt: new Date(),
+            bagSizeGrams: 300, unloggedGrams: 180,
+        }];
+        const shots = [{
+            id: 's1', beanName: 'Ethiopia', method: 'Espresso' as const, basket: 'Double' as const,
+            grindSize: 12, rating: 'Balanced' as const, doseIn: 18, timestamp: new Date(),
+        }];
+        const withUnlogged = computeStats(shots, beans);
+        const without = computeStats(shots, [{ ...beans[0], unloggedGrams: undefined }]);
+
+        expect(withUnlogged.totalGroundG).toBe(without.totalGroundG + 180);
+        expect(withUnlogged.totalCaffeineMg).toBeGreaterThan(without.totalCaffeineMg);
+        // the shot log itself is untouched
+        expect(withUnlogged.totalShots).toBe(without.totalShots);
+    });
+});

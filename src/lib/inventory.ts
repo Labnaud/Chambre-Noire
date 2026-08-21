@@ -21,7 +21,9 @@ export function getBeanInventory(bean: BeanProfile, shots: ShotLog[]): BeanInven
     const key = bean.name.toLowerCase();
     const gramsUsed = shots
         .filter(s => s.beanName.toLowerCase() === key)
-        .reduce((sum, s) => sum + (s.doseIn && s.doseIn > 0 ? s.doseIn : DEFAULT_DOSE_G), 0);
+        .reduce((sum, s) => sum + (s.doseIn && s.doseIn > 0 ? s.doseIn : DEFAULT_DOSE_G), 0)
+        // Brews that were drunk but never logged still came out of the bag.
+        + Math.max(0, bean.unloggedGrams ?? 0);
 
     const gramsLeft = Math.max(0, bean.bagSizeGrams - gramsUsed);
     const shotsLeft = Math.floor(gramsLeft / DEFAULT_DOSE_G);

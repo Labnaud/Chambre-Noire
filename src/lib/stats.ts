@@ -1,7 +1,7 @@
 import type { ShotLog, Rating, BeanProfile, CaffeineEntry, BrewMethod } from '../types';
 import { RATINGS, TARGET_STRENGTH } from '../constants';
 import { describeBrew } from './brew';
-import { caffeineForBasket } from './caffeine';
+import { caffeineForBasket, CAFFEINE_MG_PER_G } from './caffeine';
 
 export interface DayStat {
     date: string;
@@ -157,13 +157,18 @@ export function computeStats(
     const scores = shots.map(s => s.score).filter((n): n is number => n !== undefined);
     const avgScore = scores.length ? round(scores.reduce((a, b) => a + b, 0) / scores.length, 2) : null;
 
+    // Coffee drunk without an individual brew record: most of a bag, once it is
+    // dialled in and there is nothing left to learn from logging each one.
+    const unloggedG = beans.reduce((sum, b) => sum + Math.max(0, b.unloggedGrams ?? 0), 0);
+
     // Caffeine and coffee actually consumed.
     const totalCaffeineMg = Math.round(
         shots.reduce((sum, s) => sum + caffeineForBasket(s.basket), 0)
+        + unloggedG * CAFFEINE_MG_PER_G
         + intake.reduce((sum, e) => sum + e.mg, 0),
     );
     const withDose = shots.filter(s => s.doseIn !== undefined && s.doseIn > 0);
-    const totalGroundG = round(withDose.reduce((sum, s) => sum + s.doseIn!, 0), 0);
+    const totalGroundG = round(withDose.reduce((sum, s) => sum + s.doseIn!, 0) + unloggedG, 0);
 
     // Most brewed.
     const beanCounts = shots.reduce((acc, s) => {
