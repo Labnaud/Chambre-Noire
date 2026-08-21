@@ -1650,25 +1650,32 @@ button.grind-control__value:hover {
   color: var(--color-star);
 }
 
-.target-recipe__log-again {
+.suggestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-log-again {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  margin-top: 0.6rem;
-  padding: 0.45rem 0.8rem;
-  border: 1px solid var(--color-caramel);
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-caramel);
+  color: var(--color-success);
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
 }
 
-.target-recipe__log-again:hover {
-  background: color-mix(in srgb, var(--color-caramel) 12%, transparent);
+.btn-log-again:hover {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
 }
+
 
 .target-recipe__settings {
   display: flex;
@@ -5047,7 +5054,7 @@ textarea:focus-visible {
   gap: 0.75rem;
   padding: 0.85rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-mocha) 45%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-caramel) 3%, transparent);
 }

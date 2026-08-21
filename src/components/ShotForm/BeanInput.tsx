@@ -10,7 +10,6 @@ interface BeanInputProps {
     hasAnyBeans: boolean;
     beans: BeanProfile[];
     favoriteShot: ShotLog | null;
-    onLogAgain: (recipe: ShotLog) => void;
 }
 
 export default function BeanInput({
@@ -20,7 +19,6 @@ export default function BeanInput({
     hasAnyBeans,
     beans,
     favoriteShot,
-    onLogAgain,
 }: BeanInputProps) {
     const {
         showSuggestions,
@@ -126,14 +124,6 @@ export default function BeanInput({
                         <span className="setting-tag setting-tag--gold">{favoriteShot.basket}</span>
                         {favoriteShot.strength !== undefined && <span className="setting-tag setting-tag--gold">S{favoriteShot.strength}</span>}
                     </div>
-                    <button
-                        type="button"
-                        className="target-recipe__log-again"
-                        onClick={() => onLogAgain(favoriteShot)}
-                        title="Log a brew of this recipe now, without filling in the form"
-                    >
-                        <Icons.Zap /> Log again
-                    </button>
                 </div>
             )}
         </>

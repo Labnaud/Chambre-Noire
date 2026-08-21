@@ -11,8 +11,13 @@ provenance; none of that numbering carries over.
   brew with: the suggestion if there is one, or the sweet-spot recipe if the
   bean is dialled in. It runs once per choice, so editing the dials afterwards
   cannot be undone by it. *Apply to form* remains as the way back after fiddling.
-- **Log again.** A bean's target recipe now logs a repeat in one tap, for a brew
-  that is already dialled in and is being drunk rather than worked on. It copies
+- **Log again.** Smart Barista logs a repeat in one tap for a brew that is
+  already dialled in and is being drunk rather than worked on. It appears
+  whenever this bean *and method* have reached Balanced, whether or not a shot
+  has been starred, and it survives its own use: an untasted repeat becomes the
+  latest shot, which must not withdraw the button. A starred shot only counts
+  for the method it was pulled on, so an espresso favourite is never offered as
+  a V60 recipe. It copies
   the recipe's inputs -- method, pour pattern, basket, grind, temperature, dose
   and yield -- and none of its outcomes: time, taste, strength, score and notes
   describe a cup that has not been made. Dose carries over so the bag maths

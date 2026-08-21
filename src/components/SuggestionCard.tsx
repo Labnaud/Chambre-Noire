@@ -197,14 +197,17 @@ export default function SuggestionCard({
                 chosen; this is the way back after fiddling with the dials. It
                 shows at a sweet spot too, where there is no suggestion but the
                 settings to repeat are exactly the ones above. */}
-            <button
-                className="btn-apply-suggestion"
-                onClick={onApply}
-                title="Load these settings into the form"
-                type="button"
-            >
-                <Icons.Zap /> {suggestion ? 'Apply to form' : 'Reload these settings'}
-            </button>
+            <div className="suggestion-actions">
+                <button
+                    className="btn-apply-suggestion"
+                    onClick={onApply}
+                    title="Load these settings into the form"
+                    type="button"
+                >
+                    <Icons.Zap /> {suggestion ? 'Apply to form' : 'Reload these settings'}
+                </button>
+
+            </div>
 
         </>
     );

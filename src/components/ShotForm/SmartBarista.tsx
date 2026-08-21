@@ -19,6 +19,8 @@ interface SmartBaristaProps {
     ratingConfig: Record<Rating, { icon: () => React.JSX.Element; colorClass: string }>;
     ratingColors: Record<Rating, string>;
     onApply: () => void;
+    repeatRecipe: ShotLog | null;
+    onLogAgain: () => void;
     onApplyStartingPoint: (doseIn: number, doseOut: number, grind: number) => void;
     onUpdateBean: (bean: BeanProfile) => void;
 }
@@ -28,7 +30,7 @@ interface SmartBaristaProps {
 // temperature controls it talks about are directly below it.
 export default function SmartBarista({
     beanName, method, beans, shots, lastShot, suggestion,
-    ratingConfig, ratingColors, onApply, onApplyStartingPoint, onUpdateBean,
+    ratingConfig, ratingColors, onApply, repeatRecipe, onLogAgain, onApplyStartingPoint, onUpdateBean,
 }: SmartBaristaProps) {
     const freshness = getFreshnessAlert(beanName, beans);
 
@@ -93,6 +95,20 @@ export default function SmartBarista({
                 ratingColors={ratingColors}
                 onApply={onApply}
             />
+
+            {/* Shown whenever this bean and method have reached Balanced, not
+                only when the last shot did: a repeat that has not been tasted
+                would otherwise take the button away with it. */}
+            {repeatRecipe && (
+                <button
+                    type="button"
+                    className="btn-log-again"
+                    onClick={onLogAgain}
+                    title="Log a brew of the dialled-in recipe now, without filling in the form"
+                >
+                    <Icons.Check /> Log again
+                </button>
+            )}
 
             {profile?.flavorNotes && (
                 <p className="roaster-notes">

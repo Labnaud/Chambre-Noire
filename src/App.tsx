@@ -142,6 +142,26 @@ function App() {
 
   const suggestedSettings = getSuggestedSettings(lastShotForBean);
 
+  /**
+   * The recipe a one-tap repeat copies. Keyed on the bean *and* method being
+   * dialled in rather than on the last shot being a sweet spot: logging an
+   * untasted repeat makes that shot the latest one, which would otherwise
+   * withdraw the button immediately after its first use.
+   *
+   * A starred shot only counts for the method it was pulled on -- favourites
+   * are keyed by bean name alone, so the espresso favourite must not be
+   * offered as a V60 recipe.
+   */
+  const repeatRecipe: ShotLog | null = (() => {
+    const key = form.beanName.trim().toLowerCase();
+    if (!key) return null;
+    if (favoriteShot && favoriteShot.method === form.method) return favoriteShot;
+    return shots.find(s =>
+      s.beanName.trim().toLowerCase() === key
+      && s.method === form.method
+      && s.rating === 'Balanced') ?? null;
+  })();
+
   // A documented starting point for a bean with no history yet.
   const applyStartingPoint = (doseIn: number, doseOut: number, grind: number) => {
     form.setGrindSize(grind);
@@ -553,6 +573,7 @@ function App() {
             onApplyStartingPoint={applyStartingPoint}
             onUpdateBean={updateBean}
           onLogAgain={logAgainFromRecipe}
+            repeatRecipe={repeatRecipe}
             />
         </div>
 

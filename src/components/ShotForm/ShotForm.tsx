@@ -30,6 +30,7 @@ interface ShotFormProps {
     favoriteShot: ShotLog | null;
     editingShot: ShotLog | null;
     onCancelEdit: () => void;
+    repeatRecipe: ShotLog | null;
     onLogAgain: (recipe: ShotLog) => void;
     shots: ShotLog[];
     lastShotForBean: ShotLog | null;
@@ -54,6 +55,7 @@ export default function ShotForm({
     favoriteShot,
     editingShot,
     onCancelEdit,
+    repeatRecipe,
     onLogAgain,
     shots,
     lastShotForBean,
@@ -74,8 +76,7 @@ export default function ShotForm({
                 hasAnyBeans={hasAnyBeans}
                 beans={beans}
                 favoriteShot={favoriteShot}
-            onLogAgain={onLogAgain}
-                />
+            />
 
             <BrewShapeControls
                 method={form.method}
@@ -102,7 +103,9 @@ export default function ShotForm({
                 onApply={onApplySuggestion}
                 onApplyStartingPoint={onApplyStartingPoint}
                 onUpdateBean={onUpdateBean}
-            />
+            repeatRecipe={repeatRecipe}
+                onLogAgain={() => repeatRecipe && onLogAgain(repeatRecipe)}
+                />
 
             <BrewSettingControls
                 method={form.method}

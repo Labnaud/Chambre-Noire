@@ -22,6 +22,26 @@ describe('design tokens in index.css', () => {
         expect(circular).toEqual([]);
     });
 
+    it('references no custom property that is never defined', () => {
+        // var(--color-sage) once slipped in for a button, a token that does not
+        // exist in any theme; an undefined property resolves to nothing and the
+        // control renders with no colour at all. Typos in a token name are
+        // invisible until someone looks at the right screen in the right theme.
+        const defined = new Set<string>();
+        for (const m of css.matchAll(/(--[a-z0-9-]+)\s*:/g)) defined.add(m[1]);
+
+        const referenced = new Set<string>();
+        for (const m of css.matchAll(/var\(\s*(--[a-z0-9-]+)/g)) referenced.add(m[1]);
+
+        // Set from JS as an inline style, so it is legitimately absent here.
+        const setAtRuntime = new Set(['--rating-color']);
+
+        const undefinedTokens = [...referenced]
+            .filter(t => !defined.has(t) && !setAtRuntime.has(t))
+            .sort();
+        expect(undefinedTokens).toEqual([]);
+    });
+
     it('leaves no raw rating/accent hex literals in rules (tokens only)', () => {
         // The six themes own these colors; a literal here is right in one
         // theme and wrong in the other five.
