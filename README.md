@@ -11,6 +11,10 @@ your own history.
 Everything runs in the browser. No account, no backend, no telemetry, no
 outbound requests.
 
+## → [Open Chambre Noire](https://labnaud.github.io/Chambre-Noire/)
+
+No install and no sign-up. Add it to your home screen and it works offline.
+
 > [!IMPORTANT]
 > Your data lives in your browser's `localStorage`. Clearing browser data or
 > switching browsers erases it. Use **Export Backup** in Settings to save a copy.
@@ -66,18 +70,11 @@ and why, illustrated with synthetic demo data.
 
 ---
 
-## Live version
-
-**https://labnaud.github.io/Chambre-Noire/**
-
-Published from `main` by [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
-on every push, once lint, tests and the build pass. It is installable as a PWA
-and works offline.
-
-Your data stays in your browser either way: the hosted copy has no backend and
-no account, so nothing you log there reaches anyone else.
-
 ## Quick start
+
+The hosted copy at <https://labnaud.github.io/Chambre-Noire/> is published from
+`main` by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every
+push, once lint, tests and the build have passed. To run it yourself:
 
 ```bash
 npm install
