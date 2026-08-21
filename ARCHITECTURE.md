@@ -96,13 +96,11 @@ engine; `score` is a pure taste record. Either can be present without the other.
 | `drink?` | 7 espresso drinks | what was built on the shot |
 | `milkType?` `milkMl?` `milkTempC?` `waterMl?` | | what was actually poured |
 | `notes?` | `string` | short tasting note |
-| `sessionLog?` | `string` | long-form: trial shots, changes, conclusions |
 
 ### Other collections
 
 - **`BeanProfile`** — roaster, origin, roast level, process, roast date, bag
   size, price. Freshness and inventory features derive from these.
-- **`SavedRecipe`** — a reusable set of brew settings; mirrors the shot brew shape.
 - **`CaffeineEntry`** — caffeine from something that is not a logged brew.
 - **`MaintenanceEvent`** — a cleaning or descale, with the shot count at the time.
 - **`FavoritesMap`** — lowercased bean name to the id of its target shot.
@@ -214,6 +212,44 @@ a separate "consumed today" figure rather than being replaced.
 
 ---
 
+## Brew protocols
+
+`src/lib/protocols.ts` holds the V60 recipes — 2 pours, 5 pours, iced — as
+**transcribed tables, not formulas**. `stepForDose` looks a dose up; it does not
+interpolate. This matters: 14 g takes a different total water on the five-pour
+than on the two-pour, and the tables are non-linear in ways a ratio would smooth
+away. If a dose is missing from a table, the answer is to add the measured row,
+not to compute one.
+
+`V60_ROAST_SETTINGS` maps roast level to a temperature range and grind. Its roast
+labels are in French because they were transcribed verbatim from the notebook
+this app replaces.
+
+Protocols are static reference data. They are not persisted, not user-editable,
+and not part of any backup.
+
+---
+
+## Statistics
+
+`src/lib/stats.ts` computes everything in `computeStats` in one pass over the
+shots. Two rules shape it:
+
+- **Never average across methods.** Grind is one continuous scale from espresso
+  fine to filter coarse, so a single mean grind describes neither. Sweet-spot
+  figures are returned as `MethodWindow[]`, one row per method, built only from
+  brews rated `Balanced`.
+- **Require a minimum sample.** Rankings by bean, roaster, variety and origin
+  need at least two brews before an entry appears, so one lucky cup cannot top
+  the table. Multi-valued fields (a blend of two varieties) count toward each
+  value via `averageByEach`, which is why those totals can exceed the brew count.
+
+`medianShotsToDialIn` is the headline: the median number of brews taken to reach
+a `Balanced` rating, per bean-and-method pairing that has actually been dialled
+in. Pairings still being worked on are excluded rather than counted as failures.
+
+---
+
 ## Storage and validation
 
 `src/lib/storage.ts` owns every read and write. It is deliberately defensive,
@@ -267,7 +303,7 @@ crisp.
 
 ## Testing
 
-228 tests across 14 files, all in `src/lib`, all in a `node` environment.
+288 tests across 15 files, all in `src/lib`, all in a `node` environment.
 
 Notable guards worth not deleting:
 
@@ -289,9 +325,9 @@ Notable guards worth not deleting:
 
 ## Known leftovers
 
-- **`strength` (1-3)** is a preset from the machine the upstream project was
-  built for. Nothing in the current workflow produces it, and it is a candidate
-  for removal.
+- **Channelling** (bitter *and* sour at once) cannot be expressed on a single
+  sour-to-bitter axis, so a shot that channelled is recorded as whichever end it
+  leaned toward. It needs its own flag.
 - **Pour-stage detail** (bloom mass, bloom time, per-pour schedule and timings)
   is not modelled. Only the pour *pattern* is recorded.
 - **No Content-Security-Policy**, and the service worker is cache-first with a

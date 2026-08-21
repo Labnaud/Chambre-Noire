@@ -31,18 +31,24 @@ and why, illustrated with synthetic demo data.
   iced option that keeps its brew temperature
 - Dose, yield, extraction time, grind, and brew water temperature in degrees C
 - A 5-point taste rating (sour to bitter) *and* a separate 0-5 quality score
-- Free-form tasting notes plus a long-form session log for the whole dial-in
+- Free-form tasting notes per brew, and tasting notes per bean *per method*
 
 **Guidance**
-- Next-shot suggestions that move grind or temperature based on how the last
-  shot tasted, and on extraction time where one was recorded
+- Next-shot suggestions that change one thing at a time: grind for flow, then
+  yield for taste, then yield for body. On espresso, temperature is never
+  proposed as an adjustment -- only as advice
+- An extraction compass plotting each shot by taste and strength, so the walk
+  toward the sweet spot is visible
+- Roast-based starting points for a bean with no history, with a freshness note
 - Best dial-in recall per bean, and a grind-over-time trend sparkline
 - Ratio labels (ristretto / normale / lungo) for espresso-style pulls
+- Fixed V60 protocols (2 pours, 5 pours, iced) with per-dose pour schedules
 
 **Tracking**
 - Bean library with roast-date freshness, bag inventory and cost per shot
 - Caffeine forecast using a half-life pharmacokinetic model, with a bedtime
-  target and a decay curve
+  target and a decay curve; entries are editable and excludable
+- Rankings by bean, roaster, variety and origin, and median shots to dial in
 - Maintenance reminders for cleaning and descaling
 
 **Data**
@@ -70,7 +76,7 @@ npm run dev      # Vite dev server on http://localhost:5173
 | Command | What it does |
 |---|---|
 | `npm run dev` | Dev server with hot reload |
-| `npm test` | Vitest suite (228 tests) |
+| `npm test` | Vitest suite (288 tests) |
 | `npm run lint` | ESLint |
 | `npm run build` | Type-check, then production build |
 | `npm run preview` | Serve the production build locally |

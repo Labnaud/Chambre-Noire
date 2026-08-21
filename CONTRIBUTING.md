@@ -32,7 +32,7 @@ All three must pass. CI runs exactly these on Node 22.
 
 The single most useful habit: **push logic down into `src/lib` and keep
 components dumb.** Anything in `src/lib` is testable without a DOM, which is why
-228 tests run in about a second. Logic that ends up in a component is logic that
+288 tests run in about a second. Logic that ends up in a component is logic that
 will not be tested, because there is no component test harness.
 
 `src/lib` must never import React.
