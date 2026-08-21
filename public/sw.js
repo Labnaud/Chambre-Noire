@@ -1,10 +1,21 @@
-const CACHE_NAME = 'chambre-noire-v1';
+// Stamped from package.json at build time (see swVersionPlugin in
+// vite.config.ts). The worker serves cache-first, so a release only reaches a
+// returning visitor when this name changes and the old cache is evicted.
+const CACHE_NAME = 'chambre-noire-__APP_VERSION__';
+
+// Resolved against the worker's own URL rather than the domain root, so the
+// same file works whether the app is served from / or from a project subpath
+// like /Chambre-Noire/. Absolute paths would 404 under a subpath, and a single
+// 404 rejects cache.addAll(), which aborts install and leaves no worker at all.
+const ROOT = new URL('./', self.location).href;
+const asset = (path) => new URL(path, ROOT).href;
+
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/icons/icon-192.svg',
-    '/icons/icon-512.svg'
+    ROOT,
+    asset('index.html'),
+    asset('manifest.json'),
+    asset('icons/icon-192.svg'),
+    asset('icons/icon-512.svg')
 ];
 
 // Install event - cache static assets
@@ -67,7 +78,7 @@ self.addEventListener('fetch', (event) => {
             }).catch(() => {
                 // Return offline fallback for navigation requests
                 if (event.request.mode === 'navigate') {
-                    return caches.match('/');
+                    return caches.match(ROOT);
                 }
                 return new Response('Offline', { status: 503 });
             });

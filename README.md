@@ -66,6 +66,17 @@ and why, illustrated with synthetic demo data.
 
 ---
 
+## Live version
+
+**https://labnaud.github.io/Chambre-Noire/**
+
+Published from `main` by [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+on every push, once lint, tests and the build pass. It is installable as a PWA
+and works offline.
+
+Your data stays in your browser either way: the hosted copy has no backend and
+no account, so nothing you log there reaches anyone else.
+
 ## Quick start
 
 ```bash

@@ -4,6 +4,36 @@ Chambre Noire starts its own version numbering at 1.0.0. The `1.x` entries below
 it belong to the upstream project this was forked from and are kept for
 provenance; none of that numbering carries over.
 
+## [1.1.0] - 2026-08-21
+
+### Added
+- **Published to GitHub Pages** at <https://labnaud.github.io/Chambre-Noire/>,
+  deployed from `main` by a workflow that runs lint, tests and the build first,
+  so a red build cannot reach the live site.
+- **A Content-Security-Policy**, delivered in a meta tag because Pages cannot
+  set response headers. The two inline scripts are allowed by SHA-256 hash
+  instead of `'unsafe-inline'`, and the hashes are generated at build time so
+  they cannot fall out of step with the scripts.
+
+### Fixed
+- **The app works from a subpath.** A project Pages site is served from
+  `/Chambre-Noire/`, and every asset URL was absolute from the domain root. The
+  build now takes its base path from the environment, so local development stays
+  at `/` and only CI switches.
+- **The PWA survives that subpath.** The manifest and the service worker now
+  resolve their paths relative to their own location instead of the domain root.
+  This was the quiet failure: one 404 rejects `cache.addAll()`, which aborts the
+  install event, so the worker would never have registered at all.
+- **Releases now reach returning visitors.** The service-worker cache name is
+  stamped from the package version at build time; previously it was a constant,
+  so a cache-first worker could serve one build forever.
+
+### Security
+- The build deletes `public/import/` from its output. That directory stages a
+  personal backup before importing it, and while it is gitignored so CI never
+  sees it, a local build would otherwise have copied a real logbook into a
+  publishable `dist/`.
+
 ## [1.0.0] - 2026-08-21
 
 First release of Chambre Noire, forked from

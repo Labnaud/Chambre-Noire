@@ -32,19 +32,34 @@ Because there is no server, the defences that matter are all client-side:
 - **CSV export neutralises spreadsheet formula injection** (CWE-1236) by
   prefixing cells that begin with `=`, `+`, `-` or `@`.
 
-## Known accepted risks
+## Deployment hardening
 
-The app currently runs locally only. Two hardening items are deliberately
-deferred until it is deployed to a real host:
+The app is published to GitHub Pages, which serves static files and **cannot set
+response headers**. The hardening that would normally live in a header is
+therefore done differently:
 
-- **No Content-Security-Policy.** There are no XSS sinks in the codebase today
-  (no `dangerouslySetInnerHTML`, no `innerHTML`, no `eval`), and no user data
-  reaches an `href`, `src` or `style` value. A CSP should still be added as a
-  web-server response header before any public deployment, as defence against a
-  future mistake.
-- **Service-worker cache versioning.** `public/sw.js` serves cache-first and
-  never evicts entries from the current cache. Bump `CACHE_NAME` on each release
-  so clients pick up changes, including security fixes, promptly.
+- **Content-Security-Policy** travels in a `<meta http-equiv>` tag. The two
+  inline scripts (the theme applied before first paint, and the service-worker
+  registration) are allowed **by SHA-256 hash rather than `'unsafe-inline'`**,
+  and the hashes are computed at build time by a Vite plugin so they cannot
+  drift out of date with the scripts they authorise. `style-src` still needs
+  `'unsafe-inline'`, because React writes style attributes at runtime and a
+  runtime value cannot be hashed in advance.
+- **`frame-ancestors` is deliberately absent.** It is ignored in a meta tag and
+  only works as a real header, so listing it would suggest a protection that is
+  not there. Framing protection needs a host that can send headers.
+- **Service-worker cache versioning** is automatic. `CACHE_NAME` is stamped from
+  the `package.json` version at build time, so a release evicts the previous
+  cache instead of serving it indefinitely. The worker is stale-while-revalidate,
+  so a returning visitor still runs the previous build for one load before the
+  new one takes effect.
+- **Staged personal data cannot ship.** `public/import/` is where a backup is
+  placed before importing it into the app. It is gitignored, so CI never sees
+  it, and the build additionally deletes it from the output, so a local build
+  cannot publish a real logbook by accident.
+
+Everything the app stores stays in the visitor's own browser. Publishing it
+exposes the code, not anyone's data.
 
 ## Development dependencies
 
