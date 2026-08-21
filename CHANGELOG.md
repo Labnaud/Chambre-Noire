@@ -17,11 +17,16 @@ provenance; none of that numbering carries over.
   has been starred, and it survives its own use: an untasted repeat becomes the
   latest shot, which must not withdraw the button. A starred shot only counts
   for the method it was pulled on, so an espresso favourite is never offered as
-  a V60 recipe. It copies
-  the recipe's inputs -- method, pour pattern, basket, grind, temperature, dose
-  and yield -- and none of its outcomes: time, taste, strength, score and notes
-  describe a cup that has not been made. Dose carries over so the bag maths
-  stays exact, which is usually the reason for logging such a brew at all.
+  a V60 recipe, and the sweet spot it repeats is the most recent one by date
+  rather than the first in storage order, which is not the same thing once a
+  backup has been imported. It copies
+  the recipe's settings -- method, pour pattern, basket, grind, temperature,
+  dose, yield and time -- because a filter brew is poured to a schedule and its
+  drawdown is a target you brew towards. Taste, strength, score and notes stay
+  empty: those are judgements about a cup nobody has drunk. Dose carries over so
+  the bag maths stays exact, which is usually the reason for logging such a brew.
+- **Loading a recipe brings its time.** Auto-apply and *Apply to form* fill the
+  time field along with the rest of the settings.
 
 ### Changed
 - **Smart Barista reads in the order you work.** The comparison is now Dose,

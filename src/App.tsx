@@ -156,10 +156,16 @@ function App() {
     const key = form.beanName.trim().toLowerCase();
     if (!key) return null;
     if (favoriteShot && favoriteShot.method === form.method) return favoriteShot;
-    return shots.find(s =>
+    // Sorted rather than taking the first match: the array is newest-first only
+    // for shots this app appended, and an imported backup arrives in whatever
+    // order the export had, which would otherwise pick an older sweet spot.
+    const balanced = shots.filter(s =>
       s.beanName.trim().toLowerCase() === key
       && s.method === form.method
-      && s.rating === 'Balanced') ?? null;
+      && s.rating === 'Balanced');
+    if (balanced.length === 0) return null;
+    return balanced.reduce((latest, s) =>
+      s.timestamp.getTime() > latest.timestamp.getTime() ? s : latest);
   })();
 
   // A documented starting point for a bean with no history yet.
@@ -189,6 +195,13 @@ function App() {
         form.setDoseOut(String(suggestedSettings.doseOut));
       }
     }
+    // The time belongs to the recipe, so it loads with the rest of it. It goes
+    // into the manual field because that is the only one that can show a value
+    // that was not just measured; switching to Stopwatch to time the brew live
+    // replaces it.
+    form.setShowTimer(true);
+    form.setManualTimeInput(true);
+    form.setManualTimerValue(lastShotForBean.extractionTime?.toString() ?? '');
     form.setRatingIndex(BALANCED_RATING_INDEX);
     form.setRated(true);
   };
@@ -260,13 +273,16 @@ function App() {
    * Logs a repeat of the bean's target recipe in one tap, for a brew that is
    * already dialled in and is being drunk rather than worked on.
    *
-   * It copies the recipe's *inputs* -- method, pour pattern, basket, grind,
-   * temperature, dose and yield -- because those are settings that were
-   * deliberately reproduced. It copies none of its *outcomes*: extraction time,
-   * taste, strength, score and notes are measurements and judgements about a
-   * cup that was never made, and recording them would be inventing data. Dose
-   * carries over specifically so the bag maths stays exact, which is the usual
-   * reason for logging a brew like this at all.
+   * It copies the recipe's settings -- method, pour pattern, basket, grind,
+   * temperature, dose, yield and time. Time counts as part of the recipe here
+   * rather than as a measurement: a filter brew is poured to a schedule and its
+   * drawdown is a target you brew towards, and a repeat of a dialled-in
+   * espresso lands on the same time by construction. Correct it on the shot if
+   * a particular brew ran long.
+   *
+   * Taste, strength, score and notes are still left empty. Those are judgements
+   * about a cup, and no cup has been drunk yet. Dose carries over so the bag
+   * maths stays exact, which is the usual reason for logging one of these.
    */
   const logAgainFromRecipe = (recipe: ShotLog) => {
     addShot({
@@ -281,6 +297,7 @@ function App() {
       waterTempC: recipe.waterTempC,
       doseIn: recipe.doseIn,
       doseOut: recipe.doseOut,
+      extractionTime: recipe.extractionTime,
       drink: recipe.drink,
       milkType: recipe.milkType,
       milkMl: recipe.milkMl,
