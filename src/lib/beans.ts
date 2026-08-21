@@ -42,7 +42,7 @@ export function getUniqueBeans(shots: ShotLog[]): string[] {
 }
 
 export interface FreshnessAlert {
-    variant: 'fading' | 'stale';
+    variant: 'resting' | 'peak' | 'fading' | 'stale';
     label: string;
     color: string;
     text: string;
@@ -54,19 +54,32 @@ export function getFreshnessAlert(beanName: string, beans: BeanProfile[]): Fresh
     if (!profile?.roastDate) return null;
 
     const days = getDaysSinceRoast(profile.roastDate);
-    if (days === null || days <= 21) return null; // only fading or stale
+    if (days === null) return null;
 
     const freshness = getFreshnessStatus(days);
-    const text = `${profile.name} was roasted ${days} days ago${
-        days > 35
-            ? '. Consider adjusting grind finer to compensate.'
-            : '. Still good, but best to use soon.'
-    }`;
+
+    // Every state is reported, not just the bad ones. This used to return null
+    // at 21 days or fresher, because a full-width paragraph saying nothing is
+    // wrong is noise; as a badge on the title row, "Peak" is the most useful
+    // thing it can say.
+    const age = days === 0
+        ? 'was roasted today'
+        : `was roasted ${days} ${days === 1 ? 'day' : 'days'} ago`;
+
+    const advice = days < 7
+        ? '. Still degassing, so expect it to keep changing for a few more days.'
+        : days <= 21
+            ? '. In its best window.'
+            : days <= 35
+                ? '. Still good, but best to use soon.'
+                : '. Consider adjusting grind finer to compensate.';
+
+    const variant = days < 7 ? 'resting' : days <= 21 ? 'peak' : days <= 35 ? 'fading' : 'stale';
 
     return {
-        variant: days > 35 ? 'stale' : 'fading',
+        variant,
         label: freshness.label,
         color: freshness.color,
-        text,
+        text: `${profile.name} ${age}${advice}`,
     };
 }

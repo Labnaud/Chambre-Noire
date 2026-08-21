@@ -72,6 +72,7 @@ export default function SmartBarista({
             label: freshness.label,
             detail: freshness.text,
             color: freshness.color,
+            Icon: Icons.Calendar,
         });
     }
 
@@ -83,6 +84,7 @@ export default function SmartBarista({
                 ? `Your ${profile.name} bag is out. Time to restock.`
                 : `About ${inventory.gramsLeft}g (~${inventory.shotsLeft} shots) of ${profile.name} left.`,
             color: inventory.isEmpty ? 'var(--color-very-bitter)' : 'var(--color-sour)',
+            Icon: Icons.Scale,
         });
     }
 

@@ -95,9 +95,29 @@ describe('getFreshnessAlert', () => {
         expect(getFreshnessAlert('Ethiopia', [makeBean({})])).toBeNull();
     });
 
-    it('returns null when bean is 21 days or fresher', () => {
-        const roast21 = new Date(NOW.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString();
-        expect(getFreshnessAlert('Ethiopia', [makeBean({ roastDate: roast21 })])).toBeNull();
+    const roastedDaysAgo = (d: number) =>
+        new Date(NOW.getTime() - d * 24 * 60 * 60 * 1000).toISOString();
+
+    it('reports resting while the bean is still degassing', () => {
+        const alert = getFreshnessAlert('Ethiopia', [makeBean({ roastDate: roastedDaysAgo(3) })]);
+        expect(alert?.variant).toBe('resting');
+        expect(alert?.label).toBe('Resting');
+        expect(alert?.text).toMatch(/degassing/);
+    });
+
+    it('reports peak through the best window, including its last day', () => {
+        for (const d of [7, 14, 21]) {
+            const alert = getFreshnessAlert('Ethiopia', [makeBean({ roastDate: roastedDaysAgo(d) })]);
+            expect(alert?.variant).toBe('peak');
+            expect(alert?.label).toBe('Peak');
+        }
+    });
+
+    it('says "today" and speaks of one day in the singular', () => {
+        expect(getFreshnessAlert('Ethiopia', [makeBean({ roastDate: roastedDaysAgo(0) })])?.text)
+            .toMatch(/was roasted today/);
+        expect(getFreshnessAlert('Ethiopia', [makeBean({ roastDate: roastedDaysAgo(1) })])?.text)
+            .toMatch(/1 day ago/);
     });
 
     it('returns fading variant between 22 and 35 days', () => {

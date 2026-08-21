@@ -3892,47 +3892,6 @@ button.grind-control__value:hover {
 }
 
 /* ============================================
-   FRESHNESS ALERTS
-   ============================================ */
-
-.freshness-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid;
-}
-
-.freshness-alert--fading {
-  background: color-mix(in srgb, var(--color-sour) 10%, transparent);
-  border-color: color-mix(in srgb, var(--color-sour) 30%, transparent);
-}
-
-.freshness-alert--stale {
-  background: color-mix(in srgb, var(--color-very-bitter) 10%, transparent);
-  border-color: color-mix(in srgb, var(--color-very-bitter) 30%, transparent);
-}
-
-.freshness-alert__badge {
-  flex-shrink: 0;
-  padding: 0.25rem 0.5rem;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: var(--radius-xs);
-  color: #fff;
-}
-
-.freshness-alert__text {
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--color-cream);
-}
-
-/* ============================================
    MAINTENANCE ALERTS
    ============================================ */
 

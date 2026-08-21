@@ -31,7 +31,11 @@ provenance; none of that numbering carries over.
 ### Changed
 - **Bean and shot status read as one line.** Freshness, bag level and where the
   last extraction landed are now badges on the Smart Barista title row rather
-  than stacked paragraphs above the controls. Each one opens its explanation on
+  than stacked paragraphs above the controls. Freshness reports every state --
+  `Resting`, `Peak`, `Fading`, `Stale` -- where before it stayed silent under
+  22 days: a paragraph saying nothing is wrong was noise, but as a badge `Peak`
+  is the most useful thing it can say. Each badge carries the same icon the Bean
+  Library uses for that fact. Each one opens its explanation on
   tap and closes again, one at a time. Where a screen is too narrow to hold the
   section name and every status on one line, the badges wrap below it as a
   group rather than the name being dropped.
