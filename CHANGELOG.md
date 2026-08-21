@@ -1,28 +1,112 @@
 # Changelog
 
-## [Unreleased] - Chambre Noire fork
+Chambre Noire starts its own version numbering at 1.0.0. The `1.x` entries below
+it belong to the upstream project this was forked from and are kept for
+provenance; none of that numbering carries over.
 
-Forked from [Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboard) v1.16.0.
+## [1.0.0] - 2026-08-21
 
-### Removed
-- The one-time cross-domain data-migration module. It existed only to move data to the upstream author's new domain, and its landing path applied any `#migrate=` URL payload over your entire dataset with no host check, no confirmation, and no undo.
-- Bundled Vercel Web Analytics. The app now makes no outbound network requests.
-- The upstream author's funding and personal links.
+First release of Chambre Noire, forked from
+[Luxe Cafe Dashboard](https://github.com/Arishawke/luxe_cafe_dashboard) v1.16.0.
 
-### Removed
-- The per-shot session log. Every trial shot is now its own record, so the dial-in narrative is the shot history itself; cross-shot conclusions belong on the bean, where the per-method flavour notes now live.
+The fork keeps the upstream storage and validation layer and replaces most of
+what sits on top: the app is no longer tied to one espresso machine, it logs
+filter brews as first-class records, and its dial-in guidance follows a written
+notebook method rather than generic advice. Nothing leaves the browser.
 
 ### Added
-- Logged shots now appear as rows in the caffeine intake list instead of only feeding the curve invisibly. Removing one stops it counting toward caffeine while leaving the shot in your history, and exclusions can be undone from the same list.
-
-### Documentation
-- Added `ARCHITECTURE.md` (layer model, data model, brew profiles, dial-in and caffeine engines, storage and validation, testing) and `CONTRIBUTING.md` (where a change belongs, how to add a brew method or drink, traps worth knowing).
-- Rewrote `README.md` and `SECURITY.md` for the fork, including the threat model and the deferred hardening items.
+- **Brew methods.** Espresso, V60, and French Press, each with its own capability
+  profile: temperature range and step, whether yield means liquid out or water
+  in, target time window, default dose, and whether pour pattern, ice, or milk
+  drinks apply. Adding a method is a table entry, not a set of conditionals.
+- **V60 pour patterns and iced brewing.** `2 Pours` and `5 Pours` as a property
+  of the brew, with ice recorded separately so hot water is derived rather than
+  guessed.
+- **Espresso drinks.** Latte, Macchiato, Cortado, Flat White, Cappuccino, Mocha,
+  and Americano, recorded as what was built on the shot. Americano carries no
+  milk, which is why this replaced the old milk-settings fields.
+- **A 0–5 quality score**, separate from the sour↔bitter taste rating. The rating
+  drives the dial-in engine; the score drives rankings. Conflating them meant a
+  balanced shot from a mediocre bean outranked a bright one from a good bean.
+- **An extraction compass.** Each shot for a bean plots as a dot across taste and
+  strength, with arrows connecting shots in sequence, so the walk toward the
+  sweet spot is visible instead of inferred from a list.
+- **V60 brew protocols**, replacing saved recipes: per-dose pour schedules,
+  roast-level grind settings, and dial-in guidance.
+- **Statistics rebuilt** around what the app measures: per-method dial-in windows,
+  median shots to reach a sweet spot, sweet-spot rate, best beans, roasters,
+  varieties, and origins (each requiring at least two shots), total caffeine,
+  and total coffee ground.
+- **Bean fields**: variety, buy-again, `Co-ferment` processing, and per-method
+  flavour notes, so a bean can taste different through espresso than through V60.
+- **Tasting notes on the sweet spot.** Reaching a sweet spot prompts for notes
+  with the roaster's own description prefilled and editable. Notes before a
+  recipe is established describe a profile that does not exist yet.
+- **Caffeine intake is editable**: the time of a logged drink can be corrected,
+  individual shots can be excluded from the curve without deleting them from
+  history, and only active beans contribute.
+- **JSON backup import** from the file picker, including on mobile.
 
 ### Changed
-- Renamed to Chambre Noire throughout, including the PWA manifest, service-worker cache name, and all localStorage keys (`espresso-*` / `luxe-cafe-*` are now `chambre-noire-*`).
-- Generalised the shot model away from the Ninja Luxe Cafe Pro's presets: the `Luxe` basket is now `Triple`, froth styles use barista vocabulary (`Microfoam`, `Light Foam`, `Thick Foam`) instead of the machine's, and strength reads `Mild` / `Medium` / `Strong`.
-- Caffeine estimates updated for the `Triple` basket (95 mg, 3 shots).
+- **Renamed to Chambre Noire** throughout: PWA manifest, service-worker cache,
+  and every localStorage key (`espresso-*` and `luxe-cafe-*` are now
+  `chambre-noire-*`).
+- **The espresso dial-in engine follows a fixed order of levers**: grind corrects
+  flow first (a two-step jump under 20s or over 40s, one step from 20–28s, and
+  no grind change once the shot runs 28–40s), then yield corrects taste, then
+  yield adjusts body once the taste is balanced. **Temperature is never proposed
+  as an espresso adjustment** — it appears only as advice, such as a cooling
+  flush after a burnt shot. Filter methods keep temperature as a lever.
+- **Yield, not dose, carries strength.** Dose stays where the basket wants it and
+  the ratio moves, clamped to 1:1.67–1:2.33.
+- **Baskets reduced to Single and Double** (55 mg and 110 mg of caffeine). The
+  machine-specific Luxe basket and the Triple are gone.
+- **Grind scale widened**, with suggestion steps still expressed as ±1 and ±3 so
+  they stay meaningful within one recipe.
+- **Water temperature is recorded in °C.**
+- **One typeface across the interface.** Titles previously set in a serif now use
+  the UI sans, with weight rather than family carrying hierarchy.
+
+### Removed
+- **The one-time cross-domain data-migration module.** It existed only to move
+  data to the upstream author's new domain, and its landing path applied any
+  `#migrate=` URL payload over the entire dataset with no host check, no
+  confirmation, and no undo.
+- **Bundled Vercel Web Analytics.** The app now makes no outbound requests.
+- The upstream author's funding and personal links.
+- **Machine-specific presets.** Froth styles and strength labels no longer mirror
+  one espresso machine's controls.
+- **The per-shot session log.** Every trial shot is its own record, so the dial-in
+  narrative is the shot history itself; cross-shot conclusions belong on the
+  bean, where per-method flavour notes now live.
+- **Saved recipes**, whose slot the V60 protocols now occupy.
+
+### Fixed
+- Editing a shot now saves the extraction time. The edit form neither loaded the
+  stored value nor wrote it back, so timings silently kept their original value.
+- The sweet-spot prompt fires for a bean typed directly into the form. It
+  previously required an existing bean profile, which is not how a bean is
+  usually entered first.
+- Retired beans no longer appear in the shot form's bean dropdown.
+- The caffeine forecast scans a bounded 72-hour window. It previously walked from
+  the start of the year in five-minute steps on every render.
+- The stopwatch label fits its button.
+
+### Security
+- See `SECURITY.md` for the fork's threat model and the hardening deliberately
+  deferred for local-only use.
+
+### Documentation
+- `ARCHITECTURE.md` (layer model, data model, brew profiles, dial-in and caffeine
+  engines, storage and validation, testing) and `CONTRIBUTING.md` (where a change
+  belongs, how to add a brew method or drink, traps worth knowing).
+- `README.md` and `SECURITY.md` rewritten for the fork.
+
+---
+
+## Upstream history (Luxe Cafe Dashboard)
+
+The releases below predate the fork.
 
 ## [1.16.0] - 2026-08-06
 

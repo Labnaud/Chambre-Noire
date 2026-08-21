@@ -17,6 +17,13 @@ outbound requests.
 
 ---
 
+![Chambre Noire](docs/screenshots/dashboard.png)
+
+**[Read the walkthrough →](docs/WALKTHROUGH.md)** — every screen, what it does,
+and why, illustrated with synthetic demo data.
+
+---
+
 ## Features
 
 **Logging**
@@ -97,6 +104,7 @@ src/
   App.tsx       composition root
   types.ts      the data model
   index.css     design tokens + all styling
+scripts/        synthetic demo data + screenshot generation for the docs
 ```
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for how the layers fit together, what
